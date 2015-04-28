@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,6 +14,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.fenixedu.academic.domain.Enrolment;
+import org.fenixedu.academic.domain.EnrolmentEvaluation;
 import org.fenixedu.academic.domain.ExecutionInterval;
 import org.fenixedu.academic.domain.ExecutionSemester;
 import org.fenixedu.academic.domain.ExecutionYear;
@@ -207,13 +209,17 @@ public class RegistrationHistoryReportService {
         final StudentCurricularPlan studentCurricularPlan = registration.getStudentCurricularPlan(executionYear);
         final Collection<Enrolment> normalEnrolments =
                 getFilteredEnrolments(studentCurricularPlan, executionYear, new NormalEnrolmentsPredicate());
+
         final Collection<Enrolment> normalEnrolmentsEvaluated =
-                normalEnrolments.stream().filter(enrolment -> enrolment.getLatestEnrolmentEvaluation() != null)
+                normalEnrolments.stream().filter(enrolment -> enrolment.getFinalEnrolmentEvaluation() != null)
                         .collect(Collectors.toSet());
 
         if (!normalEnrolmentsEvaluated.isEmpty()) {
-            return Collections.max(normalEnrolmentsEvaluated, Enrolment.COMPARATOR_BY_LATEST_ENROLMENT_EVALUATION_AND_ID)
-                    .getLatestEnrolmentEvaluation().getExamDateYearMonthDay().toLocalDate();
+            Comparator<? super Enrolment> compareByFinalEnrolmentEvalution =
+                    (x, y) -> EnrolmentEvaluation.COMPARATOR_BY_EXAM_DATE.compare(x.getFinalEnrolmentEvaluation(),
+                            y.getFinalEnrolmentEvaluation());
+            return Collections.max(normalEnrolmentsEvaluated, compareByFinalEnrolmentEvalution).getFinalEnrolmentEvaluation()
+                    .getExamDateYearMonthDay().toLocalDate();
         }
 
         return registration.getRegistrationDataByExecutionYearSet().stream().filter(r -> r.getExecutionYear() == executionYear)
