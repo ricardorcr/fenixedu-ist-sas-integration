@@ -39,9 +39,18 @@
 			<artifactId>fenixedu-academic</artifactId>
 			<version>${version.org.fenixedu.academic}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.qubit.solution.fenixedu</groupId>
+			<artifactId>bennu-webservices-core</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 
 	<repositories>
+<repository>
+			<id>ulisboa-repo</id>
+			<url>http://ul-nexjen.ulisboa.pt:8081/nexus/content/groups/public/</url>
+		</repository>
 		<repository>
 			<id>fenixedu-maven-repository</id>
 			<url>https://repo.fenixedu.org/fenixedu-maven-repository</url>

@@ -5,7 +5,9 @@ import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 
 import org.fenixedu.bennu.core.domain.Bennu;
+import org.fenixedu.bennu.scheduler.domain.SchedulerSystem;
 import org.fenixedu.ulisboa.integration.sas.domain.SocialServicesConfiguration;
+import org.fenixedu.ulisboa.integration.sas.service.DailyEnrolmentsIndexing;
 
 import pt.ist.fenixframework.Atomic;
 import pt.ist.fenixframework.Atomic.TxMode;
@@ -20,6 +22,7 @@ public class SasInitializer implements ServletContextListener {
         if (Bennu.getInstance().getSocialServicesConfiguration() == null) {
             SocialServicesConfiguration socialServicesConfiguration = new SocialServicesConfiguration();
         }
+        DailyEnrolmentsIndexing.bindToSignals();
     }
 
     @Override

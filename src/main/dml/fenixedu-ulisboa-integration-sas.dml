@@ -74,3 +74,11 @@ relation ScholarshipReportRequestResultFile{
 	protected ScholarshipReportFile playsRole resultFile;
 	protected ScholarshipReportRequest playsRole scholarshipReportRequestForWhichIsResult;
 }
+
+//Stores the enrolments which were performed in the current day
+relation DailyEnrolmentBennu{
+	.org.fenixedu.bennu.core.domain.Bennu playsRole bennuForWhichIsDaily;
+	.org.fenixedu.academic.domain.Enrolment playsRole dailyEnrolments{
+		multiplicity *;
+	}
+}

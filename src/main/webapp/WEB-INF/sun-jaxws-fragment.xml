@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<endpoints xmlns="http://java.sun.com/xml/ns/jax-ws/ri/runtime"
+	version="2.0">
+	<endpoint name="activeDegreesWebService" implementation="org.fenixedu.ulisboa.integration.sas.webservices.ActiveDegreesWebService"
+		url-pattern="/web-services/activeDegreesWebService" />
+		<endpoint name="activeStudentsWebService" implementation="org.fenixedu.ulisboa.integration.sas.webservices.ActiveStudentsWebService"
+		url-pattern="/web-services/activeStudentsWebService" />
+</endpoints>
