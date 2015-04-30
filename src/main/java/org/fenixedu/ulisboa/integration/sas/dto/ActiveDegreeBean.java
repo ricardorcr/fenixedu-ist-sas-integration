@@ -6,7 +6,7 @@ public class ActiveDegreeBean implements Serializable {
     String degreeCode;
     String designation;
     String schoolLevel;
-    String cycle;
+    String[] cycle;
     String duration;
     String oficialCode;
 
@@ -34,11 +34,11 @@ public class ActiveDegreeBean implements Serializable {
         this.schoolLevel = schoolLevel;
     }
 
-    public String getCycle() {
+    public String[] getCycle() {
         return cycle;
     }
 
-    public void setCycle(String cycle) {
+    public void setCycle(String[] cycle) {
         this.cycle = cycle;
     }
 

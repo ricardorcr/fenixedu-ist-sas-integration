@@ -32,12 +32,6 @@ public class ActiveDegreesWebService extends BennuWebService {
     private ActiveDegreeBean populateActiveDegree(Degree degree) {
         ActiveDegreeBean activeDegreeBean = new ActiveDegreeBean();
 
-//        String degreeCode;
-//        String designation;
-//        String schoolLevel;
-//        String cycle;
-//        String duration;
-//        String oficialCode;
         ExecutionYear currentExecutionYear = ExecutionYear.readCurrentExecutionYear();
 
         activeDegreeBean.setDegreeCode(degree.getCode());
@@ -61,16 +55,15 @@ public class ActiveDegreesWebService extends BennuWebService {
         return degree.getDegreeCurricularPlansForYear(currentExecutionYear).iterator().next().getDurationInYears();
     }
 
-    private String getDegreeCyclesString(Degree degree) {
-        String appendedValues = "";
+    private String[] getDegreeCyclesString(Degree degree) {
+        Collection<CycleType> cycleTypes = degree.getDegreeType().getCycleTypes();
+        String[] values = new String[cycleTypes.size()];
 
-        for (CycleType ct : degree.getDegreeType().getCycleTypes()) {
-            if (!appendedValues.isEmpty()) {
-                appendedValues += ",";
-            }
-            appendedValues += ct.getWeight();
+        int i = 0;
+        for (CycleType ct : cycleTypes) {
+            values[i++] = ct.getWeight().toString();
         }
 
-        return appendedValues;
+        return values;
     }
 }
