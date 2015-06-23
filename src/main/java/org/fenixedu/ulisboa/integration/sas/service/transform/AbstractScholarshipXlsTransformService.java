@@ -188,4 +188,11 @@ public abstract class AbstractScholarshipXlsTransformService {
 
     }
 
+    protected String booleanToString(Boolean value) {
+        if (value == null) {
+            value = false;
+        }
+        //TODO refactor to use localized labels instead of hardcoded strings
+        return value ? "Sim" : "Não";
+    }
 }

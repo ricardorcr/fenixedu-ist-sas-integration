@@ -23,7 +23,7 @@ public abstract class AbstractScholarshipStudentBean implements Serializable {
     private String code;
     private Boolean registered = false;
     private LocalDate registrationDate;
-    private Money gratuityAmount;
+    private BigDecimal gratuityAmount;
     private Integer numberOfMonthsExecutionYear;
     private String firstMonthExecutionYear;
     private Boolean cetQualificationOwner;
@@ -144,12 +144,12 @@ public abstract class AbstractScholarshipStudentBean implements Serializable {
         this.registrationDate = registrationDate;
     }
 
-    public Money getGratuityAmount() {
+    public BigDecimal getGratuityAmount() {
         return gratuityAmount;
     }
 
-    public void setGratuityAmount(Money gratuityAmount) {
-        this.gratuityAmount = gratuityAmount;
+    public void setGratuityAmount(BigDecimal bigDecimal) {
+        this.gratuityAmount = bigDecimal;
     }
 
     public Integer getNumberOfMonthsExecutionYear() {

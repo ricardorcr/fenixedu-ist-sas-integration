@@ -1,5 +1,6 @@
 package org.fenixedu.ulisboa.integration.sas.service.process;
 
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,6 +30,8 @@ import org.fenixedu.academic.domain.student.RegistrationRegimeType;
 import org.fenixedu.academic.domain.student.Student;
 import org.fenixedu.academic.domain.student.registrationStates.RegistrationState;
 import org.fenixedu.academic.domain.student.registrationStates.RegistrationStateType;
+import org.fenixedu.academic.domain.treasury.IAcademicTreasuryEvent;
+import org.fenixedu.academic.domain.treasury.TreasuryBridgeAPIFactory;
 import org.fenixedu.academic.util.Money;
 import org.fenixedu.bennu.core.domain.Bennu;
 import org.fenixedu.ulisboa.integration.sas.domain.ScholarshipReportRequest;
@@ -363,25 +366,17 @@ public class AbstractFillScholarshipService {
         return cal.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.forLanguageTag("pt-PT"));
     }
 
-    private Money calculateGratuityAmount(Registration registration, ScholarshipReportRequest request) {
+    private BigDecimal calculateGratuityAmount(Registration registration, ScholarshipReportRequest request) {
 
-        final Event event =
-                registration.getStudentCurricularPlan(request.getExecutionYear()).getGratuityEvent(request.getExecutionYear(),
-                        GratuityEventWithPaymentPlan.class);
+        IAcademicTreasuryEvent tuitionForRegistrationTreasuryEvent =
+                TreasuryBridgeAPIFactory.implementation().getTuitionForRegistrationTreasuryEvent(registration,
+                        request.getExecutionYear());
 
-        if (event == null) {
-            return Money.ZERO;
+        if (tuitionForRegistrationTreasuryEvent == null) {
+            return BigDecimal.ZERO;
         }
 
-        if (event instanceof GratuityEventWithPaymentPlan) {
-            final GratuityEventWithPaymentPlan gratuityEventWithPaymentPlan = (GratuityEventWithPaymentPlan) event;
-
-            //TODO ???
-//            return gratuityEventWithPaymentPlan.getGratuityPaymentPlan().cashFlowBox(event, new DateTime(), BigDecimal.ZERO)
-//                    .getTotalGratuityAmount();
-        }
-
-        return event.getOriginalAmountToPay();
+        return tuitionForRegistrationTreasuryEvent.getAmountToPay();
 
     }
 

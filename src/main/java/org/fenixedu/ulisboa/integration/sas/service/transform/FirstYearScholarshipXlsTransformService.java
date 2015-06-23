@@ -1,7 +1,6 @@
 package org.fenixedu.ulisboa.integration.sas.service.transform;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 
 import org.apache.poi.hssf.usermodel.HSSFRow;
@@ -96,19 +95,20 @@ public class FirstYearScholarshipXlsTransformService extends AbstractScholarship
         writeCellString(row, COLUMN_INSTITUTION_CODE, bean.getInstitutionCode());
         writeCellInteger(row, COLUMN_STUDENT_NUMBER, bean.getStudentNumber());
         writeCellString(row, COLUMN_DEGREE_CODE, bean.getDegreeCode());
-        writeCellBoolean(row, COLUMN_REGISTERED, bean.getRegistered());
+        writeCellString(row, COLUMN_REGISTERED, booleanToString(bean.getRegistered()));
 
         writeCellLocalDate(row, COLUMN_REGISTRATION_DATE, bean.getRegistered() ? bean.getRegistrationDate() : null);
-        BigDecimal gratuity = bean.getGratuityAmount() != null ? bean.getGratuityAmount().getAmount() : BigDecimal.ZERO;
-        writeCellBigDecimal(row, COLUMN_GRATUITY, bean.getRegistered() ? gratuity : null);
+        writeCellBigDecimal(row, COLUMN_GRATUITY, bean.getRegistered() ? bean.getGratuityAmount() : null);
         writeCellInteger(row, COLUMN_NUMBER_OF_MONTHS_EXECUTION_YEAR,
                 bean.getRegistered() ? bean.getNumberOfMonthsExecutionYear() : null);
         writeCellString(row, COLUMN_FIRST_MONTH_EXECUTION_YEAR, bean.getRegistered() ? bean.getFirstMonthExecutionYear() : null);
-        writeCellBoolean(row, COLUMN_OWNER_CET, bean.getRegistered() ? bean.getCetQualificationOwner() : null);
-        writeCellBoolean(row, COLUMN_OWNER_CTSP, bean.getRegistered() ? bean.getCtspQualificationOwner() : null);
-        writeCellBoolean(row, COLUMN_OWNER_BACHELOR, bean.getRegistered() ? bean.getDegreeQualificationOwner() : null);
-        writeCellBoolean(row, COLUMN_OWNER_MASTER, bean.getRegistered() ? bean.getMasterQualificationOwner() : null);
-        writeCellBoolean(row, COLUMN_OWNER_PHD, bean.getRegistered() ? bean.getPhdQualificationOwner() : null);
+        writeCellString(row, COLUMN_OWNER_CET, bean.getRegistered() ? booleanToString(bean.getCetQualificationOwner()) : null);
+        writeCellString(row, COLUMN_OWNER_CTSP, bean.getRegistered() ? booleanToString(bean.getCtspQualificationOwner()) : null);
+        writeCellString(row, COLUMN_OWNER_BACHELOR,
+                bean.getRegistered() ? booleanToString(bean.getDegreeQualificationOwner()) : null);
+        writeCellString(row, COLUMN_OWNER_MASTER,
+                bean.getRegistered() ? booleanToString(bean.getMasterQualificationOwner()) : null);
+        writeCellString(row, COLUMN_OWNER_PHD, bean.getRegistered() ? booleanToString(bean.getPhdQualificationOwner()) : null);
         writeCellString(row, COLUMN_OBSERVATIONS, bean.getRegistered() ? bean.getObservations() : null);
         writeCellString(row, COLUMN_REGIME, bean.getRegistered() ? bean.getRegime() : null);
 

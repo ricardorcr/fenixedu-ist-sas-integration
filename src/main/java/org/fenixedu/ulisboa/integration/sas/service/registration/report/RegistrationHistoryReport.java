@@ -228,8 +228,8 @@ public class RegistrationHistoryReport {
     public boolean isWorkingStudent() {
 
         Predicate<? super StudentStatute> isValidWorkingStudent =
-                x -> getExecutionInterval().isAfterOrEquals(x.getBeginExecutionPeriod())
-                        && x.getEndExecutionPeriod().isAfterOrEquals(getExecutionInterval())
+                x -> getExecutionInterval().isAfterOrEquals(x.getBeginExecutionPeriod().getExecutionYear())
+                        && x.getEndExecutionPeriod().getExecutionYear().isAfterOrEquals(getExecutionInterval())
                         && x.getType().isWorkingStudentStatute();
 
         Optional<StudentStatute> workingStatute =
