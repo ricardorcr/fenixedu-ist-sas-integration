@@ -2,6 +2,8 @@ package org.fenixedu.ulisboa.integration.sas.dto;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang.StringUtils;
+
 public class ActiveStudentBean implements Serializable {
 
     String name;
@@ -26,7 +28,7 @@ public class ActiveStudentBean implements Serializable {
     Boolean isPayingSchool;
 
     public Boolean getIsPayingSchool() {
-        return isPayingSchool;
+        return isPayingSchool != null ? isPayingSchool : false;
     }
 
     public void setIsPayingSchool(Boolean isPayingSchool) {
@@ -34,7 +36,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getCurrentExecutionYear() {
-        return currentExecutionYear;
+        return currentExecutionYear != null ? currentExecutionYear : "";
     }
 
     public void setCurrentExecutionYear(String currentExecutionYear) {
@@ -42,7 +44,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getPreviousExecutionYear() {
-        return previousExecutionYear;
+        return previousExecutionYear != null ? previousExecutionYear : "";
     }
 
     public void setPreviousExecutionYear(String previousExecutionYear) {
@@ -50,7 +52,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getCurricularYear() {
-        return curricularYear;
+        return curricularYear != null ? currentExecutionYear : "";
     }
 
     public void setCurricularYear(String curricularYear) {
@@ -58,7 +60,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getRegime() {
-        return regime;
+        return regime != null ? regime : "";
     }
 
     public void setRegime(String regime) {
@@ -66,7 +68,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getName() {
-        return name;
+        return name != null ? name : "";
     }
 
     public void setName(String name) {
@@ -74,7 +76,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getGender() {
-        return gender;
+        return gender != null ? gender : "";
     }
 
     public void setGender(String gender) {
@@ -82,7 +84,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getMifare() {
-        return mifare;
+        return mifare != null ? mifare : "";
     }
 
     public void setMifare(String mifare) {
@@ -90,7 +92,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getIdentificationNumber() {
-        return identificationNumber;
+        return identificationNumber != null ? identificationNumber : "";
     }
 
     public void setIdentificationNumber(String identificationNumber) {
@@ -98,7 +100,8 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getFiscalIdentificationNumber() {
-        return fiscalIdentificationNumber;
+        //Students without a fiscal identification number should use the default 999999990
+        return !StringUtils.isEmpty(fiscalIdentificationNumber) ? fiscalIdentificationNumber : "999999990";
     }
 
     public void setFiscalIdentificationNumber(String fiscalIdentificationNumber) {
@@ -106,7 +109,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getDateOfBirth() {
-        return dateOfBirth;
+        return dateOfBirth != null ? dateOfBirth : dateOfBirth;
     }
 
     public void setDateOfBirth(String dateOfBirth) {
@@ -114,7 +117,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getStudentCode() {
-        return studentCode;
+        return studentCode != null ? studentCode : "";
     }
 
     public void setStudentCode(String studentCode) {
@@ -122,7 +125,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getDegreeCode() {
-        return degreeCode;
+        return degreeCode != null ? degreeCode : "";
     }
 
     public void setDegreeCode(String degreeCode) {
@@ -130,7 +133,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getEnroledECTTotal() {
-        return enroledECTTotal;
+        return enroledECTTotal != null ? enroledECTTotal : "";
     }
 
     public void setEnroledECTTotal(String enroledECTTotal) {
@@ -138,7 +141,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getEnroledECTTotalInPreviousYear() {
-        return enroledECTTotalInPreviousYear;
+        return enroledECTTotalInPreviousYear != null ? enroledECTTotalInPreviousYear : "";
     }
 
     public void setEnroledECTTotalInPreviousYear(String enroledECTTotalInPreviousYear) {
@@ -146,7 +149,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getApprovedECTTotalInPreviousYear() {
-        return approvedECTTotalInPreviousYear;
+        return approvedECTTotalInPreviousYear != null ? approvedECTTotalInPreviousYear : "";
     }
 
     public void setApprovedECTTotalInPreviousYear(String approvedECTTotalInPreviousYear) {
@@ -154,7 +157,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getOriginCountry() {
-        return originCountry;
+        return originCountry != null ? originCountry : "";
     }
 
     public void setOriginCountry(String originCountry) {
@@ -162,7 +165,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getDateOfRegistration() {
-        return dateOfRegistration;
+        return dateOfRegistration != null ? dateOfRegistration : "";
     }
 
     public void setDateOfRegistration(String dateOfRegistration) {
@@ -170,7 +173,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getOficialDegreeCode() {
-        return oficialDegreeCode;
+        return oficialDegreeCode != null ? oficialDegreeCode : "";
     }
 
     public void setOficialDegreeCode(String oficialDegreeCode) {
