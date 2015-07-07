@@ -12,6 +12,7 @@ import javax.jws.WebService;
 import org.fenixedu.academic.domain.Country;
 import org.fenixedu.academic.domain.ExecutionYear;
 import org.fenixedu.academic.domain.student.Registration;
+import org.fenixedu.academic.domain.student.RegistrationDataByExecutionYear;
 import org.fenixedu.academic.domain.student.Student;
 import org.fenixedu.bennu.core.domain.Bennu;
 import org.fenixedu.bennu.core.util.CoreConfiguration;
@@ -91,7 +92,8 @@ public class ActiveStudentsWebService extends BennuWebService {
                     ExecutionYear currentExecutionYear = sortedExecutionYears.get(sortedExecutionYears.size() - 1);
                     activeStudentBean.setCurrentExecutionYear(currentExecutionYear.getName());
                     activeStudentBean.setEnroledECTTotal(Double.toString(registration.getEnrolmentsEcts(currentExecutionYear)));
-                    activeStudentBean.setDateOfRegistration(getEnrolmentDate(registration, currentExecutionYear).toString());
+                    LocalDate enrolmentDate = getEnrolmentDate(registration, currentExecutionYear);
+                    activeStudentBean.setDateOfRegistration(enrolmentDate != null ? enrolmentDate.toString() : "");
                     activeStudentBean.setRegime(registration.getRegimeType(currentExecutionYear).toString());
                 }
 
@@ -116,8 +118,10 @@ public class ActiveStudentsWebService extends BennuWebService {
     }
 
     private LocalDate getEnrolmentDate(Registration firstRegistration, ExecutionYear currentExecutionYear) {
-        return firstRegistration.getRegistrationDataByExecutionYearSet().stream()
-                .filter(rdby -> rdby.getExecutionYear().equals(currentExecutionYear)).findFirst().get().getEnrolmentDate();
+        RegistrationDataByExecutionYear registrationDataByExecutionYear =
+                firstRegistration.getRegistrationDataByExecutionYearSet().stream()
+                        .filter(rdby -> rdby.getExecutionYear().equals(currentExecutionYear)).findFirst().orElse(null);
+        return registrationDataByExecutionYear != null ? registrationDataByExecutionYear.getEnrolmentDate() : null;
     }
 
     private Double getApprovedEcts(Registration firstRegistration, ExecutionYear previousExecutionYear) {
