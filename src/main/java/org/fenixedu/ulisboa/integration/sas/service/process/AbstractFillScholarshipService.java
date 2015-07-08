@@ -145,8 +145,10 @@ public class AbstractFillScholarshipService {
 
     private boolean isFirstTimeInCycle(Registration registration, ExecutionYear executionYear) {
 
-        Predicate<? super Registration> hasSameDegreeType = r -> r.getDegreeType() == registration.getDegreeType();
-        if (registration.getStudent().getRegistrationsSet().stream().filter(hasSameDegreeType).findAny().isPresent()) {
+        Predicate<Registration> hasSameDegreeType = r -> r.getDegreeType() == registration.getDegreeType();
+        Predicate<Registration> differentRegistration = r -> r != registration;
+        if (registration.getStudent().getRegistrationsSet().stream().filter(differentRegistration.and(hasSameDegreeType))
+                .findAny().isPresent()) {
             return false;
         }
 
