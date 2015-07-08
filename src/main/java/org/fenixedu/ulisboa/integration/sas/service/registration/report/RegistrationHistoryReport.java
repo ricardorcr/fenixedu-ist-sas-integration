@@ -234,10 +234,8 @@ public class RegistrationHistoryReport {
 
         Optional<StudentStatute> workingStatute =
                 getRegistration().getStudent().getStudentStatutesSet().stream().filter(isValidWorkingStudent).findAny();
-        workingStatute.isPresent();
 
-        return false;
-
+        return workingStatute.isPresent();
     }
 
     public Integer getEnrolmentYearsInFullRegimeCount() {
