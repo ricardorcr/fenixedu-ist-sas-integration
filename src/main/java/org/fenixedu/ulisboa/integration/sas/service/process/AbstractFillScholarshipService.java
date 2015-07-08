@@ -90,6 +90,7 @@ public class AbstractFillScholarshipService {
             try {
                 final Student student = findStudent(bean);
                 final Registration registration = findRegistration(student, bean, request);
+                validateStudentNumber(bean, registration);
                 checkPreconditions(bean, registration, request);
                 final RegistrationHistoryReport currentYearRegistrationReport =
                         new RegistrationHistoryReportService().generateReport(registration, request.getExecutionYear());
@@ -102,6 +103,12 @@ public class AbstractFillScholarshipService {
                 bean.setObservations(formatObservations(bean));
             }
 
+        }
+    }
+
+    private void validateStudentNumber(final AbstractScholarshipStudentBean bean, final Registration registration) {
+        if (registration.getNumber().intValue() != bean.getStudentNumber().intValue()) {
+            addWarning(bean, "O número de aluno indicado no ficheiro de entrada não corresponde ao número de aluno no sistema.");
         }
     }
 
@@ -458,8 +465,6 @@ public class AbstractFillScholarshipService {
         if (bean.getStudentNumber() == null) {
             addWarning(bean,
                     "Não foi possível verificar o número de aluno com o do sistema (o campo encontrava-se vazio no Excel, mas foi preenchido).");
-        } else if (person.getStudent().getStudentNumber().getNumber().intValue() != bean.getStudentNumber().intValue()) {
-            addWarning(bean, "O número de aluno indicado no ficheiro de entrada não corresponde ao número de aluno no sistema.");
         }
 
         return person.getStudent();
