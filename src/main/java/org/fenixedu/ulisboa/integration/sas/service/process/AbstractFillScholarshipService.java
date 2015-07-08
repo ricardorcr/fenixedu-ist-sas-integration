@@ -424,7 +424,9 @@ public class AbstractFillScholarshipService {
 
     private Degree findDegree(AbstractScholarshipStudentBean bean) {
 
-        final Degree degree = Degree.find(bean.getDegreeCode());
+        final Degree degree =
+                Bennu.getInstance().getDegreesSet().stream().filter(d -> bean.getDegreeCode().equals(d.getMinistryCode()))
+                        .findFirst().orElse(null);
         if (degree == null) {
             addError(bean, "Não foi possível encontrar o curso.");
             throw new FillScholarshipException();
