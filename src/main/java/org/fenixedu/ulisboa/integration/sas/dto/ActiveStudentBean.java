@@ -9,6 +9,8 @@ public class ActiveStudentBean implements Serializable {
     String name;
     String gender;
     String mifare;
+    String cardIssueDate;
+    String isTemporaryCard;
     String identificationNumber;
     String fiscalIdentificationNumber;
     String dateOfBirth;
@@ -178,6 +180,22 @@ public class ActiveStudentBean implements Serializable {
 
     public void setOficialDegreeCode(String oficialDegreeCode) {
         this.oficialDegreeCode = oficialDegreeCode;
+    }
+
+    public String getCardIssueDate() {
+        return cardIssueDate != null ? cardIssueDate : "";
+    }
+
+    public void setCardIssueDate(String cardIssueDate) {
+        this.cardIssueDate = cardIssueDate;
+    }
+
+    public String getIsTemporaryCard() {
+        return isTemporaryCard != null ? isTemporaryCard : "";
+    }
+
+    public void setIsTemporaryCard(String isTemporaryCard) {
+        this.isTemporaryCard = isTemporaryCard;
     }
 
 }

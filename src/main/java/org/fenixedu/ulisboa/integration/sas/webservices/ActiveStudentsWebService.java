@@ -3,6 +3,7 @@ package org.fenixedu.ulisboa.integration.sas.webservices;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -16,7 +17,6 @@ import org.fenixedu.academic.domain.student.RegistrationDataByExecutionYear;
 import org.fenixedu.academic.domain.student.Student;
 import org.fenixedu.academic.domain.treasury.TreasuryBridgeAPIFactory;
 import org.fenixedu.bennu.core.domain.Bennu;
-import org.fenixedu.bennu.core.util.CoreConfiguration;
 import org.fenixedu.ulisboa.integration.sas.domain.SchoolLevelTypeMapping;
 import org.fenixedu.ulisboa.integration.sas.dto.ActiveStudentBean;
 import org.fenixedu.ulisboa.specifications.domain.idcards.CgdCard;
@@ -65,10 +65,13 @@ public class ActiveStudentsWebService extends BennuWebService {
         activeStudentBean.setGender(student.getPerson().getGender().toLocalizedString(Locale.getDefault()));
         //information still not available
 
-        String mifareCode =
-                student.getPerson().getCgdCardsSet().stream().filter(CgdCard::isValid).map(CgdCard::getMifareCode).findAny()
-                        .orElse("");
-        activeStudentBean.setMifare(mifareCode);
+        Optional<CgdCard> card = student.getPerson().getCgdCardsSet().stream().filter(CgdCard::isValid).findAny();
+        if (card.isPresent()) {
+            String mifareCode = card.get().getMifareCode();
+            activeStudentBean.setMifare(mifareCode);
+            activeStudentBean.setIsTemporaryCard(Boolean.toString(card.get().getTemporary()));
+            activeStudentBean.setCardIssueDate(card.get().getIssueDate().toString());
+        }
 
         activeStudentBean.setIdentificationNumber(student.getPerson().getDocumentIdNumber());
         activeStudentBean.setFiscalIdentificationNumber(student.getPerson().getSocialSecurityNumber());
