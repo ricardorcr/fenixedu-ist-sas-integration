@@ -52,7 +52,7 @@ public class ActiveStudentBean implements Serializable {
     }
 
     public String getCurricularYear() {
-        return curricularYear != null ? currentExecutionYear : "";
+        return curricularYear != null ? curricularYear : "";
     }
 
     public void setCurricularYear(String curricularYear) {
