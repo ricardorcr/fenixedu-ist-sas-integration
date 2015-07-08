@@ -192,7 +192,7 @@ public class AbstractFillScholarshipService {
         final Registration registration = currentYearRegistrationReport.getRegistration();
 
         // replace the student number (provided by input file) by the system value
-        bean.setStudentNumber(registration.getStudent().getNumber());
+        bean.setStudentNumber(registration.getNumber());
 
         bean.setNumberOfMonthsExecutionYear(SocialServicesConfiguration.getInstance().getNumberOfMonthsOfAcademicYear());
         bean.setGratuityAmount(calculateGratuityAmount(registration, request));

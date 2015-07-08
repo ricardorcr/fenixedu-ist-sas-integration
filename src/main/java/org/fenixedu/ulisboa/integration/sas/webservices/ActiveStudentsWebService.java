@@ -74,12 +74,13 @@ public class ActiveStudentsWebService extends BennuWebService {
         activeStudentBean.setFiscalIdentificationNumber(student.getPerson().getSocialSecurityNumber());
         YearMonthDay dateOfBirthYearMonthDay = student.getPerson().getDateOfBirthYearMonthDay();
         activeStudentBean.setDateOfBirth(dateOfBirthYearMonthDay != null ? dateOfBirthYearMonthDay.toString() : "");
-        activeStudentBean.setStudentCode(student.getNumber().toString());
+
         Country country = student.getPerson().getCountry();
         activeStudentBean.setOriginCountry(country != null ? country.getLocalizedName().getContent(Locale.getDefault()) : "");
 
         if (!student.getActiveRegistrations().isEmpty()) {
             Registration registration = student.getActiveRegistrations().iterator().next();
+            activeStudentBean.setStudentCode(Integer.toString(registration.getNumber()));
             SchoolLevelTypeMapping schoolLevelTypeMapping = registration.getDegreeType().getSchoolLevelTypeMapping();
             if (schoolLevelTypeMapping == null) {
                 //Consider all courses without school level type mapping as the free course 
