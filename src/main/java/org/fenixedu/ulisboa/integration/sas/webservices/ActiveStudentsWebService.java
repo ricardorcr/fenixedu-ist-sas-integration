@@ -98,7 +98,7 @@ public class ActiveStudentsWebService extends BennuWebService {
             }
 
             if (sortedExecutionYears.size() > 1) {
-                ExecutionYear previousExecutionYear = sortedExecutionYears.get(sortedExecutionYears.size() - 1);
+                ExecutionYear previousExecutionYear = sortedExecutionYears.get(sortedExecutionYears.size() - 2);
                 activeStudentBean.setPreviousExecutionYear(previousExecutionYear.getName());
                 activeStudentBean.setEnroledECTTotalInPreviousYear(Double.toString(registration
                         .getEnrolmentsEcts(previousExecutionYear)));
