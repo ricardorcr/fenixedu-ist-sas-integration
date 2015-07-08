@@ -14,6 +14,7 @@ import org.fenixedu.academic.domain.ExecutionYear;
 import org.fenixedu.academic.domain.student.Registration;
 import org.fenixedu.academic.domain.student.RegistrationDataByExecutionYear;
 import org.fenixedu.academic.domain.student.Student;
+import org.fenixedu.academic.domain.treasury.TreasuryBridgeAPIFactory;
 import org.fenixedu.bennu.core.domain.Bennu;
 import org.fenixedu.bennu.core.util.CoreConfiguration;
 import org.fenixedu.ulisboa.integration.sas.domain.SchoolLevelTypeMapping;
@@ -95,6 +96,9 @@ public class ActiveStudentsWebService extends BennuWebService {
                 LocalDate enrolmentDate = getEnrolmentDate(registration, currentExecutionYear);
                 activeStudentBean.setDateOfRegistration(enrolmentDate != null ? enrolmentDate.toString() : "");
                 activeStudentBean.setRegime(registration.getRegimeType(currentExecutionYear).toString());
+                boolean toPayTuition =
+                        TreasuryBridgeAPIFactory.implementation().isToPayTuition(registration, currentExecutionYear);
+                activeStudentBean.setIsPayingSchool(toPayTuition);
             }
 
             if (sortedExecutionYears.size() > 1) {
@@ -110,8 +114,6 @@ public class ActiveStudentsWebService extends BennuWebService {
         } else {
             return null;
         }
-        //information will only be available during implementation of academic-treasury
-        activeStudentBean.setIsPayingSchool(true);
 
         return activeStudentBean;
     }
