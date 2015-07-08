@@ -152,7 +152,7 @@ public class AbstractFillScholarshipService {
             return false;
         }
 
-        return registration.getStartExecutionYear() == executionYear;
+        return registration.getFirstEnrolmentExecutionYear() == executionYear;
 
     }
 
