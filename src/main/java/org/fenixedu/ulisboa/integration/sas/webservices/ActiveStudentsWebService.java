@@ -86,28 +86,27 @@ public class ActiveStudentsWebService extends BennuWebService {
             } else {
                 activeStudentBean.setDegreeCode(registration.getDegree().getCode());
                 activeStudentBean.setOficialDegreeCode(registration.getDegree().getMinistryCode());
-
-                ArrayList<ExecutionYear> sortedExecutionYears = getSortedExecutionYears(registration);
-                if (sortedExecutionYears.size() > 0) {
-                    ExecutionYear currentExecutionYear = sortedExecutionYears.get(sortedExecutionYears.size() - 1);
-                    activeStudentBean.setCurrentExecutionYear(currentExecutionYear.getName());
-                    activeStudentBean.setEnroledECTTotal(Double.toString(registration.getEnrolmentsEcts(currentExecutionYear)));
-                    LocalDate enrolmentDate = getEnrolmentDate(registration, currentExecutionYear);
-                    activeStudentBean.setDateOfRegistration(enrolmentDate != null ? enrolmentDate.toString() : "");
-                    activeStudentBean.setRegime(registration.getRegimeType(currentExecutionYear).toString());
-                }
-
-                if (sortedExecutionYears.size() > 1) {
-                    ExecutionYear previousExecutionYear = sortedExecutionYears.get(sortedExecutionYears.size() - 1);
-                    activeStudentBean.setPreviousExecutionYear(previousExecutionYear.getName());
-                    activeStudentBean.setEnroledECTTotalInPreviousYear(Double.toString(registration
-                            .getEnrolmentsEcts(previousExecutionYear)));
-                    activeStudentBean.setApprovedECTTotalInPreviousYear(getApprovedEcts(registration, previousExecutionYear)
-                            .toString());
-                }
-
-                activeStudentBean.setCurricularYear(Integer.toString(registration.getCurricularYear()));
             }
+            ArrayList<ExecutionYear> sortedExecutionYears = getSortedExecutionYears(registration);
+            if (sortedExecutionYears.size() > 0) {
+                ExecutionYear currentExecutionYear = sortedExecutionYears.get(sortedExecutionYears.size() - 1);
+                activeStudentBean.setCurrentExecutionYear(currentExecutionYear.getName());
+                activeStudentBean.setEnroledECTTotal(Double.toString(registration.getEnrolmentsEcts(currentExecutionYear)));
+                LocalDate enrolmentDate = getEnrolmentDate(registration, currentExecutionYear);
+                activeStudentBean.setDateOfRegistration(enrolmentDate != null ? enrolmentDate.toString() : "");
+                activeStudentBean.setRegime(registration.getRegimeType(currentExecutionYear).toString());
+            }
+
+            if (sortedExecutionYears.size() > 1) {
+                ExecutionYear previousExecutionYear = sortedExecutionYears.get(sortedExecutionYears.size() - 1);
+                activeStudentBean.setPreviousExecutionYear(previousExecutionYear.getName());
+                activeStudentBean.setEnroledECTTotalInPreviousYear(Double.toString(registration
+                        .getEnrolmentsEcts(previousExecutionYear)));
+                activeStudentBean.setApprovedECTTotalInPreviousYear(getApprovedEcts(registration, previousExecutionYear)
+                        .toString());
+            }
+
+            activeStudentBean.setCurricularYear(Integer.toString(registration.getCurricularYear()));
         } else {
             return null;
         }
