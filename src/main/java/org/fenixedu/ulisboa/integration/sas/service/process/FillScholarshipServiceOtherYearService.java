@@ -156,7 +156,7 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
 
         Collection<ExecutionYear> enrolmentYearsIncludingPrecedentRegistrations =
                 precedentDegreeRegistrations.stream().flatMap(r -> r.getEnrolmentsExecutionYears().stream())
-                        .filter(ey -> ey.isBefore(executionYear)).collect(Collectors.toSet());
+                        .filter(ey -> ey.isBeforeOrEquals(executionYear)).collect(Collectors.toSet());
         return enrolmentYearsIncludingPrecedentRegistrations;
     }
 
