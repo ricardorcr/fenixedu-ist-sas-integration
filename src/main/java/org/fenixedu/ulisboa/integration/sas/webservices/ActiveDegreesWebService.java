@@ -37,10 +37,10 @@ public class ActiveDegreesWebService extends BennuWebService {
 
     //Consider moving this logic to a different place
     private Collection<ActiveDegreeBean> populateActiveDegrees() {
-        Predicate<? super Degree> hasSchoolLevel = degree -> degree.getDegreeType().getSchoolLevelTypeMapping() != null;
+        Predicate<Degree> hasSchoolLevel = degree -> degree.getDegreeType().getSchoolLevelTypeMapping() != null;
         List<ActiveDegreeBean> collect =
-                Bennu.getInstance().getDegreesSet().stream().filter(hasSchoolLevel).map(d -> populateActiveDegree(d))
-                        .collect(Collectors.toList());
+                Bennu.getInstance().getDegreesSet().stream().filter(hasSchoolLevel.and(Degree::isActive))
+                        .map(d -> populateActiveDegree(d)).collect(Collectors.toList());
         collect.add(getFreeCoursesPlaceholder());
 
         return collect;
