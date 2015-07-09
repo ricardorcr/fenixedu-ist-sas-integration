@@ -85,7 +85,7 @@ public class AbstractFillScholarshipService {
 
         for (final AbstractScholarshipStudentBean bean : scholarshipStudentBeans) {
             try {
-                final Student student = findStudent(bean);
+                final Student student = findStudent(bean, request);
                 final Registration registration = findRegistration(student, bean, request);
                 validateStudentNumber(bean, registration);
                 checkPreconditions(bean, registration, request);
@@ -448,9 +448,9 @@ public class AbstractFillScholarshipService {
 
     }
 
-    private Student findStudent(AbstractScholarshipStudentBean bean) {
+    private Student findStudent(AbstractScholarshipStudentBean bean, ScholarshipReportRequest request) {
 
-        final Person person = findPerson(bean);
+        final Person person = findPerson(bean, request);
         if (person == null) {
             addError(bean, "Não foi possível encontrar a pessoa.");
             throw new FillScholarshipException();
@@ -470,7 +470,7 @@ public class AbstractFillScholarshipService {
 
     }
 
-    protected Person findPerson(AbstractScholarshipStudentBean bean) {
+    protected Person findPerson(AbstractScholarshipStudentBean bean, ScholarshipReportRequest request) {
 
         final Collection<Person> withDocumentId = Person.readByDocumentIdNumber(bean.getDocumentNumber());
 
@@ -545,7 +545,8 @@ public class AbstractFillScholarshipService {
                 final Collection<Person> studentsWithSameName =
                         Person.readPersonsByNameAndRoleType(bean.getStudentName(), RoleType.STUDENT);
                 for (Person person : studentsWithSameName) {
-                    if (person.getStudent().getNumber().equals(bean.getStudentNumber())) {
+                    Registration findRegistration = findRegistration(person.getStudent(), bean, request);
+                    if (findRegistration.getNumber().equals(bean.getStudentNumber())) {
                         addWarning(
                                 bean,
                                 "Não foi possível encontrar o aluno usando o documento de identificação, no entanto o nome e número de aluno correspondem aos do sistema.");
