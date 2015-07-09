@@ -8,6 +8,7 @@ public class ActiveStudentBean implements Serializable {
 
     String name;
     String gender;
+    String cardNumber;
     String mifare;
     String cardIssueDate;
     String isTemporaryCard;
@@ -198,4 +199,11 @@ public class ActiveStudentBean implements Serializable {
         this.isTemporaryCard = isTemporaryCard;
     }
 
+    public String getCardNumber() {
+        return cardNumber != null ? cardNumber : "";
+    }
+
+    public void setCardNumber(String cardNumber) {
+        this.cardNumber = cardNumber;
+    }
 }

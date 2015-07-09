@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -19,9 +20,12 @@ import org.fenixedu.academic.domain.treasury.TreasuryBridgeAPIFactory;
 import org.fenixedu.bennu.core.domain.Bennu;
 import org.fenixedu.ulisboa.integration.sas.domain.SchoolLevelTypeMapping;
 import org.fenixedu.ulisboa.integration.sas.dto.ActiveStudentBean;
+import org.fenixedu.ulisboa.integration.sas.dto.StudentIssuedCardBean;
 import org.fenixedu.ulisboa.specifications.domain.idcards.CgdCard;
+import org.fenixedu.ulisboa.specifications.domain.idcards.CgdCard_Base;
 import org.joda.time.LocalDate;
 import org.joda.time.YearMonthDay;
+import org.springframework.cglib.core.Local;
 
 import com.qubit.solution.fenixedu.bennu.webservices.services.server.BennuWebService;
 
@@ -36,6 +40,11 @@ public class ActiveStudentsWebService extends BennuWebService {
     @WebMethod
     public Collection<ActiveStudentBean> getDailyRegistration() {
         return populateActiveStudents(calculateStudentsRegisteredInCurrentDay());
+    }
+
+    @WebMethod
+    public Collection<ActiveStudentBean> getCurrentDayIssuedCards() {
+        return populateActiveStudents(getStudentsWithCardsIssuedToday());
     }
 
     //Consider moving this logic to a different place
@@ -71,6 +80,8 @@ public class ActiveStudentsWebService extends BennuWebService {
             activeStudentBean.setMifare(mifareCode);
             activeStudentBean.setIsTemporaryCard(Boolean.toString(card.get().getTemporary()));
             activeStudentBean.setCardIssueDate(card.get().getIssueDate().toString());
+            //TODO add card number
+            //activeStudentBean.setCardNumber(cardNumber);
         }
 
         activeStudentBean.setIdentificationNumber(student.getPerson().getDocumentIdNumber());
@@ -140,4 +151,18 @@ public class ActiveStudentsWebService extends BennuWebService {
         arrayList.sort((e1, e2) -> e1.compareTo(e2));
         return arrayList;
     }
+
+    private Stream<Student> getStudentsWithCardsIssuedToday() {
+        // TODO we should not be comparing the card issued date, but the card modification date
+        // This is required since the card issued date may be some day before the card insertion in the system
+        return Bennu.getInstance().getCgdCardsSet().stream()
+                .filter(card -> isToday(card.getIssueDate()) && card.getPerson().getStudent() != null)
+                .map(card -> card.getPerson().getStudent());
+    }
+
+    public boolean isToday(LocalDate b) {
+        LocalDate now = LocalDate.now();
+        return now.year() == b.year() && now.monthOfYear() == b.monthOfYear() && now.dayOfMonth() == b.dayOfMonth();
+    }
+
 }
