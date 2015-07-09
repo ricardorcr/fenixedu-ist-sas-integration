@@ -18,8 +18,6 @@ import org.fenixedu.academic.domain.ExecutionYear;
 import org.fenixedu.academic.domain.Person;
 import org.fenixedu.academic.domain.SchoolLevelType;
 import org.fenixedu.academic.domain.StudentCurricularPlan;
-import org.fenixedu.academic.domain.accounting.Event;
-import org.fenixedu.academic.domain.accounting.events.gratuity.GratuityEventWithPaymentPlan;
 import org.fenixedu.academic.domain.candidacy.IngressionType;
 import org.fenixedu.academic.domain.degree.DegreeType;
 import org.fenixedu.academic.domain.degreeStructure.CycleType;
@@ -32,7 +30,6 @@ import org.fenixedu.academic.domain.student.registrationStates.RegistrationState
 import org.fenixedu.academic.domain.student.registrationStates.RegistrationStateType;
 import org.fenixedu.academic.domain.treasury.IAcademicTreasuryEvent;
 import org.fenixedu.academic.domain.treasury.TreasuryBridgeAPIFactory;
-import org.fenixedu.academic.util.Money;
 import org.fenixedu.bennu.core.domain.Bennu;
 import org.fenixedu.ulisboa.integration.sas.domain.ScholarshipReportRequest;
 import org.fenixedu.ulisboa.integration.sas.domain.SchoolLevelTypeMapping;
@@ -107,7 +104,7 @@ public class AbstractFillScholarshipService {
     }
 
     private void validateStudentNumber(final AbstractScholarshipStudentBean bean, final Registration registration) {
-        if (registration.getNumber().intValue() != bean.getStudentNumber().intValue()) {
+        if (bean.getStudentNumber() != null && registration.getNumber().intValue() != bean.getStudentNumber().intValue()) {
             addWarning(bean, "O número de aluno indicado no ficheiro de entrada não corresponde ao número de aluno no sistema.");
         }
     }
