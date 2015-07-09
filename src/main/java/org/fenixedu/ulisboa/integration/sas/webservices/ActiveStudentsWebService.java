@@ -20,7 +20,6 @@ import org.fenixedu.academic.domain.treasury.TreasuryBridgeAPIFactory;
 import org.fenixedu.bennu.core.domain.Bennu;
 import org.fenixedu.ulisboa.integration.sas.domain.SchoolLevelTypeMapping;
 import org.fenixedu.ulisboa.integration.sas.dto.ActiveStudentBean;
-import org.fenixedu.ulisboa.integration.sas.dto.StudentIssuedCardBean;
 import org.fenixedu.ulisboa.specifications.domain.idcards.CgdCard;
 import org.fenixedu.ulisboa.specifications.domain.idcards.CgdCard_Base;
 import org.joda.time.LocalDate;
