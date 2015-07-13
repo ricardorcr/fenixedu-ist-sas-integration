@@ -71,9 +71,8 @@ public class ActiveStudentsWebService extends BennuWebService {
             String mifareCode = card.get().getMifareCode();
             activeStudentBean.setMifare(mifareCode);
             activeStudentBean.setIsTemporaryCard(Boolean.toString(card.get().getTemporary()));
-            activeStudentBean.setCardIssueDate(card.get().getIssueDate().toString());
-            //TODO add card number
-            //activeStudentBean.setCardNumber(cardNumber);
+            activeStudentBean.setCardIssueDate(card.get().getLastMifareModication().toString());
+            activeStudentBean.setCardNumber(card.get().getCardNumber());
         }
 
         activeStudentBean.setIdentificationNumber(student.getPerson().getDocumentIdNumber());
@@ -145,10 +144,10 @@ public class ActiveStudentsWebService extends BennuWebService {
     }
 
     private Stream<Student> getStudentsWithCardsIssuedToday() {
-        // TODO we should not be comparing the card issued date, but the card modification date
+        // We are comparing the card modification date instead of the card issued date
         // This is required since the card issued date may be some day before the card insertion in the system
         return Bennu.getInstance().getCgdCardsSet().stream()
-                .filter(card -> isToday(card.getIssueDate()) && card.getPerson().getStudent() != null)
+                .filter(card -> isToday(card.getLastMifareModication()) && card.getPerson().getStudent() != null)
                 .map(card -> card.getPerson().getStudent());
     }
 
