@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,10 +20,8 @@ import org.fenixedu.bennu.core.domain.Bennu;
 import org.fenixedu.ulisboa.integration.sas.domain.SchoolLevelTypeMapping;
 import org.fenixedu.ulisboa.integration.sas.dto.ActiveStudentBean;
 import org.fenixedu.ulisboa.specifications.domain.idcards.CgdCard;
-import org.fenixedu.ulisboa.specifications.domain.idcards.CgdCard_Base;
 import org.joda.time.LocalDate;
 import org.joda.time.YearMonthDay;
-import org.springframework.cglib.core.Local;
 
 import com.qubit.solution.fenixedu.bennu.webservices.services.server.BennuWebService;
 
@@ -52,12 +49,8 @@ public class ActiveStudentsWebService extends BennuWebService {
     }
 
     private Stream<Student> calculateActiveStudents() {
-        return Bennu.getInstance().getStudentsSet().stream().filter(student -> isActive(student));
-    }
-
-    private boolean isActive(Student student) {
-        //TODO review the requirements since the concept of active student for SAS is not the same as in fenix
-        return !student.getActiveRegistrations().isEmpty();
+        return ExecutionYear.readCurrentExecutionYear().getExecutionPeriodsSet().stream()
+                .flatMap(ep -> ep.getEnrolmentsSet().stream()).map(enrollment -> enrollment.getStudent()).distinct();
     }
 
     private Stream<Student> calculateStudentsRegisteredInCurrentDay() {
