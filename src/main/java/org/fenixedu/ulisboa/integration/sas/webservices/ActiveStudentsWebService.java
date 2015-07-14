@@ -2,6 +2,7 @@ package org.fenixedu.ulisboa.integration.sas.webservices;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -11,6 +12,7 @@ import javax.jws.WebMethod;
 import javax.jws.WebService;
 
 import org.fenixedu.academic.domain.Country;
+import org.fenixedu.academic.domain.ExecutionSemester;
 import org.fenixedu.academic.domain.ExecutionYear;
 import org.fenixedu.academic.domain.student.Registration;
 import org.fenixedu.academic.domain.student.RegistrationDataByExecutionYear;
@@ -23,14 +25,82 @@ import org.fenixedu.ulisboa.specifications.domain.idcards.CgdCard;
 import org.joda.time.LocalDate;
 import org.joda.time.YearMonthDay;
 
+import pt.ist.fenixframework.CallableWithoutException;
+import pt.ist.fenixframework.FenixFramework;
+
 import com.qubit.solution.fenixedu.bennu.webservices.services.server.BennuWebService;
 
 @WebService
 public class ActiveStudentsWebService extends BennuWebService {
 
     @WebMethod
+    public Collection<ActiveStudentBean> getOldActiveStudents() {
+        Collection<ActiveStudentBean> populateActiveStudents = populateActiveStudents(calculateActiveStudents());
+        return populateActiveStudents;
+    }
+
+    @WebMethod
     public Collection<ActiveStudentBean> getActiveStudents() {
-        return populateActiveStudents(calculateActiveStudents());
+        List<Student> collect = calculateActiveStudents().collect(Collectors.toList());
+        List<StudentDataCollector> collectors = new ArrayList<StudentDataCollector>();
+        int size = collect.size();
+        int split = size / 12 + (size % 12);
+        for (int i = 0; i < 12; i++) {
+            int start = i * split;
+            int end = Math.min(start + split, size);
+            collectors.add(new StudentDataCollector(collect.subList(start, end)));
+        }
+
+        List<Thread> threadList = new ArrayList<Thread>();
+        for (StudentDataCollector collector : collectors) {
+            Thread t = new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    Collection<ActiveStudentBean> results = FenixFramework.getTransactionManager().withTransaction(collector);
+                    collector.setBeans(results);
+                }
+            });
+            threadList.add(t);
+            t.start();
+        }
+        List<ActiveStudentBean> beans = new ArrayList<ActiveStudentBean>();
+        for (Thread t : threadList) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        for (StudentDataCollector collector : collectors) {
+            beans.addAll(collector.getBeans());
+        }
+        return beans;
+    }
+
+    private static class StudentDataCollector implements CallableWithoutException<Collection<ActiveStudentBean>> {
+
+        private List<Student> students;
+        private Collection<ActiveStudentBean> beans;
+
+        public StudentDataCollector(List<Student> students) {
+            this.students = students;
+        }
+
+        public void setBeans(Collection<ActiveStudentBean> beans) {
+            this.beans = beans;
+        }
+
+        public Collection<ActiveStudentBean> getBeans() {
+            return beans;
+        }
+
+        @Override
+        public Collection<ActiveStudentBean> call() {
+            return populateActiveStudents(students.stream());
+        }
+
     }
 
     @WebMethod
@@ -44,20 +114,23 @@ public class ActiveStudentsWebService extends BennuWebService {
     }
 
     //Consider moving this logic to a different place
-    private Collection<ActiveStudentBean> populateActiveStudents(Stream<Student> students) {
-        return students.map(student -> populateActiveStudent(student)).collect(Collectors.toList());
+    public static Collection<ActiveStudentBean> populateActiveStudents(Stream<Student> students) {
+        List<ActiveStudentBean> collect = students.map(student -> populateActiveStudent(student)).collect(Collectors.toList());
+        return collect;
     }
 
     private Stream<Student> calculateActiveStudents() {
-        return ExecutionYear.readCurrentExecutionYear().getExecutionPeriodsSet().stream()
-                .flatMap(ep -> ep.getEnrolmentsSet().stream()).map(enrollment -> enrollment.getStudent()).distinct();
+        Stream<Student> stream =
+                ExecutionYear.readCurrentExecutionYear().getExecutionPeriodsSet().stream()
+                        .flatMap(ep -> ep.getEnrolmentsSet().stream()).map(enrollment -> enrollment.getStudent()).distinct();
+        return stream;
     }
 
     private Stream<Student> calculateStudentsRegisteredInCurrentDay() {
         return Bennu.getInstance().getDailyEnrolmentsSet().stream().map(enrolment -> enrolment.getStudent()).distinct();
     }
 
-    private ActiveStudentBean populateActiveStudent(Student student) {
+    private static ActiveStudentBean populateActiveStudent(Student student) {
         // TODO review which registration to use
         // Return the first Registration found
 
@@ -124,19 +197,19 @@ public class ActiveStudentsWebService extends BennuWebService {
         return activeStudentBean;
     }
 
-    private LocalDate getEnrolmentDate(Registration firstRegistration, ExecutionYear currentExecutionYear) {
+    private static LocalDate getEnrolmentDate(Registration firstRegistration, ExecutionYear currentExecutionYear) {
         RegistrationDataByExecutionYear registrationDataByExecutionYear =
                 firstRegistration.getRegistrationDataByExecutionYearSet().stream()
                         .filter(rdby -> rdby.getExecutionYear().equals(currentExecutionYear)).findFirst().orElse(null);
         return registrationDataByExecutionYear != null ? registrationDataByExecutionYear.getEnrolmentDate() : null;
     }
 
-    private Double getApprovedEcts(Registration firstRegistration, ExecutionYear previousExecutionYear) {
+    private static Double getApprovedEcts(Registration firstRegistration, ExecutionYear previousExecutionYear) {
         return firstRegistration.getEnrolments(previousExecutionYear).stream().filter(e -> e.isApproved())
                 .map(e -> e.getEctsCredits()).reduce((n1, n2) -> n1 + n2).orElse(0.0);
     }
 
-    private ArrayList<ExecutionYear> getSortedExecutionYears(Registration firstRegistration) {
+    private static ArrayList<ExecutionYear> getSortedExecutionYears(Registration firstRegistration) {
         ArrayList<ExecutionYear> arrayList = new ArrayList<>();
         arrayList.addAll(firstRegistration.getEnrolmentsExecutionYears());
         arrayList.sort((e1, e2) -> e1.compareTo(e2));
