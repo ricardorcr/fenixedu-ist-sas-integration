@@ -12,7 +12,6 @@ import javax.jws.WebMethod;
 import javax.jws.WebService;
 
 import org.fenixedu.academic.domain.Country;
-import org.fenixedu.academic.domain.ExecutionSemester;
 import org.fenixedu.academic.domain.ExecutionYear;
 import org.fenixedu.academic.domain.student.Registration;
 import org.fenixedu.academic.domain.student.RegistrationDataByExecutionYear;
@@ -34,14 +33,22 @@ import com.qubit.solution.fenixedu.bennu.webservices.services.server.BennuWebSer
 public class ActiveStudentsWebService extends BennuWebService {
 
     @WebMethod
-    public Collection<ActiveStudentBean> getOldActiveStudents() {
-        Collection<ActiveStudentBean> populateActiveStudents = populateActiveStudents(calculateActiveStudents());
-        return populateActiveStudents;
+    public Collection<ActiveStudentBean> getActiveStudents() {
+        return parallelPopulateActiveStudents(calculateActiveStudents());
+
     }
 
     @WebMethod
-    public Collection<ActiveStudentBean> getActiveStudents() {
-        List<Student> collect = calculateActiveStudents().collect(Collectors.toList());
+    public Collection<ActiveStudentBean> getDailyRegistration() {
+        return parallelPopulateActiveStudents(calculateStudentsRegisteredInCurrentDay());
+    }
+
+    @WebMethod
+    public Collection<ActiveStudentBean> getCurrentDayIssuedCards() {
+        return parallelPopulateActiveStudents(getStudentsWithCardsIssuedToday());
+    }
+
+    private List<ActiveStudentBean> parallelPopulateActiveStudents(List<Student> collect) {
         List<StudentDataCollector> collectors = new ArrayList<StudentDataCollector>();
         int size = collect.size();
         int split = size / 12 + (size % 12);
@@ -81,7 +88,7 @@ public class ActiveStudentsWebService extends BennuWebService {
 
     private static class StudentDataCollector implements CallableWithoutException<Collection<ActiveStudentBean>> {
 
-        private List<Student> students;
+        private final List<Student> students;
         private Collection<ActiveStudentBean> beans;
 
         public StudentDataCollector(List<Student> students) {
@@ -103,31 +110,21 @@ public class ActiveStudentsWebService extends BennuWebService {
 
     }
 
-    @WebMethod
-    public Collection<ActiveStudentBean> getDailyRegistration() {
-        return populateActiveStudents(calculateStudentsRegisteredInCurrentDay());
-    }
-
-    @WebMethod
-    public Collection<ActiveStudentBean> getCurrentDayIssuedCards() {
-        return populateActiveStudents(getStudentsWithCardsIssuedToday());
-    }
-
     //Consider moving this logic to a different place
     public static Collection<ActiveStudentBean> populateActiveStudents(Stream<Student> students) {
         List<ActiveStudentBean> collect = students.map(student -> populateActiveStudent(student)).collect(Collectors.toList());
         return collect;
     }
 
-    private Stream<Student> calculateActiveStudents() {
-        Stream<Student> stream =
-                ExecutionYear.readCurrentExecutionYear().getExecutionPeriodsSet().stream()
-                        .flatMap(ep -> ep.getEnrolmentsSet().stream()).map(enrollment -> enrollment.getStudent()).distinct();
-        return stream;
+    private List<Student> calculateActiveStudents() {
+        return ExecutionYear.readCurrentExecutionYear().getExecutionPeriodsSet().stream()
+                .flatMap(ep -> ep.getEnrolmentsSet().stream()).map(enrollment -> enrollment.getStudent()).distinct()
+                .collect(Collectors.toList());
     }
 
-    private Stream<Student> calculateStudentsRegisteredInCurrentDay() {
-        return Bennu.getInstance().getDailyEnrolmentsSet().stream().map(enrolment -> enrolment.getStudent()).distinct();
+    private List<Student> calculateStudentsRegisteredInCurrentDay() {
+        return Bennu.getInstance().getDailyEnrolmentsSet().stream().map(enrolment -> enrolment.getStudent()).distinct()
+                .collect(Collectors.toList());
     }
 
     private static ActiveStudentBean populateActiveStudent(Student student) {
@@ -216,12 +213,12 @@ public class ActiveStudentsWebService extends BennuWebService {
         return arrayList;
     }
 
-    private Stream<Student> getStudentsWithCardsIssuedToday() {
+    private List<Student> getStudentsWithCardsIssuedToday() {
         // We are comparing the card modification date instead of the card issued date
         // This is required since the card issued date may be some day before the card insertion in the system
         return Bennu.getInstance().getCgdCardsSet().stream()
                 .filter(card -> isToday(card.getLastMifareModication()) && card.getPerson().getStudent() != null)
-                .map(card -> card.getPerson().getStudent());
+                .map(card -> card.getPerson().getStudent()).collect(Collectors.toList());
     }
 
     public boolean isToday(LocalDate b) {
