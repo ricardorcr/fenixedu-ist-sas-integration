@@ -225,9 +225,10 @@ public class ActiveStudentsWebService extends BennuWebService {
                 .map(card -> card.getPerson().getStudent()).collect(Collectors.toList());
     }
 
-    public boolean isToday(LocalDate b) {
+    private boolean isToday(LocalDate b) {
         LocalDate now = LocalDate.now();
-        return now.year() == b.year() && now.monthOfYear() == b.monthOfYear() && now.dayOfMonth() == b.dayOfMonth();
+        return now.year().get() == b.year().get() && now.monthOfYear().get() == b.monthOfYear().get()
+                && now.dayOfMonth().get() == b.dayOfMonth().get();
     }
 
 }
