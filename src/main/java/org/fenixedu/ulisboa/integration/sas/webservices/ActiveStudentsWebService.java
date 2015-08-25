@@ -71,11 +71,11 @@ public class ActiveStudentsWebService extends BennuWebService {
                 }
 
                 while (run) {
-                    logger.info("Updating ActiveStudentsBean cache");
-                    if (cache == null || cache.get() == null || System.currentTimeMillis() - timestamp > 3600 * 4) {
+                    logger.info("Updating ActiveStudentsBean cache.");
+                    if (cache == null || cache.get() == null || ((System.currentTimeMillis() - timestamp) / 1000) > (3600 * 4)) {
                         FenixFramework.getTransactionManager().withTransaction(new ActiveStudentCalculator());
                     }
-                    logger.info("Updated ActiveStudentsBean cache");
+                    logger.info("Updated ActiveStudentsBean cache.");
                     try {
                         Thread.sleep(600 * 1000);
                     } catch (InterruptedException e) {
