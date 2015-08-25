@@ -1,5 +1,6 @@
 package org.fenixedu.ulisboa.integration.sas.webservices;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,18 +25,65 @@ import org.fenixedu.ulisboa.specifications.domain.idcards.CgdCard;
 import org.fenixedu.ulisboa.specifications.service.StudentActive;
 import org.joda.time.LocalDate;
 import org.joda.time.YearMonthDay;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import pt.ist.fenixframework.CallableWithoutException;
 import pt.ist.fenixframework.FenixFramework;
 
 import com.qubit.solution.fenixedu.bennu.webservices.services.server.BennuWebService;
 
+import edu.emory.mathcs.backport.java.util.Collections;
+
 @WebService
 public class ActiveStudentsWebService extends BennuWebService {
 
+    private static Logger logger = LoggerFactory.getLogger(ActiveStudentsWebService.class);
+    private static WeakReference<Collection<ActiveStudentBean>> cache = null;
+    private static long timestamp = 0;
+
+    private static class ActiveStudentCalculator implements CallableWithoutException<Object> {
+
+        @Override
+        public Object call() {
+            cache = new WeakReference<Collection<ActiveStudentBean>>(parallelPopulateActiveStudents(calculateActiveStudents()));
+            timestamp = System.currentTimeMillis();
+            return null;
+        }
+
+    }
+
+    static {
+        logger.info("Launching ActiveStudentBean cache updater!");
+        Thread thread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                boolean run = true;
+
+                while (run) {
+                    logger.info("Updating ActiveStudentsBean cache");
+                    if (cache == null || cache.get() == null || System.currentTimeMillis() - timestamp > 3600 * 4) {
+                        FenixFramework.getTransactionManager().withTransaction(new ActiveStudentCalculator());
+                    }
+                    logger.info("Updated ActiveStudentsBean cache");
+                    try {
+                        Thread.sleep(600 * 1000);
+                    } catch (InterruptedException e) {
+                        run = false;
+                    }
+
+                }
+            }
+        });
+        thread.setName("ActiveStudenBean cache updater");
+        thread.start();
+    }
+
     @WebMethod
     public Collection<ActiveStudentBean> getActiveStudents() {
-        return parallelPopulateActiveStudents(calculateActiveStudents());
+        Collection<ActiveStudentBean> collection = cache != null ? cache.get() : null;
+        return collection == null ? Collections.emptyList() : collection;
 
     }
 
@@ -49,7 +97,7 @@ public class ActiveStudentsWebService extends BennuWebService {
         return parallelPopulateActiveStudents(getStudentsWithCardsIssuedToday());
     }
 
-    private List<ActiveStudentBean> parallelPopulateActiveStudents(List<Student> collect) {
+    private static List<ActiveStudentBean> parallelPopulateActiveStudents(List<Student> collect) {
         List<StudentDataCollector> collectors = new ArrayList<StudentDataCollector>();
         int size = collect.size();
         int split = size / 20 + ((size % 20) > 0 ? 1 : 0);
@@ -121,7 +169,7 @@ public class ActiveStudentsWebService extends BennuWebService {
         return collect;
     }
 
-    private List<Student> calculateActiveStudents() {
+    private static List<Student> calculateActiveStudents() {
         return Bennu.getInstance().getStudentsSet().stream().filter(student -> StudentActive.isActiveStudent(student))
                 .collect(Collectors.toList());
     }
