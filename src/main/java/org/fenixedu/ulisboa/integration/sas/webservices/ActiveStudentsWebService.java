@@ -21,6 +21,7 @@ import org.fenixedu.bennu.core.domain.Bennu;
 import org.fenixedu.ulisboa.integration.sas.domain.SchoolLevelTypeMapping;
 import org.fenixedu.ulisboa.integration.sas.dto.ActiveStudentBean;
 import org.fenixedu.ulisboa.specifications.domain.idcards.CgdCard;
+import org.fenixedu.ulisboa.specifications.service.StudentActive;
 import org.joda.time.LocalDate;
 import org.joda.time.YearMonthDay;
 
@@ -121,8 +122,7 @@ public class ActiveStudentsWebService extends BennuWebService {
     }
 
     private List<Student> calculateActiveStudents() {
-        return ExecutionYear.readCurrentExecutionYear().getExecutionPeriodsSet().stream()
-                .flatMap(ep -> ep.getEnrolmentsSet().stream()).map(enrollment -> enrollment.getStudent()).distinct()
+        return Bennu.getInstance().getStudentsSet().stream().filter(student -> StudentActive.isActiveStudent(student))
                 .collect(Collectors.toList());
     }
 
