@@ -33,8 +33,6 @@ import pt.ist.fenixframework.FenixFramework;
 
 import com.qubit.solution.fenixedu.bennu.webservices.services.server.BennuWebService;
 
-import edu.emory.mathcs.backport.java.util.Collections;
-
 @WebService
 public class ActiveStudentsWebService extends BennuWebService {
 
@@ -60,6 +58,17 @@ public class ActiveStudentsWebService extends BennuWebService {
             @Override
             public void run() {
                 boolean run = true;
+                // Let's wait 90 seconds before we start loading the students cache.
+                // We're doing this because this thread is started at application startup,
+                // and we want to give all the resources to the startup and only afterwards
+                // we want to start this thread. Otherwise we can seriously delay the startup.
+                // 
+                // 25 August 2015 - Paulo Abrantes
+                try {
+                    Thread.sleep(90 * 1000);
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                }
 
                 while (run) {
                     logger.info("Updating ActiveStudentsBean cache");
@@ -83,7 +92,11 @@ public class ActiveStudentsWebService extends BennuWebService {
     @WebMethod
     public Collection<ActiveStudentBean> getActiveStudents() {
         Collection<ActiveStudentBean> collection = cache != null ? cache.get() : null;
-        return collection == null ? Collections.emptyList() : collection;
+        if (collection == null) {
+            throw new RuntimeException(
+                    "Cache was empty...most probably system is recalculating cache. Please invoke the webservice a few minutes later. If this message keeps showing up please contact the support");
+        }
+        return collection;
 
     }
 
