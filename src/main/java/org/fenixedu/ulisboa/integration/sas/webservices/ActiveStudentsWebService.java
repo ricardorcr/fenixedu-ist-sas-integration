@@ -51,10 +51,14 @@ public class ActiveStudentsWebService extends BennuWebService {
     private List<ActiveStudentBean> parallelPopulateActiveStudents(List<Student> collect) {
         List<StudentDataCollector> collectors = new ArrayList<StudentDataCollector>();
         int size = collect.size();
-        int split = size / 12 + (size % 12);
+        int split = size / 12 + ((size % 12) > 0 ? 1 : 0);
         for (int i = 0; i < 12; i++) {
             int start = i * split;
             int end = Math.min(start + split, size);
+            if (start >= end) {
+                // we don't need that many threads. let's break the cycle
+                break;
+            }
             collectors.add(new StudentDataCollector(collect.subList(start, end)));
         }
 
