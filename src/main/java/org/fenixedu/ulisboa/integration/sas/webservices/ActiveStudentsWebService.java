@@ -39,6 +39,7 @@ public class ActiveStudentsWebService extends BennuWebService {
     private static Logger logger = LoggerFactory.getLogger(ActiveStudentsWebService.class);
     private static WeakReference<Collection<ActiveStudentBean>> cache = null;
     private static long timestamp = 0;
+    private static final String THREAD_NAME = "ActiveStudenBean cache updater";
 
     private static class ActiveStudentCalculator implements CallableWithoutException<Object> {
 
@@ -52,6 +53,10 @@ public class ActiveStudentsWebService extends BennuWebService {
     }
 
     static {
+        launchCacheUpdaterThread();
+    }
+
+    private static void launchCacheUpdaterThread() {
         logger.info("Launching ActiveStudentBean cache updater!");
         Thread thread = new Thread(new Runnable() {
 
@@ -73,11 +78,15 @@ public class ActiveStudentsWebService extends BennuWebService {
                 while (run) {
                     logger.info("Updating ActiveStudentsBean cache.");
                     if (cache == null || cache.get() == null || ((System.currentTimeMillis() - timestamp) / 1000) > (3600 * 4)) {
-                        FenixFramework.getTransactionManager().withTransaction(new ActiveStudentCalculator());
+                        try {
+                            FenixFramework.getTransactionManager().withTransaction(new ActiveStudentCalculator());
+                        } catch (Throwable t) {
+                            t.printStackTrace();
+                        }
                     }
                     logger.info("Updated ActiveStudentsBean cache.");
                     try {
-                        Thread.sleep(600 * 1000);
+                        Thread.sleep(120 * 1000);
                     } catch (InterruptedException e) {
                         run = false;
                     }
@@ -85,14 +94,33 @@ public class ActiveStudentsWebService extends BennuWebService {
                 }
             }
         });
-        thread.setName("ActiveStudenBean cache updater");
+        thread.setName(THREAD_NAME);
         thread.start();
+    }
+
+    // It could happen that the thread was kill by the JVM for some reason but
+    // the system is still up. So basically what we'll do is if the cache is not
+    // present we'll check if the thread exists and if not we'll relaunch it.
+    //
+    // 28 August 2015 - Paulo Abrantes
+    private void launchThreadIfIsDead() {
+        boolean needsLaunch = true;
+        for (Thread thread : Thread.getAllStackTraces().keySet()) {
+            if (thread.getName().equals(THREAD_NAME)) {
+                needsLaunch = false;
+                break;
+            }
+        }
+        if (needsLaunch) {
+            launchCacheUpdaterThread();
+        }
     }
 
     @WebMethod
     public Collection<ActiveStudentBean> getActiveStudents() {
         Collection<ActiveStudentBean> collection = cache != null ? cache.get() : null;
         if (collection == null) {
+            launchThreadIfIsDead();
             throw new RuntimeException(
                     "Cache was empty...most probably system is recalculating cache. Please invoke the webservice a few minutes later. If this message keeps showing up please contact the support");
         }
