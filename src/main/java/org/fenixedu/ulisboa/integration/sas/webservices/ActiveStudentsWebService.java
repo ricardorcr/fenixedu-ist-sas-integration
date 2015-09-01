@@ -1,6 +1,6 @@
 package org.fenixedu.ulisboa.integration.sas.webservices;
 
-import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -37,7 +37,7 @@ import com.qubit.solution.fenixedu.bennu.webservices.services.server.BennuWebSer
 public class ActiveStudentsWebService extends BennuWebService {
 
     private static Logger logger = LoggerFactory.getLogger(ActiveStudentsWebService.class);
-    private static WeakReference<Collection<ActiveStudentBean>> cache = null;
+    private static SoftReference<Collection<ActiveStudentBean>> cache = null;
     private static long timestamp = 0;
     private static final String THREAD_NAME = "ActiveStudenBean cache updater";
 
@@ -45,7 +45,7 @@ public class ActiveStudentsWebService extends BennuWebService {
 
         @Override
         public Object call() {
-            cache = new WeakReference<Collection<ActiveStudentBean>>(parallelPopulateActiveStudents(calculateActiveStudents()));
+            cache = new SoftReference<Collection<ActiveStudentBean>>(parallelPopulateActiveStudents(calculateActiveStudents()));
             timestamp = System.currentTimeMillis();
             return null;
         }
