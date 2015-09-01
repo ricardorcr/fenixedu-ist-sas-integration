@@ -86,7 +86,7 @@ public class ActiveStudentsWebService extends BennuWebService {
                     }
                     logger.info("Updated ActiveStudentsBean cache.");
                     try {
-                        Thread.sleep(120 * 1000);
+                        Thread.sleep(300 * 1000);
                     } catch (InterruptedException e) {
                         run = false;
                     }
