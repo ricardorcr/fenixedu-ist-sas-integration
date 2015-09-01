@@ -21,6 +21,7 @@ import org.fenixedu.academic.domain.treasury.TreasuryBridgeAPIFactory;
 import org.fenixedu.bennu.core.domain.Bennu;
 import org.fenixedu.ulisboa.integration.sas.domain.SchoolLevelTypeMapping;
 import org.fenixedu.ulisboa.integration.sas.dto.ActiveStudentBean;
+import org.fenixedu.ulisboa.specifications.ULisboaConfiguration;
 import org.fenixedu.ulisboa.specifications.domain.idcards.CgdCard;
 import org.fenixedu.ulisboa.specifications.service.StudentActive;
 import org.joda.time.LocalDate;
@@ -62,7 +63,7 @@ public class ActiveStudentsWebService extends BennuWebService {
 
             @Override
             public void run() {
-                boolean run = true;
+                boolean run = ULisboaConfiguration.getConfiguration().getActiveStudentsServoceEnable();
                 // Let's wait 90 seconds before we start loading the students cache.
                 // We're doing this because this thread is started at application startup,
                 // and we want to give all the resources to the startup and only afterwards
@@ -141,8 +142,9 @@ public class ActiveStudentsWebService extends BennuWebService {
     private static List<ActiveStudentBean> parallelPopulateActiveStudents(List<Student> collect) {
         List<StudentDataCollector> collectors = new ArrayList<StudentDataCollector>();
         int size = collect.size();
-        int split = size / 20 + ((size % 20) > 0 ? 1 : 0);
-        for (int i = 0; i < 20; i++) {
+        int numberOfthreads = ULisboaConfiguration.getConfiguration().getActiveStudentsThreadNumber();
+        int split = size / numberOfthreads + ((size % numberOfthreads) > 0 ? 1 : 0);
+        for (int i = 0; i < numberOfthreads; i++) {
             int start = i * split;
             int end = Math.min(start + split, size);
             if (start >= end) {
