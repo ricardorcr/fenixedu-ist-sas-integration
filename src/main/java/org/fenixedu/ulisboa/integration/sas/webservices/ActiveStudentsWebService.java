@@ -1,5 +1,6 @@
 package org.fenixedu.ulisboa.integration.sas.webservices;
 
+import java.lang.annotation.Annotation;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,6 +30,7 @@ import org.joda.time.YearMonthDay;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import pt.ist.fenixframework.Atomic;
 import pt.ist.fenixframework.CallableWithoutException;
 import pt.ist.fenixframework.FenixFramework;
 
@@ -41,6 +43,25 @@ public class ActiveStudentsWebService extends BennuWebService {
     private static SoftReference<Collection<ActiveStudentBean>> cache = null;
     private static long timestamp = 0;
     private static final String THREAD_NAME = "ActiveStudenBean cache updater";
+
+    private static final Atomic atomic = new Atomic() {
+
+        @Override
+        public Class<? extends Annotation> annotationType() {
+            return Atomic.class;
+        }
+
+        @Override
+        public TxMode mode() {
+            return TxMode.READ;
+        }
+
+        @Override
+        public boolean flattenNested() {
+            return false;
+        }
+
+    };
 
     private static class ActiveStudentCalculator implements CallableWithoutException<Object> {
 
@@ -80,7 +101,7 @@ public class ActiveStudentsWebService extends BennuWebService {
                     logger.info("Updating ActiveStudentsBean cache.");
                     if (cache == null || cache.get() == null || ((System.currentTimeMillis() - timestamp) / 1000) > (3600 * 4)) {
                         try {
-                            FenixFramework.getTransactionManager().withTransaction(new ActiveStudentCalculator());
+                            FenixFramework.getTransactionManager().withTransaction(new ActiveStudentCalculator(), atomic);
                         } catch (Throwable t) {
                             t.printStackTrace();
                         }
@@ -160,8 +181,13 @@ public class ActiveStudentsWebService extends BennuWebService {
 
                 @Override
                 public void run() {
-                    Collection<ActiveStudentBean> results = FenixFramework.getTransactionManager().withTransaction(collector);
-                    collector.setBeans(results);
+                    try {
+                        Collection<ActiveStudentBean> results =
+                                FenixFramework.getTransactionManager().withTransaction(collector, atomic);
+                        collector.setBeans(results);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             });
             threadList.add(t);
