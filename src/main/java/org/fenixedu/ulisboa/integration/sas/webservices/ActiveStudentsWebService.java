@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -186,7 +187,8 @@ public class ActiveStudentsWebService extends BennuWebService {
                                 FenixFramework.getTransactionManager().withTransaction(collector, atomic);
                         collector.setBeans(results);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        logger.warn("Problems in one of the student cache calculation threads", e);
+                        collector.setBeans(Collections.EMPTY_LIST);
                     }
                 }
             });
@@ -252,67 +254,72 @@ public class ActiveStudentsWebService extends BennuWebService {
         // TODO review which registration to use
         // Return the first Registration found
 
-        ActiveStudentBean activeStudentBean = new ActiveStudentBean();
-        activeStudentBean.setName(student.getName());
-        activeStudentBean.setGender(student.getPerson().getGender().toLocalizedString(Locale.getDefault()));
-        //information still not available
+        try {
+            ActiveStudentBean activeStudentBean = new ActiveStudentBean();
+            activeStudentBean.setName(student.getName());
+            activeStudentBean.setGender(student.getPerson().getGender().toLocalizedString(Locale.getDefault()));
+            //information still not available
 
-        Optional<CgdCard> card = student.getPerson().getCgdCardsSet().stream().filter(CgdCard::isValid).findAny();
-        if (card.isPresent()) {
-            String mifareCode = card.get().getMifareCode();
-            activeStudentBean.setMifare(mifareCode);
-            activeStudentBean.setIsTemporaryCard(Boolean.toString(card.get().getTemporary()));
-            activeStudentBean.setCardIssueDate(card.get().getLastMifareModication().toString());
-            activeStudentBean.setCardNumber(card.get().getCardNumber());
-        }
+            Optional<CgdCard> card = student.getPerson().getCgdCardsSet().stream().filter(CgdCard::isValid).findAny();
+            if (card.isPresent()) {
+                String mifareCode = card.get().getMifareCode();
+                activeStudentBean.setMifare(mifareCode);
+                activeStudentBean.setIsTemporaryCard(Boolean.toString(card.get().getTemporary()));
+                activeStudentBean.setCardIssueDate(card.get().getLastMifareModication().toString());
+                activeStudentBean.setCardNumber(card.get().getCardNumber());
+            }
 
-        activeStudentBean.setIdentificationNumber(student.getPerson().getDocumentIdNumber());
-        activeStudentBean.setFiscalIdentificationNumber(student.getPerson().getSocialSecurityNumber());
-        YearMonthDay dateOfBirthYearMonthDay = student.getPerson().getDateOfBirthYearMonthDay();
-        activeStudentBean.setDateOfBirth(dateOfBirthYearMonthDay != null ? dateOfBirthYearMonthDay.toString() : "");
+            activeStudentBean.setIdentificationNumber(student.getPerson().getDocumentIdNumber());
+            activeStudentBean.setFiscalIdentificationNumber(student.getPerson().getSocialSecurityNumber());
+            YearMonthDay dateOfBirthYearMonthDay = student.getPerson().getDateOfBirthYearMonthDay();
+            activeStudentBean.setDateOfBirth(dateOfBirthYearMonthDay != null ? dateOfBirthYearMonthDay.toString() : "");
 
-        Country country = student.getPerson().getCountry();
-        activeStudentBean.setOriginCountry(country != null ? country.getLocalizedName().getContent(Locale.getDefault()) : "");
+            Country country = student.getPerson().getCountry();
+            activeStudentBean.setOriginCountry(country != null ? country.getLocalizedName().getContent(Locale.getDefault()) : "");
 
-        if (!student.getActiveRegistrations().isEmpty()) {
-            Registration registration = student.getActiveRegistrations().iterator().next();
-            activeStudentBean.setStudentCode(Integer.toString(registration.getNumber()));
-            SchoolLevelTypeMapping schoolLevelTypeMapping = registration.getDegreeType().getSchoolLevelTypeMapping();
-            if (schoolLevelTypeMapping == null) {
-                //Consider all courses without school level type mapping as the free course 
-                activeStudentBean.setDegreeCode(ActiveDegreesWebService.FREE_COURSES_CODE);
+            if (!student.getActiveRegistrations().isEmpty()) {
+                Registration registration = student.getActiveRegistrations().iterator().next();
+                activeStudentBean.setStudentCode(Integer.toString(registration.getNumber()));
+                SchoolLevelTypeMapping schoolLevelTypeMapping = registration.getDegreeType().getSchoolLevelTypeMapping();
+                if (schoolLevelTypeMapping == null) {
+                    //Consider all courses without school level type mapping as the free course 
+                    activeStudentBean.setDegreeCode(ActiveDegreesWebService.FREE_COURSES_CODE);
+                } else {
+                    activeStudentBean.setDegreeCode(registration.getDegree().getCode());
+                    activeStudentBean.setOficialDegreeCode(registration.getDegree().getMinistryCode());
+                }
+                ArrayList<ExecutionYear> sortedExecutionYears = getSortedExecutionYears(registration);
+                if (sortedExecutionYears.size() > 0) {
+                    ExecutionYear currentExecutionYear = sortedExecutionYears.get(sortedExecutionYears.size() - 1);
+                    activeStudentBean.setCurrentExecutionYear(currentExecutionYear.getName());
+                    activeStudentBean.setEnroledECTTotal(Double.toString(registration.getEnrolmentsEcts(currentExecutionYear)));
+                    LocalDate enrolmentDate = getEnrolmentDate(registration, currentExecutionYear);
+                    activeStudentBean.setDateOfRegistration(enrolmentDate != null ? enrolmentDate.toString() : "");
+                    activeStudentBean.setRegime(registration.getRegimeType(currentExecutionYear).toString());
+                    boolean toPayTuition =
+                            TreasuryBridgeAPIFactory.implementation().isToPayTuition(registration, currentExecutionYear);
+                    activeStudentBean.setIsPayingSchool(toPayTuition);
+                }
+
+                if (sortedExecutionYears.size() > 1) {
+                    ExecutionYear previousExecutionYear = sortedExecutionYears.get(sortedExecutionYears.size() - 2);
+                    activeStudentBean.setPreviousExecutionYear(previousExecutionYear.getName());
+                    activeStudentBean.setEnroledECTTotalInPreviousYear(Double.toString(registration
+                            .getEnrolmentsEcts(previousExecutionYear)));
+                    activeStudentBean.setApprovedECTTotalInPreviousYear(getApprovedEcts(registration, previousExecutionYear)
+                            .toString());
+                }
+
+                activeStudentBean.setCurricularYear(Integer.toString(registration.getCurricularYear()));
             } else {
-                activeStudentBean.setDegreeCode(registration.getDegree().getCode());
-                activeStudentBean.setOficialDegreeCode(registration.getDegree().getMinistryCode());
-            }
-            ArrayList<ExecutionYear> sortedExecutionYears = getSortedExecutionYears(registration);
-            if (sortedExecutionYears.size() > 0) {
-                ExecutionYear currentExecutionYear = sortedExecutionYears.get(sortedExecutionYears.size() - 1);
-                activeStudentBean.setCurrentExecutionYear(currentExecutionYear.getName());
-                activeStudentBean.setEnroledECTTotal(Double.toString(registration.getEnrolmentsEcts(currentExecutionYear)));
-                LocalDate enrolmentDate = getEnrolmentDate(registration, currentExecutionYear);
-                activeStudentBean.setDateOfRegistration(enrolmentDate != null ? enrolmentDate.toString() : "");
-                activeStudentBean.setRegime(registration.getRegimeType(currentExecutionYear).toString());
-                boolean toPayTuition =
-                        TreasuryBridgeAPIFactory.implementation().isToPayTuition(registration, currentExecutionYear);
-                activeStudentBean.setIsPayingSchool(toPayTuition);
+                return null;
             }
 
-            if (sortedExecutionYears.size() > 1) {
-                ExecutionYear previousExecutionYear = sortedExecutionYears.get(sortedExecutionYears.size() - 2);
-                activeStudentBean.setPreviousExecutionYear(previousExecutionYear.getName());
-                activeStudentBean.setEnroledECTTotalInPreviousYear(Double.toString(registration
-                        .getEnrolmentsEcts(previousExecutionYear)));
-                activeStudentBean.setApprovedECTTotalInPreviousYear(getApprovedEcts(registration, previousExecutionYear)
-                        .toString());
-            }
-
-            activeStudentBean.setCurricularYear(Integer.toString(registration.getCurricularYear()));
-        } else {
+            return activeStudentBean;
+        } catch (Throwable t) {
+            logger.error("Problems calculating active students cache for student: " + student.getNumber());
             return null;
         }
-
-        return activeStudentBean;
     }
 
     private static LocalDate getEnrolmentDate(Registration firstRegistration, ExecutionYear currentExecutionYear) {
