@@ -183,8 +183,8 @@ public class RegistrationHistoryReportService {
 
     private LocalDate getEnrolmentDate(Registration registration, ExecutionYear executionYear) {
         return registration.getRegistrationDataByExecutionYearSet().stream()
-                .filter(rdbey -> rdbey.getExecutionYear() == executionYear).map(rdbey -> rdbey.getEnrolmentDate()).findAny()
-                .orElse(null);
+                .filter(rdbey -> rdbey.getExecutionYear() == executionYear).map(rdbey -> rdbey.getEnrolmentDate())
+                .filter(x -> x != null).findAny().orElse(null);
     }
 
     //TODO: this should be moved to registration (including normal students predicate)
@@ -223,7 +223,7 @@ public class RegistrationHistoryReportService {
         }
 
         return registration.getRegistrationDataByExecutionYearSet().stream().filter(r -> r.getExecutionYear() == executionYear)
-                .map(rdbey -> rdbey.getEnrolmentDate()).findAny().orElse(null);
+                .map(rdbey -> rdbey.getEnrolmentDate()).filter(x -> x != null).findAny().orElse(null);
     }
 
     private Integer calculateEnrolmentYearsInFullRegimeCount(final Registration registration, final ExecutionYear executionYear) {
