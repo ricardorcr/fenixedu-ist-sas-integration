@@ -10,6 +10,7 @@ import org.fenixedu.bennu.io.domain.GenericFile;
 import org.fenixedu.ulisboa.integration.sas.domain.ScholarshipReportRequest;
 import org.fenixedu.ulisboa.integration.sas.service.transform.FirstYearScholarshipXlsTransformService;
 import org.fenixedu.ulisboa.integration.sas.service.transform.OtherYearScholarshipXlsTransformService;
+import org.fenixedu.ulisboa.integration.sas.util.SASDomainException;
 
 public class ScholarshipService {
 
@@ -55,6 +56,8 @@ public class ScholarshipService {
                 }
             }
 
+        } catch (SASDomainException e1) {
+            throw e1;
         } catch (IOException e1) {
             throw new DomainException(e1.getMessage());
         }

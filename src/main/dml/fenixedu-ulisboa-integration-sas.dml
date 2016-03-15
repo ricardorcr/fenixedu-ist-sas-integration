@@ -9,7 +9,7 @@ class SocialServicesConfiguration{
 class ScholarshipReportRequest {
 	DateTime whenRequested;
 	DateTime whenProcessed;
-
+	LocalizedString error;
 	protected boolean firstYearOfCycle;
 }
 

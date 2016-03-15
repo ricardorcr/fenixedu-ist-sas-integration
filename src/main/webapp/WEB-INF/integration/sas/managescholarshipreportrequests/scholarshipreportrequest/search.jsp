@@ -105,6 +105,7 @@ ${portal.toolkit()}
 <th><spring:message code="label.ScholarshipReportRequest.executionYear"/></th>
 <th><spring:message code="label.ScholarshipReportRequest.parameterFile"/></th>
 <th><spring:message code="label.ScholarshipReportRequest.resultFile"/></th>
+<th><spring:message code="label.ScholarshipReportRequest.error"/></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -137,6 +138,7 @@ ${portal.toolkit()}
 "firstyearofcycle" : "<c:if test="${searchResult.firstYearOfCycle}"><spring:message code="label.true" /></c:if><c:if test="${not searchResult.firstYearOfCycle}"><spring:message code="label.false" /></c:if>",
 "executionyear" : "<c:out value='${searchResult.executionYear.name}'/>",
 "parameterfile" : "<a href='${parameterFileDownloadLink}'>Download</a>",
+"error" : '${searchResult.error.content}',
 <c:choose>
 <c:when test="${empty searchResult.resultFile}">
 "resultfile" : ""},
@@ -164,7 +166,8 @@ ${portal.toolkit()}
 			{ data: 'firstyearofcycle' },
 			{ data: 'executionyear' },
 			{ data: 'parameterfile' },
-			{ data: 'resultfile' }
+			{ data: 'resultfile' },
+			{ data: 'error' }
 			
 		],
 		"data" : searchscholarshipreportrequestDataSet,

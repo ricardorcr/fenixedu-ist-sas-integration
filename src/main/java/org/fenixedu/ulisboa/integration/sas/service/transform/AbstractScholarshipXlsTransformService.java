@@ -20,6 +20,7 @@ import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.fenixedu.bennu.core.i18n.BundleUtil;
 import org.fenixedu.bennu.core.util.CoreConfiguration;
 import org.fenixedu.ulisboa.integration.sas.dto.AbstractScholarshipStudentBean;
+import org.fenixedu.ulisboa.integration.sas.util.SASDomainException;
 import org.joda.time.LocalDate;
 
 public abstract class AbstractScholarshipXlsTransformService {
@@ -45,7 +46,7 @@ public abstract class AbstractScholarshipXlsTransformService {
         if (checkExcelYear(sheet)) {
             readStudentLines(sheet);
         } else {
-            throw new IOException("O ficheiro submetido não corresponde à opção selecionada no campo \"Primeiro ano do ciclo\"");
+            throw new SASDomainException("error.fileTypeDoesNotMatchRequest.expected" + getClass().getSimpleName() );
         }
     }
 
@@ -177,7 +178,7 @@ public abstract class AbstractScholarshipXlsTransformService {
 
         if (date != null) {
             HSSFWorkbook workbook = row.getSheet().getWorkbook();
-            HSSFCreationHelper createHelper = (HSSFCreationHelper) workbook.getCreationHelper();
+            HSSFCreationHelper createHelper = workbook.getCreationHelper();
             CellStyle cellStyle = workbook.createCellStyle();
             cellStyle.setDataFormat(createHelper.createDataFormat().getFormat(dateFormat));
             cell.setCellValue(date);
