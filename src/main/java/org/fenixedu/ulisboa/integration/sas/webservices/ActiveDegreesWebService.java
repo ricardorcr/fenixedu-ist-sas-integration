@@ -117,7 +117,9 @@ public class ActiveDegreesWebService extends BennuWebService {
                     output += " ";
                 }
                 String part = split[i];
-                output += part.substring(0, 1).toUpperCase();
+                if (part.length() > 0) {
+                    output += part.substring(0, 1).toUpperCase();
+                }
 
                 if (part.length() > 1) {
                     output += part.substring(1, part.length()).toLowerCase();
