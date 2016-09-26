@@ -79,7 +79,8 @@ public class AbstractFillScholarshipService {
         return Bennu.getInstance().getDegreeTypeSet().stream().filter(predicate).findAny().orElse(null);
     }
 
-    public void fillAllInfo(Collection<AbstractScholarshipStudentBean> scholarshipStudentBeans, ScholarshipReportRequest request) {
+    public void fillAllInfo(Collection<AbstractScholarshipStudentBean> scholarshipStudentBeans,
+            ScholarshipReportRequest request) {
 
         messages.clear();
 
@@ -113,8 +114,8 @@ public class AbstractFillScholarshipService {
             ScholarshipReportRequest request) {
 
         if (registration.getEnrolments(request.getExecutionYear()).isEmpty()) {
-            addWarning(bean, "A matrícula não tem inscrições para o ano lectivo " + request.getExecutionYear().getQualifiedName()
-                    + ".");
+            addWarning(bean,
+                    "A matrícula não tem inscrições para o ano lectivo " + request.getExecutionYear().getQualifiedName() + ".");
         }
 
         final RegistrationState lastRegistrationState = registration.getLastRegistrationState(request.getExecutionYear());
@@ -129,10 +130,8 @@ public class AbstractFillScholarshipService {
         if (isEnroledInStandaloneOnly(registration, request.getExecutionYear())) {
 
             final IngressionType ingression = getRootRegistration(registration).getStudentCandidacy().getIngressionType();
-            addWarning(
-                    bean,
-                    "A matrícula apenas tem inscrições em isoladas (ingresso: "
-                            + (ingression != null ? ingression.getDescription() : "n/a") + ").");
+            addWarning(bean, "A matrícula apenas tem inscrições em isoladas (ingresso: "
+                    + (ingression != null ? ingression.getDescription() : "n/a") + ").");
         }
 
         if (request.getFirstYearOfCycle() && !isFirstTimeInCycle(registration, request.getExecutionYear())) {
@@ -332,7 +331,8 @@ public class AbstractFillScholarshipService {
         for (final Registration registration : student.getRegistrationsSet()) {
 
             //TODO: find cleaner solution
-            if (registration.getDegreeType().isIntegratedMasterDegree() && registration.hasConcludedCycle(CycleType.FIRST_CYCLE)) {
+            if (registration.getDegreeType().isIntegratedMasterDegree()
+                    && registration.hasConcludedCycle(CycleType.FIRST_CYCLE)) {
                 result.add(SchoolLevelType.DEGREE);
             }
 
@@ -374,9 +374,8 @@ public class AbstractFillScholarshipService {
 
     private BigDecimal calculateGratuityAmount(Registration registration, ScholarshipReportRequest request) {
 
-        IAcademicTreasuryEvent tuitionForRegistrationTreasuryEvent =
-                TreasuryBridgeAPIFactory.implementation().getTuitionForRegistrationTreasuryEvent(registration,
-                        request.getExecutionYear());
+        IAcademicTreasuryEvent tuitionForRegistrationTreasuryEvent = TreasuryBridgeAPIFactory.implementation()
+                .getTuitionForRegistrationTreasuryEvent(registration, request.getExecutionYear());
 
         if (tuitionForRegistrationTreasuryEvent == null) {
             return BigDecimal.ZERO;
@@ -402,7 +401,8 @@ public class AbstractFillScholarshipService {
         return result.toString();
     }
 
-    private Registration findRegistration(Student student, AbstractScholarshipStudentBean bean, ScholarshipReportRequest request) {
+    private Registration findRegistration(Student student, AbstractScholarshipStudentBean bean,
+            ScholarshipReportRequest request) {
 
         final Degree degree = findDegree(bean);
         final List<Registration> registrations = student.getRegistrationsFor(degree);
@@ -430,14 +430,22 @@ public class AbstractFillScholarshipService {
 
     private Degree findDegree(AbstractScholarshipStudentBean bean) {
 
-        final Degree degree =
-                Bennu.getInstance().getDegreesSet().stream().filter(d -> bean.getDegreeCode().equals(d.getMinistryCode()))
-                        .findFirst().orElse(null);
-        if (degree == null) {
+        Set<Degree> degrees = Bennu.getInstance().getDegreesSet().stream()
+                .filter(d -> bean.getDegreeCode().equals(d.getMinistryCode()) || bean.getDegreeCode().equals(d.getCode()))
+                .collect(Collectors.toSet());
+
+        if (degrees.isEmpty()) {
             addError(bean, "Não foi possível encontrar o curso.");
             throw new FillScholarshipException();
         }
 
+        if (degrees.size() > 1) {
+            addError(bean,
+                    "Cursos com códigos iguais: " + degrees.stream().map(i -> i.getName()).collect(Collectors.joining("; ")));
+            throw new FillScholarshipException();
+        }
+        
+        final Degree degree = degrees.stream().findAny().orElse(null);
         final DegreeType degreeType = DEGREE_TYPE_MAPPING.get(bean.getDegreeTypeName());
         if (degree.getDegreeType() != degreeType) {
             addError(bean, "O tipo de curso não coincide com o tipo de curso no sistema.");
@@ -445,7 +453,6 @@ public class AbstractFillScholarshipService {
         }
 
         return degree;
-
     }
 
     private Student findStudent(AbstractScholarshipStudentBean bean, ScholarshipReportRequest request) {
@@ -521,8 +528,7 @@ public class AbstractFillScholarshipService {
                 if (withPartialDocumentIdWithoutCCSerial.size() == 1) {
                     if (bean.getDocumentBINumber() == null
                             || !bean.getDocumentBINumber().equals(documentIdWithoutCitizenCardSerial)) {
-                        addWarning(
-                                bean,
+                        addWarning(bean,
                                 "O número de BI indicado na última coluna não corresponde ao número de documento (sem o dígito de controlo e sem o número de série) de identificação.");
                     }
                     return ensureDocumentIdType(withPartialDocumentIdWithoutCCSerial.iterator().next(), bean);
@@ -531,12 +537,10 @@ public class AbstractFillScholarshipService {
                 if (withPartialDocumentIdWithoutCCSerial.size() > 1) {
                     if (bean.getDocumentBINumber() == null
                             || !bean.getDocumentBINumber().equals(documentIdWithoutCitizenCardSerial)) {
-                        addWarning(
-                                bean,
+                        addWarning(bean,
                                 "O número de BI indicado na última coluna não corresponde ao número de documento (sem o dígito de controlo e sem o número de série) de identificação.");
                     }
-                    addWarning(
-                            bean,
+                    addWarning(bean,
                             "Encontradas múltiplas pessoas com o mesmo número de documento (sem o dígito de controlo e sem o número de série) de identificação.");
                     return findPersonByName(withPartialDocumentIdWithoutCCSerial, bean);
                 }
@@ -547,8 +551,7 @@ public class AbstractFillScholarshipService {
                 for (Person person : studentsWithSameName) {
                     Registration findRegistration = findRegistration(person.getStudent(), bean, request);
                     if (findRegistration.getNumber().equals(bean.getStudentNumber())) {
-                        addWarning(
-                                bean,
+                        addWarning(bean,
                                 "Não foi possível encontrar o aluno usando o documento de identificação, no entanto o nome e número de aluno correspondem aos do sistema.");
                         return person;
                     }
