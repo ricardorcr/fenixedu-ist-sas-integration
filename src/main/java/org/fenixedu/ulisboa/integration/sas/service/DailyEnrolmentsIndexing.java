@@ -52,7 +52,7 @@ public class DailyEnrolmentsIndexing {
             performDailyClean(dailyEnrolmentsSet.subList(start, end));
         }
         dailyEnrolmentsSet.forEach(dessociateWithBennu());
-        logger.info("Finisheddaily index clean for enrolments....");
+        logger.info("Finished daily index clean for enrolments....");
     }
 
     @Atomic
