@@ -11,6 +11,7 @@ import org.fenixedu.ulisboa.integration.sas.dto.ScholarshipStudentOtherYearBean;
 public class OtherYearScholarshipXlsTransformService extends AbstractScholarshipXlsTransformService {
 
     static Integer FIRST_VALUE_ROW = 2;
+    static Integer TEST_VALUE_ROW = null; //3 - 1;
 
     public static Integer COLUMN_INSTITUTION_CODE = 0;
     public static Integer COLUMN_INSTITUTION_NAME = 1;
@@ -66,6 +67,11 @@ public class OtherYearScholarshipXlsTransformService extends AbstractScholarship
         int i = FIRST_VALUE_ROW;
         HSSFRow row;
         while ((row = sheet.getRow(i)) != null && row.getCell(0) != null) {
+            if (TEST_VALUE_ROW != null && i != TEST_VALUE_ROW.intValue()) {
+                i++;
+                continue;
+            }
+
             ScholarshipStudentOtherYearBean bean = new ScholarshipStudentOtherYearBean();
             readSpreadsheetRow(row, bean);
             studentLines.add(bean);
@@ -143,7 +149,7 @@ public class OtherYearScholarshipXlsTransformService extends AbstractScholarship
         writeCellString(row, COLUMN_OWNER_MASTER,
                 bean.getRegistered() ? booleanToString(bean.getMasterQualificationOwner()) : null);
         writeCellString(row, COLUMN_OWNER_PHD, bean.getRegistered() ? booleanToString(bean.getPhdQualificationOwner()) : null);
-        writeCellString(row, COLUMN_OBSERVATIONS, bean.getRegistered() ? bean.getObservations() : null);
+        writeCellString(row, COLUMN_OBSERVATIONS, bean.getObservations());
         writeCellInteger(row, COLUMN_LAST_ENROLMENT_EXECUTION_YEAR, bean.getRegistered() ? bean.getLastEnrolmentYear() : null);
         writeCellLocalDate(row, COLUMN_LAST_ACADEMIC_ACT_DATE_LAST_YEAR,
                 bean.getRegistered() ? bean.getLastAcademicActDateLastYear() : null);
