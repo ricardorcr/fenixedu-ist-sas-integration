@@ -5,6 +5,7 @@ import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -62,6 +63,35 @@ public class ActiveStudentsWebService extends BennuWebService {
             return false;
         }
 
+    };
+
+    private static final Comparator COMPARATOR = new Comparator<Registration>() {
+
+        @Override
+        public int compare(Registration o1, Registration o2) {
+            SchoolLevelTypeMapping schoolLevelType = o1.getDegree().getDegreeType().getSchoolLevelTypeMapping();
+            SchoolLevelTypeMapping schoolLevelType2 = o2.getDegree().getDegreeType().getSchoolLevelTypeMapping();
+            return getOrderSchoolLevelType(schoolLevelType).compareTo(getOrderSchoolLevelType(schoolLevelType2));
+        }
+
+        private Integer getOrderSchoolLevelType(SchoolLevelTypeMapping schoolLevelType) {
+            if (schoolLevelType == null) {
+                return 5;
+            }
+
+            switch (schoolLevelType.getSchoolLevel()) {
+            case DEGREE:
+                return 1;
+            case MASTER_DEGREE:
+                return 2;
+            case MASTER_DEGREE_INTEGRATED:
+                return 3;
+            case DOCTORATE_DEGREE:
+                return 4;
+            default:
+                return 5;
+            }
+        }
     };
 
     private static class ActiveStudentCalculator implements CallableWithoutException<Object> {
@@ -277,8 +307,21 @@ public class ActiveStudentsWebService extends BennuWebService {
             Country country = student.getPerson().getCountry();
             activeStudentBean.setOriginCountry(country != null ? country.getLocalizedName().getContent(Locale.getDefault()) : "");
 
-            if (!student.getActiveRegistrations().isEmpty()) {
-                Registration registration = student.getActiveRegistrations().iterator().next();
+            List<Registration> activeRegistrations = student.getActiveRegistrations();
+            if (!activeRegistrations.isEmpty()) {
+                if (activeRegistrations.size() > 1) {
+                    // This ordering is needed because SAS need to get the most relevant course. 
+                    // Since they don't support receiving several courses associated we have to hack the order
+                    // away to send the correct one.
+                    //
+                    // For more information about this check email "RE: Faculdade de Letras - alunos com cursos Formação Livre" 
+                    // from 29 September 2016
+                    //
+                    // 30 September 2016 - Paulo Abrantes
+                    Collections.sort(activeRegistrations, COMPARATOR);
+                }
+
+                Registration registration = activeRegistrations.iterator().next();
                 activeStudentBean.setStudentCode(Integer.toString(registration.getNumber()));
                 SchoolLevelTypeMapping schoolLevelTypeMapping = registration.getDegreeType().getSchoolLevelTypeMapping();
                 if (schoolLevelTypeMapping == null) {
