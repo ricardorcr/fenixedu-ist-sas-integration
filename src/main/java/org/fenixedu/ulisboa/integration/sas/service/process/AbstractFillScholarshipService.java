@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -404,8 +403,12 @@ public class AbstractFillScholarshipService {
     private Registration findRegistration(Student student, AbstractScholarshipStudentBean bean,
             ScholarshipReportRequest request) {
 
-        final Degree degree = findDegree(bean);
-        final List<Registration> registrations = student.getRegistrationsFor(degree);
+        final Set<Degree> degrees = findDegree(bean);
+
+        final Set<Registration> registrations = Sets.newHashSet();
+        for (final Degree degree : degrees) {
+            registrations.addAll(student.getRegistrationsFor(degree));
+        }
 
         if (registrations.size() == 1) {
             return registrations.iterator().next();
@@ -428,10 +431,11 @@ public class AbstractFillScholarshipService {
 
     }
 
-    private Degree findDegree(AbstractScholarshipStudentBean bean) {
+    private Set<Degree> findDegree(AbstractScholarshipStudentBean bean) {
 
         Set<Degree> degrees = Bennu.getInstance().getDegreesSet().stream()
-                .filter(d -> bean.getDegreeCode().equals(d.getMinistryCode()) || bean.getDegreeCode().equals(d.getCode()))
+                .filter(d -> d.getDegreeType() == DEGREE_TYPE_MAPPING.get(bean.getDegreeTypeName())
+                        && (bean.getDegreeCode().equals(d.getMinistryCode()) || bean.getDegreeCode().equals(d.getCode())))
                 .collect(Collectors.toSet());
 
         if (degrees.isEmpty()) {
@@ -439,20 +443,7 @@ public class AbstractFillScholarshipService {
             throw new FillScholarshipException();
         }
 
-        if (degrees.size() > 1) {
-            addError(bean,
-                    "Cursos com códigos iguais: " + degrees.stream().map(i -> i.getName()).collect(Collectors.joining("; ")));
-            throw new FillScholarshipException();
-        }
-        
-        final Degree degree = degrees.stream().findAny().orElse(null);
-        final DegreeType degreeType = DEGREE_TYPE_MAPPING.get(bean.getDegreeTypeName());
-        if (degree.getDegreeType() != degreeType) {
-            addError(bean, "O tipo de curso não coincide com o tipo de curso no sistema.");
-            throw new FillScholarshipException();
-        }
-
-        return degree;
+        return degrees;
     }
 
     private Student findStudent(AbstractScholarshipStudentBean bean, ScholarshipReportRequest request) {

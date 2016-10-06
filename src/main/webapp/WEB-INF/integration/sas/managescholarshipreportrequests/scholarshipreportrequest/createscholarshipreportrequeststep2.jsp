@@ -86,7 +86,7 @@ ${portal.toolkit()}
 <div class="col-sm-2 control-label"><spring:message code="label.ScholarshipReportRequest.parameterFile"/></div> 
 
 <div class="col-sm-4">
-	 <input id="file" class="form-control" type="file" name="file" value='' accept=".xls,.xlsx"/>
+	 <input id="file" class="form-control" type="file" name="file" value='' accept=".xls"/>
 </div>
 </div>		
   </div>
