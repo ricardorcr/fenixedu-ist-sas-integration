@@ -380,8 +380,8 @@ public class AbstractFillScholarshipService {
             return BigDecimal.ZERO;
         }
 
-        return tuitionForRegistrationTreasuryEvent.getAmountToPay();
-
+        return tuitionForRegistrationTreasuryEvent.getAmountToPay()
+                .subtract(tuitionForRegistrationTreasuryEvent.getInterestsAmountToPay());
     }
 
     private String formatObservations(AbstractScholarshipStudentBean bean) {
