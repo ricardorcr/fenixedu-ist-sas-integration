@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.stream.Collectors;
 
 import org.fenixedu.academic.domain.ExecutionInterval;
 import org.fenixedu.academic.domain.ExecutionYear;
@@ -50,19 +49,18 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
                 calculateRegistrationReports(registration.getStudent(), registration.getDegreeType(), request.getExecutionYear());
 
         bean.setCycleNumberOfEnrolmentYears(calculateCycleNumberOfEnrolmentYears(cycleRegistrationReports, request));
-        bean.setCycleNumberOfEnrolmentsYearsInIntegralRegime(calculateCycleNumberOfEnrolmentYearsInIntegralRegime(
-                cycleRegistrationReports, request));
+        bean.setCycleNumberOfEnrolmentsYearsInIntegralRegime(
+                calculateCycleNumberOfEnrolmentYearsInIntegralRegime(cycleRegistrationReports, request));
 
         final RegistrationHistoryReport lastEnrolmentYearHistory = calculateCycleLastEnrolmentYearHistory(registration, request);
+        checkIfHasDismissals(bean, registration, lastEnrolmentYearHistory);
 
         if (lastEnrolmentYearHistory != null) {
-            checkIfHasDismissals(bean, lastEnrolmentYearHistory);
             bean.setLastEnrolmentYear(lastEnrolmentYearHistory.getExecutionInterval().getBeginDateYearMonthDay().getYear());
             bean.setLastEnrolmentCurricularYear(lastEnrolmentYearHistory.getCurricularYear());
 
-            final ExecutionYear executionYear =
-                    ExecutionInterval.assertExecutionIntervalType(ExecutionYear.class,
-                            lastEnrolmentYearHistory.getExecutionInterval());
+            final ExecutionYear executionYear = ExecutionInterval.assertExecutionIntervalType(ExecutionYear.class,
+                    lastEnrolmentYearHistory.getExecutionInterval());
 
             if (!isInMobility(registration, executionYear)) {
                 bean.setNumberOfEnrolledEctsLastYear(lastEnrolmentYearHistory.getTotalEnroledCredits());
@@ -90,8 +88,8 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
 
             if (studentCurricularPlan == null) {
                 throw new DomainException(
-                        "error.RegistrationHistoryReportService.unable.to.find.student.curricular.plan.for.year", registration
-                                .getStudent().getNumber().toString(), executionYear.getQualifiedName());
+                        "error.RegistrationHistoryReportService.unable.to.find.student.curricular.plan.for.year",
+                        registration.getStudent().getNumber().toString(), executionYear.getQualifiedName());
             }
 
             curriculum = studentCurricularPlan.getCurriculum(new DateTime(), executionYear.getNextExecutionYear());
@@ -102,8 +100,8 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
 
             if (studentCurricularPlan == null) {
                 throw new DomainException(
-                        "error.RegistrationHistoryReportService.unable.to.find.student.curricular.plan.for.year", registration
-                                .getStudent().getNumber().toString(), executionYear.getQualifiedName());
+                        "error.RegistrationHistoryReportService.unable.to.find.student.curricular.plan.for.year",
+                        registration.getStudent().getNumber().toString(), executionYear.getQualifiedName());
             }
 
             curriculum = studentCurricularPlan.getCurriculum(new DateTime(), null);
@@ -112,22 +110,38 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
         return curriculum.getSumEctsCredits();
     }
 
-    private void checkIfHasDismissals(ScholarshipStudentOtherYearBean bean, RegistrationHistoryReport lastEnrolmentYearHistory) {
+    private void checkIfHasDismissals(final ScholarshipStudentOtherYearBean bean, final Registration registration,
+            final RegistrationHistoryReport lastEnrolmentYearHistory) {
 
-        final ExecutionYear executionYear =
-                ExecutionInterval.assertExecutionIntervalType(ExecutionYear.class,
-                        lastEnrolmentYearHistory.getExecutionInterval());
+        // report any in the last enrolment year
+        if (lastEnrolmentYearHistory != null) {
+            final ExecutionYear year = ExecutionInterval.assertExecutionIntervalType(ExecutionYear.class,
+                    lastEnrolmentYearHistory.getExecutionInterval());
 
-        for (final StudentCurricularPlan studentCurricularPlan : lastEnrolmentYearHistory.getRegistration()
-                .getStudentCurricularPlansSet()) {
-            for (final Credits credits : studentCurricularPlan.getCreditsSet()) {
-                if (credits.getExecutionPeriod().getExecutionYear() == executionYear) {
-                    addWarning(bean, "A matrícula tem creditações no ano lectivo " + executionYear.getQualifiedName() + ".");
-                    return;
+            boolean anyInLastEnrolmentYear = false;
+            for (final StudentCurricularPlan iter : registration.getStudentCurricularPlansSet()) {
+                if (anyInLastEnrolmentYear) {
+                    break;
+                }
+
+                for (final Credits credits : iter.getCreditsSet()) {
+                    if (credits.getExecutionPeriod().getExecutionYear() == year) {
+                        addWarning(bean, "A matrícula tem creditações no ano lectivo " + year.getQualifiedName() + ".");
+                        anyInLastEnrolmentYear = true;
+                        break;
+                    }
                 }
             }
         }
 
+        // report an year only with dismissals
+        final Set<ExecutionYear> curriculumLineYears = getExecutionYears(registration,
+                r -> r.getApprovedCurriculumLines().stream().map(e -> e.getExecutionYear()), ey -> true);
+        final Set<ExecutionYear> enrolmentYears = getExecutionYears(registration,
+                r -> r.getApprovedEnrolments().stream().map(e -> e.getExecutionYear()), ey -> true);
+        for (final ExecutionYear iter : Sets.difference(curriculumLineYears, enrolmentYears)) {
+            addWarning(bean, "A matrícula tem APENAS creditações no ano lectivo " + iter.getQualifiedName() + ".");
+        }
     }
 
     private Integer calculateCycleNumberOfEnrolmentYearsInIntegralRegime(
@@ -138,7 +152,7 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
 
             Registration registration = registrationHistoryReport.getRegistration();
             Collection<ExecutionYear> enrolmentYearsIncludingPrecedentRegistrations =
-                    getEnrolmentYearsIncludingPrecedentDegrees(request.getExecutionYear(), registration);
+                    getEnrolmentYearsIncludingPrecedentDegrees(registration, request.getExecutionYear());
 
             for (ExecutionYear executionYear : enrolmentYearsIncludingPrecedentRegistrations) {
                 if (!registrationHistoryReport.getRegistration().isPartialRegime(executionYear))
@@ -148,16 +162,10 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
         return executionYears.size();
     }
 
-    private Collection<ExecutionYear> getEnrolmentYearsIncludingPrecedentDegrees(ExecutionYear executionYear,
-            Registration registration) {
+    static private Set<ExecutionYear> getEnrolmentYearsIncludingPrecedentDegrees(final Registration registration,
+            final ExecutionYear year) {
 
-        Collection<Registration> precedentDegreeRegistrations = getPrecedentDegreeRegistrations(registration);
-        precedentDegreeRegistrations.add(registration);
-
-        Collection<ExecutionYear> enrolmentYearsIncludingPrecedentRegistrations =
-                precedentDegreeRegistrations.stream().flatMap(r -> r.getEnrolmentsExecutionYears().stream())
-                        .filter(ey -> ey.isBeforeOrEquals(executionYear)).collect(Collectors.toSet());
-        return enrolmentYearsIncludingPrecedentRegistrations;
+        return getExecutionYears(registration, r -> r.getEnrolmentsExecutionYears().stream(), ey -> ey.isBeforeOrEquals(year));
     }
 
     private Integer calculateCycleNumberOfEnrolmentYears(Collection<RegistrationHistoryReport> cycleRegistrationReports,
@@ -165,8 +173,8 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
 
         Set<ExecutionYear> executionYears = Sets.newHashSet();
         for (RegistrationHistoryReport registrationHistoryReport : cycleRegistrationReports) {
-            executionYears.addAll(getEnrolmentYearsIncludingPrecedentDegrees(request.getExecutionYear(),
-                    registrationHistoryReport.getRegistration()));
+            executionYears.addAll(getEnrolmentYearsIncludingPrecedentDegrees(registrationHistoryReport.getRegistration(),
+                    request.getExecutionYear()));
         }
         return executionYears.size();
     }
@@ -192,9 +200,8 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
                 getRootRegistration(firstRegistration).getStartExecutionYear().getBeginDateYearMonthDay().getYear();
 
         if (bean.getCycleIngressionYear() != null && !bean.getCycleIngressionYear().equals(firstRegistrationYear)) {
-            String message =
-                    "o ano de ingresso no ciclo de estudos declarado no ficheiro (" + bean.getCycleIngressionYear()
-                            + ") não corresponde ao ano de início do sistema (" + firstRegistrationYear + ").";
+            String message = "o ano de ingresso no ciclo de estudos declarado no ficheiro (" + bean.getCycleIngressionYear()
+                    + ") não corresponde ao ano de início do sistema (" + firstRegistrationYear + ").";
             addWarning(bean, message);
         }
 
@@ -208,11 +215,11 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
 
         final Multimap<Registration, ExecutionYear> enrolmentYearsByRegistration = ArrayListMultimap.create();
 
-        for (final Registration registration : currentYearRegistration.getStudent().getRegistrationsByDegreeTypes(
-                currentYearRegistration.getDegreeType())) {
+        for (final Registration registration : currentYearRegistration.getStudent()
+                .getRegistrationsByDegreeTypes(currentYearRegistration.getDegreeType())) {
 
             final Collection<ExecutionYear> enrolmentYears =
-                    getEnrolmentYearsIncludingPrecedentDegrees(request.getExecutionYear(), registration);
+                    getEnrolmentYearsIncludingPrecedentDegrees(registration, request.getExecutionYear());
             enrolmentYearsByRegistration.putAll(registration, enrolmentYears);
             allEnrolmentYears.addAll(enrolmentYears);
         }
@@ -243,9 +250,8 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
         if (rootRegistration.getStartExecutionYear() == request.getExecutionYear()) {
             final IngressionType ingression = rootRegistration.getStudentCandidacy().getIngressionType();
 
-            return ingression != null
-                    && SocialServicesConfiguration.getInstance().getIngressionTypeWhichAreDegreeTransferSet()
-                            .contains(ingression);
+            return ingression != null && SocialServicesConfiguration.getInstance().getIngressionTypeWhichAreDegreeTransferSet()
+                    .contains(ingression);
 
         }
 
@@ -286,9 +292,8 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
         for (final Registration registration : allRegistrations) {
             final IngressionType ingression = registration.getStudentCandidacy().getIngressionType();
 
-            if (ingression != null
-                    && SocialServicesConfiguration.getInstance().getIngressionTypeWhichAreDegreeTransferSet()
-                            .contains(ingression)) {
+            if (ingression != null && SocialServicesConfiguration.getInstance().getIngressionTypeWhichAreDegreeTransferSet()
+                    .contains(ingression)) {
                 return true;
             }
         }

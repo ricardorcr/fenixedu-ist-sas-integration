@@ -60,9 +60,8 @@ public class RegistrationHistoryReportService {
         }
 
         private boolean belongsToDegreeCurricularPlanOfStudent(Enrolment enrolment) {
-            return enrolment.getDegreeModule() != null
-                    && enrolment.getDegreeModule().getParentDegreeCurricularPlan() == enrolment.getStudentCurricularPlan()
-                            .getDegreeCurricularPlan();
+            return enrolment.getDegreeModule() != null && enrolment.getDegreeModule().getParentDegreeCurricularPlan() == enrolment
+                    .getStudentCurricularPlan().getDegreeCurricularPlan();
         }
     }
 
@@ -126,24 +125,24 @@ public class RegistrationHistoryReportService {
         result.setStatuteTypes(registration.getStudent().getStatutesTypesValidOnAnyExecutionSemesterFor(executionYear));
 
         final ExecutionSemester firstExecutionPeriod = executionYear.getFirstExecutionPeriod();
-        result.setFirstSemesterEnrolmentsCount(calculateEnrolmentsCount(studentCurricularPlan, firstExecutionPeriod,
-                new NormalEnrolmentsPredicate()));
-        result.setFirstSemesterEnroledCredits(calculateEnroledCredits(studentCurricularPlan, firstExecutionPeriod,
-                new NormalEnrolmentsPredicate()));
-        result.setFirstSemesterApprovedCredits(calculateApprovedCredits(studentCurricularPlan, firstExecutionPeriod,
-                new NormalEnrolmentsPredicate()));
+        result.setFirstSemesterEnrolmentsCount(
+                calculateEnrolmentsCount(studentCurricularPlan, firstExecutionPeriod, new NormalEnrolmentsPredicate()));
+        result.setFirstSemesterEnroledCredits(
+                calculateEnroledCredits(studentCurricularPlan, firstExecutionPeriod, new NormalEnrolmentsPredicate()));
+        result.setFirstSemesterApprovedCredits(
+                calculateApprovedCredits(studentCurricularPlan, firstExecutionPeriod, new NormalEnrolmentsPredicate()));
 
         final ExecutionSemester lastExecutionPeriod = executionYear.getLastExecutionPeriod();
-        result.setSecondSemesterEnrolmentsCount(calculateEnrolmentsCount(studentCurricularPlan, lastExecutionPeriod,
-                new NormalEnrolmentsPredicate()));
-        result.setSecondSemesterEnroledCredits(calculateEnroledCredits(studentCurricularPlan, lastExecutionPeriod,
-                new NormalEnrolmentsPredicate()));
-        result.setSecondSemesterApprovedCredits(calculateApprovedCredits(studentCurricularPlan, lastExecutionPeriod,
-                new NormalEnrolmentsPredicate()));
+        result.setSecondSemesterEnrolmentsCount(
+                calculateEnrolmentsCount(studentCurricularPlan, lastExecutionPeriod, new NormalEnrolmentsPredicate()));
+        result.setSecondSemesterEnroledCredits(
+                calculateEnroledCredits(studentCurricularPlan, lastExecutionPeriod, new NormalEnrolmentsPredicate()));
+        result.setSecondSemesterApprovedCredits(
+                calculateApprovedCredits(studentCurricularPlan, lastExecutionPeriod, new NormalEnrolmentsPredicate()));
 
         //TODO: change logic when degrees are not organized in years and semesters
-        result.setTotalEnrolmentsCount(result.getFirstSemesterEnrolmentsCount().intValue()
-                + result.getSecondSemesterEnrolmentsCount().intValue());
+        result.setTotalEnrolmentsCount(
+                result.getFirstSemesterEnrolmentsCount().intValue() + result.getSecondSemesterEnrolmentsCount().intValue());
         result.setTotalEnroledCredits(result.getFirstSemesterEnroledCredits().add(result.getSecondSemesterEnroledCredits()));
         result.setTotalApprovedCredits(result.getFirstSemesterApprovedCredits().add(result.getSecondSemesterApprovedCredits()));
 
@@ -160,7 +159,7 @@ public class RegistrationHistoryReportService {
 
         // calling getPrecedentDegreeRegistrations here is poor design.
         // That method should be refactored to the registration
-        Set<ExecutionYear> collect = getEnrolmentYearsIncludingPrecedentRegistrations(registration, null);
+        Set<ExecutionYear> collect = getEnrolmentYearsIncludingPrecedentRegistrations(registration);
         int size = collect.size();
         result.setEnrolmentYearsCount(size);
         result.setEnrolmentYearsInFullRegimeCount(calculateEnrolmentYearsInFullRegimeCount(registration, executionYear));
@@ -169,16 +168,9 @@ public class RegistrationHistoryReportService {
         return result;
     }
 
-    private Set<ExecutionYear> getEnrolmentYearsIncludingPrecedentRegistrations(Registration registration,
-            ExecutionYear executionYear) {
+    static private Set<ExecutionYear> getEnrolmentYearsIncludingPrecedentRegistrations(final Registration input) {
 
-        Collection<Registration> precedentDegreeRegistrations =
-                AbstractFillScholarshipService.getPrecedentDegreeRegistrations(registration);
-        precedentDegreeRegistrations.add(registration);
-        Set<ExecutionYear> collect =
-                precedentDegreeRegistrations.stream().flatMap(r -> r.getEnrolmentsExecutionYears().stream())
-                        .collect(Collectors.toSet());
-        return collect;
+        return AbstractFillScholarshipService.getExecutionYears(input, r -> r.getEnrolmentsExecutionYears().stream(), ey -> true);
     }
 
     private LocalDate getEnrolmentDate(Registration registration, ExecutionYear executionYear) {
@@ -210,14 +202,12 @@ public class RegistrationHistoryReportService {
         final Collection<Enrolment> normalEnrolments =
                 getFilteredEnrolments(studentCurricularPlan, executionYear, new NormalEnrolmentsPredicate());
 
-        final Collection<Enrolment> normalEnrolmentsEvaluated =
-                normalEnrolments.stream().filter(enrolment -> enrolment.getFinalEnrolmentEvaluation() != null)
-                        .collect(Collectors.toSet());
+        final Collection<Enrolment> normalEnrolmentsEvaluated = normalEnrolments.stream()
+                .filter(enrolment -> enrolment.getFinalEnrolmentEvaluation() != null).collect(Collectors.toSet());
 
         if (!normalEnrolmentsEvaluated.isEmpty()) {
-            Comparator<? super Enrolment> compareByFinalEnrolmentEvalution =
-                    (x, y) -> EnrolmentEvaluation.COMPARATOR_BY_EXAM_DATE.compare(x.getFinalEnrolmentEvaluation(),
-                            y.getFinalEnrolmentEvaluation());
+            Comparator<? super Enrolment> compareByFinalEnrolmentEvalution = (x, y) -> EnrolmentEvaluation.COMPARATOR_BY_EXAM_DATE
+                    .compare(x.getFinalEnrolmentEvaluation(), y.getFinalEnrolmentEvaluation());
             return Collections.max(normalEnrolmentsEvaluated, compareByFinalEnrolmentEvalution).getFinalEnrolmentEvaluation()
                     .getExamDateYearMonthDay().toLocalDate();
         }
@@ -228,8 +218,7 @@ public class RegistrationHistoryReportService {
 
     private Integer calculateEnrolmentYearsInFullRegimeCount(final Registration registration, final ExecutionYear executionYear) {
 
-        final Collection<ExecutionYear> enrolmentYears =
-                getEnrolmentYearsIncludingPrecedentRegistrations(registration, executionYear);
+        final Collection<ExecutionYear> enrolmentYears = getEnrolmentYearsIncludingPrecedentRegistrations(registration);
         return enrolmentYears.stream().filter(enrolmentYear -> !registration.isPartialRegime(enrolmentYear))
                 .collect(Collectors.toSet()).size();
 

@@ -8,8 +8,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.fenixedu.academic.domain.Degree;
 import org.fenixedu.academic.domain.Enrolment;
@@ -384,20 +386,12 @@ public class AbstractFillScholarshipService {
                 .subtract(tuitionForRegistrationTreasuryEvent.getInterestsAmountToPay());
     }
 
-    private String formatObservations(AbstractScholarshipStudentBean bean) {
+    private String formatObservations(final AbstractScholarshipStudentBean bean) {
         if (!messages.containsKey(bean)) {
             return "";
         }
 
-        final StringBuilder result = new StringBuilder();
-        for (final String message : messages.get(bean)) {
-            if (!result.toString().isEmpty())
-                result.append("\n").append(message);
-            else
-                result.append(message);
-        }
-
-        return result.toString();
+        return messages.get(bean).stream().collect(Collectors.joining("\n"));
     }
 
     private Registration findRegistration(Student student, AbstractScholarshipStudentBean bean,
@@ -620,6 +614,15 @@ public class AbstractFillScholarshipService {
         }
 
         return result;
+    }
+
+    static public Set<ExecutionYear> getExecutionYears(final Registration registration,
+            final Function<Registration, Stream<ExecutionYear>> mapper, final Predicate<ExecutionYear> predicate) {
+
+        final Collection<Registration> toInspect = getPrecedentDegreeRegistrations(registration);
+        toInspect.add(registration);
+
+        return toInspect.stream().flatMap(mapper).filter(predicate).collect(Collectors.toSet());
     }
 
     // TODO Method should be inserted in Degree@academic
