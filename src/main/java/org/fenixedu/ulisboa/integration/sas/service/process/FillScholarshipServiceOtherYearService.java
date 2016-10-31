@@ -118,19 +118,18 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
             final ExecutionYear year = ExecutionInterval.assertExecutionIntervalType(ExecutionYear.class,
                     lastEnrolmentYearHistory.getExecutionInterval());
 
-            boolean anyInLastEnrolmentYear = false;
+            BigDecimal givenCredits = BigDecimal.ZERO;
             for (final StudentCurricularPlan iter : registration.getStudentCurricularPlansSet()) {
-                if (anyInLastEnrolmentYear) {
-                    break;
-                }
-
                 for (final Credits credits : iter.getCreditsSet()) {
                     if (credits.getExecutionPeriod().getExecutionYear() == year) {
-                        addWarning(bean, "A matrícula tem creditações no ano lectivo " + year.getQualifiedName() + ".");
-                        anyInLastEnrolmentYear = true;
-                        break;
+                        givenCredits = givenCredits.add(BigDecimal.valueOf(credits.getGivenCredits()));
                     }
                 }
+            }
+
+            if (!BigDecimal.ZERO.equals(givenCredits)) {
+                addWarning(bean, "A matrícula tem " + givenCredits.toPlainString() + " ECTS em creditações no ano lectivo "
+                        + year.getQualifiedName() + ".");
             }
         }
 
