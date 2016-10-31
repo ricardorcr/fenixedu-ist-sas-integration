@@ -42,6 +42,10 @@ public class RegistrationHistoryReportService {
         @Override
         public boolean test(Enrolment enrolment) {
 
+            if (enrolment.isAnnulled()) {
+                return false;
+            }
+            
             if (!belongsToDegreeCurricularPlanOfStudent(enrolment)) {
                 return false;
             }
