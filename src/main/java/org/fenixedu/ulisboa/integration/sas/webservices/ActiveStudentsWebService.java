@@ -26,17 +26,18 @@ import org.fenixedu.ulisboa.integration.sas.domain.SchoolLevelTypeMapping;
 import org.fenixedu.ulisboa.integration.sas.dto.ActiveStudentBean;
 import org.fenixedu.ulisboa.specifications.ULisboaConfiguration;
 import org.fenixedu.ulisboa.specifications.domain.idcards.CgdCard;
+import org.fenixedu.ulisboa.specifications.domain.services.RegistrationServices;
 import org.fenixedu.ulisboa.specifications.service.StudentActive;
 import org.joda.time.LocalDate;
 import org.joda.time.YearMonthDay;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.qubit.solution.fenixedu.bennu.webservices.services.server.BennuWebService;
+
 import pt.ist.fenixframework.Atomic;
 import pt.ist.fenixframework.CallableWithoutException;
 import pt.ist.fenixframework.FenixFramework;
-
-import com.qubit.solution.fenixedu.bennu.webservices.services.server.BennuWebService;
 
 @WebService
 public class ActiveStudentsWebService extends BennuWebService {
@@ -347,13 +348,14 @@ public class ActiveStudentsWebService extends BennuWebService {
                 if (sortedExecutionYears.size() > 1) {
                     ExecutionYear previousExecutionYear = sortedExecutionYears.get(sortedExecutionYears.size() - 2);
                     activeStudentBean.setPreviousExecutionYear(previousExecutionYear.getName());
-                    activeStudentBean.setEnroledECTTotalInPreviousYear(Double.toString(registration
-                            .getEnrolmentsEcts(previousExecutionYear)));
-                    activeStudentBean.setApprovedECTTotalInPreviousYear(getApprovedEcts(registration, previousExecutionYear)
-                            .toString());
+                    activeStudentBean.setEnroledECTTotalInPreviousYear(
+                            Double.toString(registration.getEnrolmentsEcts(previousExecutionYear)));
+                    activeStudentBean
+                            .setApprovedECTTotalInPreviousYear(getApprovedEcts(registration, previousExecutionYear).toString());
                 }
 
-                activeStudentBean.setCurricularYear(Integer.toString(registration.getCurricularYear()));
+                activeStudentBean.setCurricularYear(
+                        Integer.toString(RegistrationServices.getCurricularYear(registration, (ExecutionYear) null).getResult()));
             } else {
                 return null;
             }
