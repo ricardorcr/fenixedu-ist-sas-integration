@@ -308,7 +308,7 @@ public class ActiveStudentsWebService extends BennuWebService {
 
             Country country = student.getPerson().getCountry();
             activeStudentBean.setOriginCountry(country != null ? country.getLocalizedName().getContent(Locale.getDefault()) : "");
-            activeStudentBean.setOriginCountryCode(country != null ? country.getCode() : ""),
+            activeStudentBean.setOriginCountryCode(country != null ? country.getCode() : "");
             
             List<Registration> activeRegistrations = student.getActiveRegistrations();
             if (!activeRegistrations.isEmpty()) {
