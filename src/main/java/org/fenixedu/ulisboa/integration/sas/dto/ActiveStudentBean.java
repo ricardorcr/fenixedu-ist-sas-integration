@@ -13,6 +13,7 @@ public class ActiveStudentBean implements Serializable {
     String cardIssueDate;
     String isTemporaryCard;
     String identificationNumber;
+    String fiscalCountryCode;
     String fiscalIdentificationNumber;
     String dateOfBirth;
     String studentCode;
@@ -22,6 +23,7 @@ public class ActiveStudentBean implements Serializable {
     String enroledECTTotal;
     String enroledECTTotalInPreviousYear;
     String approvedECTTotalInPreviousYear;
+    String originCountryCode;
     String originCountry;
     String dateOfRegistration;
     String oficialDegreeCode;
@@ -102,6 +104,14 @@ public class ActiveStudentBean implements Serializable {
         this.identificationNumber = identificationNumber;
     }
 
+    public String getFiscalCountryCode() {
+        return fiscalCountryCode;
+    }
+    
+    public void setFiscalCountryCode(String fiscalCountryCode) {
+        this.fiscalCountryCode = fiscalCountryCode;
+    }
+
     public String getFiscalIdentificationNumber() {
         //Students without a fiscal identification number should use the default 999999990
         return !StringUtils.isEmpty(fiscalIdentificationNumber) ? fiscalIdentificationNumber : "999999990";
@@ -158,6 +168,14 @@ public class ActiveStudentBean implements Serializable {
     public void setApprovedECTTotalInPreviousYear(String approvedECTTotalInPreviousYear) {
         this.approvedECTTotalInPreviousYear = approvedECTTotalInPreviousYear;
     }
+    
+    public String getOriginCountryCode() {
+		return originCountryCode;
+	}
+    
+    public void setOriginCountryCode(String originCountryCode) {
+		this.originCountryCode = originCountryCode;
+	}
 
     public String getOriginCountry() {
         return originCountry != null ? originCountry : "";

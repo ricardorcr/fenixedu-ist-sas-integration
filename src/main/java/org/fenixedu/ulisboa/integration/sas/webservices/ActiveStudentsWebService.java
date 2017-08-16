@@ -301,13 +301,15 @@ public class ActiveStudentsWebService extends BennuWebService {
             }
 
             activeStudentBean.setIdentificationNumber(student.getPerson().getDocumentIdNumber());
+            activeStudentBean.setFiscalCountryCode(student.getPerson().getFiscalCountry() != null ? student.getPerson().getFiscalCountry().getCode() : "");
             activeStudentBean.setFiscalIdentificationNumber(student.getPerson().getSocialSecurityNumber());
             YearMonthDay dateOfBirthYearMonthDay = student.getPerson().getDateOfBirthYearMonthDay();
             activeStudentBean.setDateOfBirth(dateOfBirthYearMonthDay != null ? dateOfBirthYearMonthDay.toString() : "");
 
             Country country = student.getPerson().getCountry();
             activeStudentBean.setOriginCountry(country != null ? country.getLocalizedName().getContent(Locale.getDefault()) : "");
-
+            activeStudentBean.setOriginCountryCode(country != null ? country.getCode() : ""),
+            
             List<Registration> activeRegistrations = student.getActiveRegistrations();
             if (!activeRegistrations.isEmpty()) {
                 if (activeRegistrations.size() > 1) {
