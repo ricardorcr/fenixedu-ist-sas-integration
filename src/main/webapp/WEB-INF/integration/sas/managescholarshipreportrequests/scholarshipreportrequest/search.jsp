@@ -1,6 +1,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jstl/fmt" %>
+<%@taglib prefix="joda" uri="http://www.joda.org/joda/time/tags"%>
 <spring:url var="datatablesUrl" value="/javaScript/dataTables/media/js/jquery.dataTables.latest.min.js"/>
 <spring:url var="datatablesBootstrapJsUrl" value="/javaScript/dataTables/media/js/jquery.dataTables.bootstrap.min.js"></spring:url>
 <script type="text/javascript" src="${datatablesUrl}"></script>
@@ -133,8 +134,8 @@ ${portal.toolkit()}
 				<%-- Field access / formatting  here CHANGE_ME --%>
 				{
 				"DT_RowId" : '<c:out value='${searchResult.externalId}'/>',
-"whenrequested" : "<c:out value='${searchResult.whenRequested}'/>",
-"whenprocessed" : "<c:out value='${searchResult.whenProcessed}'/>",
+"whenrequested" : "<joda:format value='${searchResult.whenRequested}' pattern='yyyy-MM-dd HH:mm' />",
+"whenprocessed" : "<joda:format value='${searchResult.whenProcessed}' pattern='yyyy-MM-dd HH:mm' />",
 "firstyearofcycle" : "<c:if test="${searchResult.firstYearOfCycle}"><spring:message code="label.true" /></c:if><c:if test="${not searchResult.firstYearOfCycle}"><spring:message code="label.false" /></c:if>",
 "executionyear" : "<c:out value='${searchResult.executionYear.name}'/>",
 "parameterfile" : "<a href='${parameterFileDownloadLink}'>Download</a>",
@@ -171,6 +172,7 @@ ${portal.toolkit()}
 			
 		],
 		"data" : searchscholarshipreportrequestDataSet,
+		"order": [[ 0, "desc" ]],
 
 "dom": '<"col-sm-6"l><"col-sm-6"f>rtip',
 
