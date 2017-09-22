@@ -20,14 +20,11 @@ import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.fenixedu.bennu.core.i18n.BundleUtil;
 import org.fenixedu.bennu.core.util.CoreConfiguration;
 import org.fenixedu.ulisboa.integration.sas.dto.AbstractScholarshipStudentBean;
-import org.fenixedu.ulisboa.integration.sas.util.SASDomainException;
 import org.joda.time.LocalDate;
 
 public abstract class AbstractScholarshipXlsTransformService {
 
     private static final String SHEET_NAME = "Dados Academicos";
-
-    private static final Locale PT_LOCALE = Locale.forLanguageTag("pt-PT");
 
     private static final String DATE_FORMAT = "dd-MM-yyyy";
 
@@ -43,14 +40,11 @@ public abstract class AbstractScholarshipXlsTransformService {
         this.wb = new HSSFWorkbook(poifsFileSystem);
         HSSFSheet sheet = wb.getSheet(SHEET_NAME);
 
-        if (checkExcelYear(sheet)) {
-            readStudentLines(sheet);
-        } else {
-            throw new SASDomainException("error.fileTypeDoesNotMatchRequest.expected" + getClass().getSimpleName() );
-        }
+        checkExcelFormat(sheet);
+        readStudentLines(sheet);
     }
 
-    public abstract boolean checkExcelYear(HSSFSheet sheet) throws IOException;
+    public abstract boolean checkExcelFormat(HSSFSheet sheet) throws IOException;
 
     public abstract void readStudentLines(HSSFSheet sheet) throws IOException;
 
@@ -95,7 +89,8 @@ public abstract class AbstractScholarshipXlsTransformService {
         if (cell == null) {
             return StringUtils.EMPTY;
         }
-        return getValueFromColumn(row, i).trim();
+        final String valueFromColumn = getValueFromColumn(row, i);
+        return valueFromColumn == null ? StringUtils.EMPTY : valueFromColumn.trim();
     }
 
     private String getValueFromColumn(HSSFRow row, int i) {

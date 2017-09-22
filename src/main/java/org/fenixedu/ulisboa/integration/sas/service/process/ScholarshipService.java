@@ -7,11 +7,11 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.fenixedu.academic.domain.ExecutionYear;
 import org.fenixedu.academic.domain.exceptions.DomainException;
-import org.fenixedu.bennu.SasSpringConfiguration;
+import org.fenixedu.academic.domain.organizationalStructure.Unit;
 import org.fenixedu.bennu.core.domain.Bennu;
-import org.fenixedu.bennu.core.i18n.BundleUtil;
 import org.fenixedu.bennu.io.domain.GenericFile;
 import org.fenixedu.ulisboa.integration.sas.domain.ScholarshipReportRequest;
+import org.fenixedu.ulisboa.integration.sas.service.transform.AbstractScholarshipXlsTransformService;
 import org.fenixedu.ulisboa.integration.sas.service.transform.FirstYearScholarshipXlsTransformService;
 import org.fenixedu.ulisboa.integration.sas.service.transform.OtherYearScholarshipXlsTransformService;
 import org.fenixedu.ulisboa.integration.sas.util.SASDomainException;
@@ -19,38 +19,30 @@ import org.joda.time.DateTime;
 
 public class ScholarshipService {
 
-    static public GenericFile createScholarshipService(ScholarshipReportRequest request) {
+    static public GenericFile processScholarshipFile(final ScholarshipReportRequest request) {
 
         GenericFile file = request.getParameterFile();
 
-        POIFSFileSystem poifsFileSystem;
+        POIFSFileSystem poifs;
         try {
-            poifsFileSystem = new POIFSFileSystem(file.getStream());
+            poifs = new POIFSFileSystem(file.getStream());
 
-            HSSFWorkbook hssfWorkbook;
+            final AbstractScholarshipXlsTransformService xlsService =
+                    request.getFirstYearOfCycle() ? new FirstYearScholarshipXlsTransformService(
+                            poifs) : new OtherYearScholarshipXlsTransformService(poifs);
+            xlsService.readExcelFile();
 
-            if (request.getFirstYearOfCycle()) {
-                FirstYearScholarshipXlsTransformService spreadsheetScholarshipFirstYear =
-                        new FirstYearScholarshipXlsTransformService(poifsFileSystem);
-                spreadsheetScholarshipFirstYear.readExcelFile();
-                final FillScholarshipFirstYearService service = new FillScholarshipFirstYearService();
-                service.fillAllInfo(spreadsheetScholarshipFirstYear.getStudentLines(), request);
-                hssfWorkbook = spreadsheetScholarshipFirstYear.writeExcelFile(poifsFileSystem);
-            } else {
-                OtherYearScholarshipXlsTransformService spreadsheetScholarshipOtherYearService =
-                        new OtherYearScholarshipXlsTransformService(poifsFileSystem);
-                spreadsheetScholarshipOtherYearService.readExcelFile();
-                final FillScholarshipServiceOtherYearService service = new FillScholarshipServiceOtherYearService();
-                service.fillAllInfo(spreadsheetScholarshipOtherYearService.getStudentLines(), request);
-                hssfWorkbook = spreadsheetScholarshipOtherYearService.writeExcelFile(poifsFileSystem);
-            }
+            final AbstractFillScholarshipService service = request
+                    .getFirstYearOfCycle() ? new FillScholarshipFirstYearService() : new FillScholarshipServiceOtherYearService();
+            service.fillAllInfo(xlsService.getStudentLines(), request);
 
+            final HSSFWorkbook hssfWorkbook = xlsService.writeExcelFile(poifs);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
             try {
                 hssfWorkbook.write(outputStream);
                 final byte[] content = outputStream.toByteArray();
                 return request.createResultFile(getFilename(request), content);
+
             } catch (final Exception e) {
                 throw new DomainException("error.ScholarshipService.spreadsheet.generation.failed", e);
             } finally {
@@ -66,12 +58,10 @@ public class ScholarshipService {
         } catch (IOException e1) {
             throw new DomainException(e1.getMessage());
         }
-
     }
 
     static private String getFilename(final ScholarshipReportRequest request) {
-        final org.fenixedu.academic.domain.organizationalStructure.Unit institutionUnit =
-                Bennu.getInstance().getInstitutionUnit();
+        final Unit institutionUnit = Bennu.getInstance().getInstitutionUnit();
         final String acronym = institutionUnit.getAcronym();
 
         final String title = acronym + "_Bolsas_";

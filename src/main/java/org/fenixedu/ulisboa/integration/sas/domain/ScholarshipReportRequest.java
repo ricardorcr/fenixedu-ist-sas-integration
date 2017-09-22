@@ -3,7 +3,11 @@ package org.fenixedu.ulisboa.integration.sas.domain;
 import org.fenixedu.academic.domain.ExecutionYear;
 import org.fenixedu.academic.domain.exceptions.DomainException;
 import org.fenixedu.bennu.core.domain.Bennu;
+import org.fenixedu.commons.i18n.LocalizedString;
 import org.joda.time.DateTime;
+
+import pt.ist.fenixframework.Atomic;
+import pt.ist.fenixframework.Atomic.TxMode;
 
 public class ScholarshipReportRequest extends ScholarshipReportRequest_Base {
 
@@ -19,14 +23,26 @@ public class ScholarshipReportRequest extends ScholarshipReportRequest_Base {
         setWhenRequested(new DateTime());
     }
 
-    public ScholarshipReportFile createResultFile(String fileName, byte[] content) {
+    @Atomic(mode = TxMode.WRITE)
+    public ScholarshipReportFile createResultFile(final String fileName, final byte[] content) {
         if (getResultFile() != null) {
             throw new DomainException("label.error.scholarship.requestAlreadyHasResult");
         }
-        ScholarshipReportFile scholarshipReportFile = new ScholarshipReportFile(fileName, content);
-        setResultFile(scholarshipReportFile);
+
+        final ScholarshipReportFile result = new ScholarshipReportFile(fileName, content);
+        setResultFile(result);
+
+        setBennuForWhichIsPending(null);
         setWhenProcessed(new DateTime());
-        return scholarshipReportFile;
+        return result;
+    }
+
+    @Atomic(mode = TxMode.WRITE)
+    public void removeReport(final LocalizedString reason) {
+        setError(reason);
+
+        setBennuForWhichIsPending(null);
+        setWhenProcessed(new DateTime());
     }
 
     //Overrides to change visibility

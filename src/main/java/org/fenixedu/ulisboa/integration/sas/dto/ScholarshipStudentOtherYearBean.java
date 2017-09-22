@@ -4,9 +4,50 @@ import java.math.BigDecimal;
 
 import org.joda.time.LocalDate;
 
+@SuppressWarnings("serial")
 public class ScholarshipStudentOtherYearBean extends AbstractScholarshipStudentBean {
-    
-    static final long serialVersionUID = 1L;
+
+    public static Integer INSTITUTION_CODE = 0;
+    public static Integer INSTITUTION_NAME = 1;
+    public static Integer CANDIDACY_NUMBER = 2;
+    public static Integer STUDENT_NUMBER = 3;
+    public static Integer STUDENT_NAME = 4;
+    public static Integer DOCUMENT_TYPE_NAME = 5;
+    public static Integer DOCUMENT_NUMBER = 6;
+    public static Integer DEGREE_CODE = 7;
+    public static Integer DEGREE_NAME = 8;
+    public static Integer DEGREE_TYPE_NAME = 9;
+    public static Integer CODE = 10;
+    public static Integer COUNT_NUMBER_OF_DEGREE_CHANGES = 11;
+    public static Integer CURRENT_YEAR_HAS_MADE_DEGREE_CHANGE = 12;
+    public static Integer REGISTERED = 13;
+    public static Integer REGISTRATION_DATE = 14;
+    public static Integer REGIME = 15;
+    public static Integer CODE1 = 16;
+    public static Integer CYCLE_INGRESSION_YEAR = 17;
+    public static Integer CYCLE_NUMBER_OF_ENROLMENT_YEARS = 18;
+    public static Integer CYCLE_COUNT_NUMBER_OF_ENROLMENTS_YEARS_IN_INTEGRAL_REGIME = 19;
+    public static Integer NUMBER_OF_APPROVED_ECTS = 20;
+    public static Integer NUMBER_OF_YEARS_DEGREE = 21;
+    public static Integer LAST_ENROLMENT_CURRICULAR_YEAR = 22;
+    public static Integer NUMBER_OF_ENROLLED_ECTS_LAST_YEAR = 23;
+    public static Integer NUMBER_OF_APPROVED_ECTS_LAST_YEAR = 24;
+    public static Integer CURRICULAR_YEAR = 25;
+    public static Integer NUMBER_OF_ECTS = 26;
+    public static Integer GRATUITY = 27;
+    public static Integer NUMBER_OF_MONTHS_EXECUTION_YEAR = 28;
+    public static Integer FIRST_MONTH_EXECUTION_YEAR = 29;
+    public static Integer OWNER_CET = 30;
+    public static Integer OWNER_CSTP = 31;
+    public static Integer OWNER_BACHELOR = 32;
+    public static Integer OWNER_MASTER = 33;
+    public static Integer OWNER_PHD = 34;
+    public static Integer OWNER_OF_HIGHER_QUALIFICATION = 35;
+    public static Integer OBSERVATIONS = 36;
+    public static Integer LAST_ENROLMENT_EXECUTION_YEAR = 37;
+    public static Integer FISCAL_CODE = 38;
+    public static Integer LAST_ACADEMIC_ACT_DATE_LAST_YEAR = 39;
+    public static Integer DOCUMENT_BI = 40;
 
     private Integer numberOfDegreeChanges;
     private Boolean hasMadeDegreeChangeOnCurrentYear;
@@ -75,7 +116,7 @@ public class ScholarshipStudentOtherYearBean extends AbstractScholarshipStudentB
     public void setNumberOfApprovedEctsLastYear(BigDecimal numberOfApprovedEctsLastYear) {
         this.numberOfApprovedEctsLastYear = numberOfApprovedEctsLastYear;
     }
-    
+
     public BigDecimal getNumberOfApprovedEcts() {
         return numberOfApprovedEcts;
     }
