@@ -3,12 +3,10 @@ package org.fenixedu.ulisboa.integration.sas.dto;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
-import org.fenixedu.academic.util.Money;
 import org.joda.time.LocalDate;
 
+@SuppressWarnings("serial")
 public abstract class AbstractScholarshipStudentBean implements Serializable {
-
-    static final long serialVersionUID = 1L;
 
     private String institutionCode;
     private String institutionName;
