@@ -10,7 +10,6 @@ import java.util.SortedSet;
 import org.fenixedu.academic.domain.ExecutionInterval;
 import org.fenixedu.academic.domain.ExecutionYear;
 import org.fenixedu.academic.domain.StudentCurricularPlan;
-import org.fenixedu.academic.domain.candidacy.IngressionType;
 import org.fenixedu.academic.domain.degree.DegreeType;
 import org.fenixedu.academic.domain.exceptions.DomainException;
 import org.fenixedu.academic.domain.student.Registration;
@@ -196,7 +195,7 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
                         Registration.COMPARATOR_BY_START_DATE);
 
         Integer firstRegistrationYear =
-                getRootRegistration(firstRegistration).getStartExecutionYear().getBeginDateYearMonthDay().getYear();
+                firstRegistration.getStartExecutionYear().getBeginDateYearMonthDay().getYear();
 
         if (bean.getCycleIngressionYear() != null && !bean.getCycleIngressionYear().equals(firstRegistrationYear)) {
             String message = "o ano de ingresso no ciclo de estudos declarado no ficheiro (" + bean.getCycleIngressionYear()
@@ -240,63 +239,25 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
         }
 
         return null;
-
     }
 
     private Boolean calculateDegreeChangeForCurrentYear(Registration registration, ScholarshipReportRequest request) {
 
-        Registration rootRegistration = getRootRegistration(registration);
-        if (rootRegistration.getStartExecutionYear() == request.getExecutionYear()) {
-            final IngressionType ingression = rootRegistration.getStudentCandidacy().getIngressionType();
-
-            return ingression != null && SocialServicesConfiguration.getInstance().getIngressionTypeWhichAreDegreeTransferSet()
-                    .contains(ingression);
-
-        }
-
-        return false;
+        return registration.getStudent().getRegistrationsSet().stream()
+                .filter(r -> r.getStartExecutionYear() == request.getExecutionYear()).filter(r -> SocialServicesConfiguration
+                        .getInstance().getIngressionTypeWhichAreDegreeTransferSet().contains(r.getIngressionType()))
+                .findAny().isPresent();
     }
 
     private Integer calculateNumberOfDegreeChanges(Student student, ScholarshipReportRequest request) {
 
-        final SortedSet<Registration> allRegistrations =
-                Sets.newTreeSet(Collections.reverseOrder(Registration.COMPARATOR_BY_START_DATE));
-        allRegistrations.addAll(student.getRegistrationsSet());
-
-        final Set<Registration> headRegistrations = Sets.newHashSet();
-
-        while (!allRegistrations.isEmpty()) {
-            final Registration registration = allRegistrations.first();
-            headRegistrations.add(registration);
-            allRegistrations.remove(registration);
-            allRegistrations.removeAll(getPrecedentDegreeRegistrations(registration));
-        }
-
-        int degreeChangeCount = 0;
-        for (final Registration headRegistration : headRegistrations) {
-            if (hasAnyDegreeChange(headRegistration, request)) {
+        Integer degreeChangeCount = 0;
+        for (final Registration iter : student.getRegistrationsSet()) {
+            if (SocialServicesConfiguration.getInstance().getIngressionTypeWhichAreDegreeTransferSet()
+                    .contains(iter.getIngressionType())) {
                 degreeChangeCount++;
             }
         }
-
         return degreeChangeCount;
-
-    }
-
-    private boolean hasAnyDegreeChange(Registration headRegistration, ScholarshipReportRequest request) {
-        final Set<Registration> allRegistrations = Sets.newHashSet();
-        allRegistrations.add(headRegistration);
-        allRegistrations.addAll(getPrecedentDegreeRegistrations(headRegistration));
-
-        for (final Registration registration : allRegistrations) {
-            final IngressionType ingression = registration.getStudentCandidacy().getIngressionType();
-
-            if (ingression != null && SocialServicesConfiguration.getInstance().getIngressionTypeWhichAreDegreeTransferSet()
-                    .contains(ingression)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

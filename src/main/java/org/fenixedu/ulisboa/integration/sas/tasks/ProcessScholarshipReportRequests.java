@@ -1,5 +1,9 @@
 package org.fenixedu.ulisboa.integration.sas.tasks;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+
 import org.fenixedu.bennu.core.domain.Bennu;
 import org.fenixedu.bennu.scheduler.CronTask;
 import org.fenixedu.bennu.scheduler.annotation.Task;
@@ -15,21 +19,28 @@ public class ProcessScholarshipReportRequests extends CronTask {
     public void runTask() throws Exception {
 
         for (final ScholarshipReportRequest request : Bennu.getInstance().getPendingScholarshipReportRequestsSet()) {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
             try {
                 ScholarshipService.processScholarshipFile(request);
 
             } catch (final SASDomainException e) {
                 taskLog("Error processing scholarship request with oid " + request.getExternalId());
-                e.printStackTrace(getTaskLogWriter());
+                e.printStackTrace(getTaskLogWriter(bos));
                 request.removeReport(e.getLocalizedString());
 
             } catch (final Throwable t) {
                 taskLog("Error processing scholarship request with oid " + request.getExternalId());
-                t.printStackTrace(getTaskLogWriter());
+                t.printStackTrace(getTaskLogWriter(bos));
                 request.removeReport(null);
             }
+
+            taskLog(bos.toString(StandardCharsets.UTF_8.name()));
         }
+
     }
 
+    public PrintStream getTaskLogWriter(ByteArrayOutputStream bos) {
+        return new PrintStream(bos);
+    }
 }

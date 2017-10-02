@@ -1,13 +1,13 @@
 package org.fenixedu.ulisboa.integration.sas.service.process;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -19,6 +19,7 @@ import org.fenixedu.academic.domain.ExecutionYear;
 import org.fenixedu.academic.domain.Person;
 import org.fenixedu.academic.domain.SchoolLevelType;
 import org.fenixedu.academic.domain.StudentCurricularPlan;
+import org.fenixedu.academic.domain.accounting.events.gratuity.GratuityEvent;
 import org.fenixedu.academic.domain.candidacy.IngressionType;
 import org.fenixedu.academic.domain.degree.DegreeType;
 import org.fenixedu.academic.domain.degreeStructure.CycleType;
@@ -29,8 +30,7 @@ import org.fenixedu.academic.domain.student.RegistrationRegimeType;
 import org.fenixedu.academic.domain.student.Student;
 import org.fenixedu.academic.domain.student.registrationStates.RegistrationState;
 import org.fenixedu.academic.domain.student.registrationStates.RegistrationStateType;
-import org.fenixedu.academic.domain.treasury.IAcademicTreasuryEvent;
-import org.fenixedu.academic.domain.treasury.TreasuryBridgeAPIFactory;
+import org.fenixedu.academic.util.Money;
 import org.fenixedu.bennu.core.domain.Bennu;
 import org.fenixedu.ulisboa.integration.sas.domain.ScholarshipReportRequest;
 import org.fenixedu.ulisboa.integration.sas.domain.SchoolLevelTypeMapping;
@@ -130,7 +130,7 @@ public class AbstractFillScholarshipService {
 
         if (isEnroledInStandaloneOnly(registration, request.getExecutionYear())) {
 
-            final IngressionType ingression = getRootRegistration(registration).getStudentCandidacy().getIngressionType();
+            final IngressionType ingression = registration.getStudentCandidacy().getIngressionType();
             addWarning(bean, "A matrícula apenas tem inscrições em isoladas (ingresso: "
                     + (ingression != null ? ingression.getDescription() : "n/a") + ").");
         }
@@ -177,17 +177,6 @@ public class AbstractFillScholarshipService {
                 return true;
             }
         }
-
-        //TODO wth?
-//        for (final MobilityRegistrationInformation mobility : registration.getMobilityRegistrationInformationsSet()) {
-//            final ExecutionSemester begin = mobility.getBegin();
-//            final ExecutionSemester end = mobility.getEnd();
-//
-//            if (!executionYear.isBefore(begin.getExecutionYear())
-//                    && (end == null || !executionYear.isAfter(end.getExecutionYear()))) {
-//                return true;
-//            }
-//        }
 
         return false;
     }
@@ -374,16 +363,16 @@ public class AbstractFillScholarshipService {
     }
 
     private BigDecimal calculateGratuityAmount(Registration registration, ScholarshipReportRequest request) {
+        List<Money> debts = registration.getPerson().getAnnualEventsFor(request.getExecutionYear()).stream()
+                .filter(e -> e instanceof GratuityEvent)
+                .filter(e -> ((GratuityEvent) e).getDegree() == registration.getDegree()).map(e -> e.getAmountToPay())
+                .collect(Collectors.toList());
 
-        IAcademicTreasuryEvent tuitionForRegistrationTreasuryEvent = TreasuryBridgeAPIFactory.implementation()
-                .getTuitionForRegistrationTreasuryEvent(registration, request.getExecutionYear());
-
-        if (tuitionForRegistrationTreasuryEvent == null) {
-            return BigDecimal.ZERO;
+        Money totalDebt = Money.ZERO;
+        for (Money money : debts) {
+            totalDebt = totalDebt.add(money);
         }
-
-        return tuitionForRegistrationTreasuryEvent.getAmountToPay()
-                .subtract(tuitionForRegistrationTreasuryEvent.getInterestsAmountToPay());
+        return totalDebt.getAmount();
     }
 
     private String formatObservations(final AbstractScholarshipStudentBean bean) {
@@ -584,51 +573,16 @@ public class AbstractFillScholarshipService {
         messages.put(bean, "AVISO: " + message);
     }
 
-    // TODO Methods should be inserted into Registration@academic
-    protected Registration getRootRegistration(Registration registration) {
-        final SortedSet<Registration> registrations = Sets.newTreeSet(Registration.COMPARATOR_BY_START_DATE);
-        registrations.add(registration);
-        registrations.addAll(getPrecedentDegreeRegistrations(registration));
-
-        return registrations.first();
-    }
-
-    public static Collection<Registration> getPrecedentDegreeRegistrations(Registration registration) {
-
-        final Set<Degree> precedentDegreesUntilRoot = getPrecedentDegreesUntilRoot(registration.getDegree());
-        final Set<Registration> result = Sets.newHashSet();
-        for (final Registration iteratedRegistration : registration.getStudent().getRegistrationsSet()) {
-
-            if (registration == iteratedRegistration) {
-                continue;
-            }
-
-            if (iteratedRegistration.isCanceled() || iteratedRegistration.isConcluded() || iteratedRegistration.hasConcluded()) {
-                continue;
-            }
-
-            if (precedentDegreesUntilRoot.contains(iteratedRegistration.getDegree())) {
-                result.add(iteratedRegistration);
-            }
-
-        }
-
-        return result;
-    }
-
     static public Set<ExecutionYear> getExecutionYears(final Registration registration,
             final Function<Registration, Stream<ExecutionYear>> mapper, final Predicate<ExecutionYear> predicate) {
 
-        final Collection<Registration> toInspect = getPrecedentDegreeRegistrations(registration);
+        final Collection<Registration> toInspect = new ArrayList<Registration>();
+        if (registration.getSourceRegistrationForTransition() != null) {
+            toInspect.add(registration.getSourceRegistrationForTransition());
+        }
         toInspect.add(registration);
 
         return toInspect.stream().flatMap(mapper).filter(predicate).collect(Collectors.toSet());
-    }
-
-    // TODO Method should be inserted in Degree@academic
-    protected static Set<Degree> getPrecedentDegreesUntilRoot(Degree degree) {
-        //TODO IMPLEMENT
-        return Collections.EMPTY_SET;
     }
 
 }

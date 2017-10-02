@@ -66,6 +66,7 @@ ${portal.toolkit()}
 			</c:if>
 
 <form method="post" class="form-horizontal" enctype="multipart/form-data">
+${csrf.field()}
 <div class="panel panel-default">
   <div class="panel-body">
 <div class="form-group row">

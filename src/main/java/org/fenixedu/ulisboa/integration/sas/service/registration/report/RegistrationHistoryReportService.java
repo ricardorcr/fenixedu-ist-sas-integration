@@ -196,7 +196,6 @@ public class RegistrationHistoryReportService {
             } else {
                 conclusionBean = new RegistrationConclusionBean(registration);
             }
-
             if (conclusionBean.getConclusionYear() == executionYear) {
                 return conclusionBean.getConclusionDate().toLocalDate();
             }
