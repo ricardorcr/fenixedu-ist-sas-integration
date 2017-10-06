@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +18,7 @@ import org.fenixedu.academic.domain.ExecutionYear;
 import org.fenixedu.academic.domain.Person;
 import org.fenixedu.academic.domain.SchoolLevelType;
 import org.fenixedu.academic.domain.StudentCurricularPlan;
+import org.fenixedu.academic.domain.accounting.Event;
 import org.fenixedu.academic.domain.accounting.events.gratuity.GratuityEvent;
 import org.fenixedu.academic.domain.candidacy.IngressionType;
 import org.fenixedu.academic.domain.degree.DegreeType;
@@ -363,16 +363,10 @@ public class AbstractFillScholarshipService {
     }
 
     private BigDecimal calculateGratuityAmount(Registration registration, ScholarshipReportRequest request) {
-        List<Money> debts = registration.getPerson().getAnnualEventsFor(request.getExecutionYear()).stream()
+        return registration.getPerson().getAnnualEventsFor(request.getExecutionYear()).stream()
                 .filter(e -> e instanceof GratuityEvent)
-                .filter(e -> ((GratuityEvent) e).getDegree() == registration.getDegree()).map(e -> e.getAmountToPay())
-                .collect(Collectors.toList());
-
-        Money totalDebt = Money.ZERO;
-        for (Money money : debts) {
-            totalDebt = totalDebt.add(money);
-        }
-        return totalDebt.getAmount();
+                .filter(e -> ((GratuityEvent) e).getDegree() == registration.getDegree()).map(Event::getTotalAmountToPay)
+                .reduce(Money.ZERO, Money::add).getAmount();
     }
 
     private String formatObservations(final AbstractScholarshipStudentBean bean) {
