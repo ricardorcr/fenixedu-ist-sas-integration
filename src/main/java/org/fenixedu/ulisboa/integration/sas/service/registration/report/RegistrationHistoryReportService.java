@@ -26,7 +26,6 @@ import org.fenixedu.academic.domain.student.RegistrationRegimeType;
 import org.fenixedu.academic.domain.student.curriculum.Curriculum;
 import org.fenixedu.academic.domain.student.curriculum.ICurriculumEntry;
 import org.fenixedu.academic.domain.student.registrationStates.RegistrationState;
-import org.fenixedu.academic.domain.studentCurriculum.CurriculumGroup;
 import org.fenixedu.academic.domain.studentCurriculum.CycleCurriculumGroup;
 import org.fenixedu.academic.domain.studentCurriculum.Dismissal;
 import org.fenixedu.academic.dto.student.RegistrationConclusionBean;
@@ -45,28 +44,15 @@ public class RegistrationHistoryReportService {
             if (enrolment.isAnnulled()) {
                 return false;
             }
-            
-            if (!belongsToDegreeCurricularPlanOfStudent(enrolment)) {
-                return false;
-            }
 
-            if (enrolment.getCurriculumGroup().isNoCourseGroupCurriculumGroup()
-                    && !isInternalCreditsSourceGroup(enrolment.getCurriculumGroup())) {
-                return false;
-            }
+            //TODO: replace with RegistrationHistoryReportService from specifications
+            return (enrolment.getCurriculumGroup().isInternalCreditsSourceGroup()
+                    || !enrolment.getCurriculumGroup().isNoCourseGroupCurriculumGroup())
+                    && (enrolment.getParentCycleCurriculumGroup() == null
+                            || !enrolment.getParentCycleCurriculumGroup().isExternal());
 
-            return true;
         }
 
-        private boolean isInternalCreditsSourceGroup(CurriculumGroup curriculumGroup) {
-            //TODO implement
-            return false;
-        }
-
-        private boolean belongsToDegreeCurricularPlanOfStudent(Enrolment enrolment) {
-            return enrolment.getDegreeModule() != null && enrolment.getDegreeModule().getParentDegreeCurricularPlan() == enrolment
-                    .getStudentCurricularPlan().getDegreeCurricularPlan();
-        }
     }
 
     public Collection<RegistrationHistoryReport> generateReport(final ExecutionInterval startInterval,
