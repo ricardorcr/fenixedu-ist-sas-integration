@@ -50,7 +50,7 @@ public class OtherYearScholarshipXlsTransformService extends AbstractScholarship
         }
     }
 
-    private void readSpreadsheetRow(HSSFRow row, ScholarshipStudentOtherYearBean bean) {
+    protected void readSpreadsheetRow(HSSFRow row, ScholarshipStudentOtherYearBean bean) {
         bean.setInstitutionCode(getValueFromColumnMayBeNull(row, ScholarshipStudentOtherYearBean.INSTITUTION_CODE));
         bean.setInstitutionName(getValueFromColumnMayBeNull(row, ScholarshipStudentOtherYearBean.INSTITUTION_NAME));
         bean.setCandidacyNumber(getValueFromColumnMayBeNull(row, ScholarshipStudentOtherYearBean.CANDIDACY_NUMBER));
@@ -85,7 +85,7 @@ public class OtherYearScholarshipXlsTransformService extends AbstractScholarship
         }
     }
 
-    private void writeSpreadsheetRow(HSSFRow row, ScholarshipStudentOtherYearBean bean) {
+    protected void writeSpreadsheetRow(HSSFRow row, ScholarshipStudentOtherYearBean bean) {
         writeCellString(row, ScholarshipStudentOtherYearBean.INSTITUTION_CODE, bean.getInstitutionCode());
         writeCellInteger(row, ScholarshipStudentOtherYearBean.STUDENT_NUMBER, bean.getStudentNumber());
         writeCellString(row, ScholarshipStudentOtherYearBean.DEGREE_CODE, bean.getDegreeCode());

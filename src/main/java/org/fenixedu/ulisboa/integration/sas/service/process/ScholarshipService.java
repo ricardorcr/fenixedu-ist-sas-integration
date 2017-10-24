@@ -12,6 +12,7 @@ import org.fenixedu.bennu.core.domain.Bennu;
 import org.fenixedu.bennu.io.domain.GenericFile;
 import org.fenixedu.ulisboa.integration.sas.domain.ScholarshipReportRequest;
 import org.fenixedu.ulisboa.integration.sas.service.transform.AbstractScholarshipXlsTransformService;
+import org.fenixedu.ulisboa.integration.sas.service.transform.ContractualisationScholarshipXlsTransformService;
 import org.fenixedu.ulisboa.integration.sas.service.transform.FirstYearScholarshipXlsTransformService;
 import org.fenixedu.ulisboa.integration.sas.service.transform.OtherYearScholarshipXlsTransformService;
 import org.fenixedu.ulisboa.integration.sas.util.SASDomainException;
@@ -27,13 +28,24 @@ public class ScholarshipService {
         try {
             poifs = new POIFSFileSystem(file.getStream());
 
-            final AbstractScholarshipXlsTransformService xlsService =
-                    request.getFirstYearOfCycle() ? new FirstYearScholarshipXlsTransformService(
-                            poifs) : new OtherYearScholarshipXlsTransformService(poifs);
+            final AbstractScholarshipXlsTransformService xlsService;
+            if (request.getContractualisation()) {
+                xlsService = new ContractualisationScholarshipXlsTransformService(poifs);
+
+            } else {
+                xlsService = request.getFirstYearOfCycle() ? new FirstYearScholarshipXlsTransformService(
+                        poifs) : new OtherYearScholarshipXlsTransformService(poifs);
+            }
+
             xlsService.readExcelFile();
 
-            final AbstractFillScholarshipService service = request
-                    .getFirstYearOfCycle() ? new FillScholarshipFirstYearService() : new FillScholarshipServiceOtherYearService();
+            final AbstractFillScholarshipService service;
+            if (request.getContractualisation() || !request.getFirstYearOfCycle()) {
+                service = new FillScholarshipServiceOtherYearService();
+            } else {
+                service = new FillScholarshipFirstYearService();
+            }
+
             service.fillAllInfo(xlsService.getStudentLines(), request);
 
             final HSSFWorkbook hssfWorkbook = xlsService.writeExcelFile(poifs);

@@ -102,6 +102,7 @@ ${portal.toolkit()}
 					<%--!!!  Field names here --%>
 <th><spring:message code="label.ScholarshipReportRequest.whenRequested"/></th>
 <th><spring:message code="label.ScholarshipReportRequest.whenProcessed"/></th>
+<th><spring:message code="label.ScholarshipReportRequest.contractualisation"/></th>
 <th><spring:message code="label.ScholarshipReportRequest.firstYearOfCycle"/></th>
 <th><spring:message code="label.ScholarshipReportRequest.executionYear"/></th>
 <th><spring:message code="label.ScholarshipReportRequest.parameterFile"/></th>
@@ -136,6 +137,7 @@ ${portal.toolkit()}
 				"DT_RowId" : '<c:out value='${searchResult.externalId}'/>',
 "whenrequested" : "<joda:format value='${searchResult.whenRequested}' pattern='yyyy-MM-dd HH:mm' />",
 "whenprocessed" : "<joda:format value='${searchResult.whenProcessed}' pattern='yyyy-MM-dd HH:mm' />",
+"contractualisation" : "<c:if test="${searchResult.contractualisation}"><spring:message code="label.true" /></c:if><c:if test="${not searchResult.contractualisation}"><spring:message code="label.false" /></c:if>",
 "firstyearofcycle" : "<c:if test="${searchResult.firstYearOfCycle}"><spring:message code="label.true" /></c:if><c:if test="${not searchResult.firstYearOfCycle}"><spring:message code="label.false" /></c:if>",
 "executionyear" : "<c:out value='${searchResult.executionYear.name}'/>",
 "parameterfile" : "<a href='${parameterFileDownloadLink}'>Download</a>",
@@ -164,6 +166,7 @@ ${portal.toolkit()}
 		"columns": [
 			{ data: 'whenrequested' },
 			{ data: 'whenprocessed' },
+			{ data: 'contractualisation' },
 			{ data: 'firstyearofcycle' },
 			{ data: 'executionyear' },
 			{ data: 'parameterfile' },

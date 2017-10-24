@@ -7,7 +7,6 @@ import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.fenixedu.ulisboa.integration.sas.dto.ScholarshipStudentFirstYearBean;
-import org.fenixedu.ulisboa.integration.sas.dto.ScholarshipStudentOtherYearBean;
 import org.fenixedu.ulisboa.integration.sas.util.SASDomainException;
 
 public class FirstYearScholarshipXlsTransformService extends AbstractScholarshipXlsTransformService {
@@ -21,14 +20,9 @@ public class FirstYearScholarshipXlsTransformService extends AbstractScholarship
 
         final int columnsRead = Integer.valueOf(String.valueOf(sheet.getRow(0).getLastCellNum()));
         final int columnsExpected = ScholarshipStudentFirstYearBean.DOCUMENT_BI + 1;
-        final int columnsAlternative = ScholarshipStudentOtherYearBean.DOCUMENT_BI + 1;
 
         if (columnsRead == columnsExpected) {
             return true;
-        }
-
-        if (columnsRead == columnsAlternative) {
-            throw new SASDomainException("error.fileTypeDoesNotMatchRequest.expected" + getClass().getSimpleName());
         }
 
         throw new SASDomainException("error.fileFormatDoesNotMatchRequest.expected",

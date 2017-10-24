@@ -96,14 +96,17 @@ public class ScholarshipReportRequestController extends SasBaseController {
 //				
     @RequestMapping(value = "/createscholarshipreportrequeststep1", method = RequestMethod.POST)
     public String createscholarshipreportrequeststep1(
-            @RequestParam(value = "executionyear", required = false) ExecutionYear executionYear, @RequestParam(
-                    value = "firstyearofcycle", required = false) boolean firstYearOfCycle, Model model,
+            @RequestParam(value = "executionyear", required = false) ExecutionYear executionYear,
+            @RequestParam(value = "firstyearofcycle", required = false) boolean firstYearOfCycle,
+            @RequestParam(value = "contractualisation", required = false) boolean contractualisation, Model model,
             RedirectAttributes redirectAttributes) {
 
         if (executionYear != null) {
             redirectAttributes.addAttribute("executionyear", executionYear.getExternalId());
             redirectAttributes.addAttribute("firstyearofcycle", firstYearOfCycle);
-            return redirect("/integration/sas/managescholarshipreportrequests/scholarshipreportrequest/createscholarshipreportrequeststep2/",
+            redirectAttributes.addAttribute("contractualisation", contractualisation);
+            return redirect(
+                    "/integration/sas/managescholarshipreportrequests/scholarshipreportrequest/createscholarshipreportrequeststep2/",
                     model, redirectAttributes);
         } else {
             addErrorMessage("An execution year must be selected.", model);
@@ -114,53 +117,60 @@ public class ScholarshipReportRequestController extends SasBaseController {
 
     @RequestMapping(value = "/createscholarshipreportrequeststep2", method = RequestMethod.GET)
     public String createscholarshipreportrequeststep2(Model model,
-            @RequestParam(value = "executionyear", required = true) ExecutionYear executionYear, @RequestParam(
-                    value = "firstyearofcycle", required = true) boolean firstYearOfCycle) {
+            @RequestParam(value = "executionyear", required = true) ExecutionYear executionYear,
+            @RequestParam(value = "firstyearofcycle", required = true) boolean firstYearOfCycle,
+            @RequestParam(value = "contractualisation", required = true) boolean contractualisation) {
         model.addAttribute("executionyear", executionYear);
         model.addAttribute("firstyearofcycle", firstYearOfCycle);
+        model.addAttribute("contractualisation", contractualisation);
         return "integration/sas/managescholarshipreportrequests/scholarshipreportrequest/createscholarshipreportrequeststep2";
     }
 
     @RequestMapping(value = "/createscholarshipreportrequeststep2", method = RequestMethod.POST)
     public String createscholarshipreportrequeststep2(
-            @RequestParam(value = "executionyear", required = false) ExecutionYear executionYear, @RequestParam(
-                    value = "firstyearofcycle", required = false) boolean firstYearOfCycle,
+            @RequestParam(value = "executionyear", required = false) ExecutionYear executionYear,
+            @RequestParam(value = "firstyearofcycle", required = false) boolean firstYearOfCycle,
+            @RequestParam(value = "contractualisation", required = false) boolean contractualisation,
             @RequestParam(value = "file") MultipartFile file, Model model, RedirectAttributes redirectAttributes) {
 
         try {
 
             ScholarshipReportRequest scholarshipReportRequest =
-                    createScholarshipReportRequest(executionYear, firstYearOfCycle, file.getOriginalFilename(), file.getBytes());
+                    createScholarshipReportRequest(executionYear, firstYearOfCycle,contractualisation, file.getOriginalFilename(), file.getBytes());
 
             model.addAttribute("scholarshipReportRequest", scholarshipReportRequest);
-            return redirect("/integration/sas/managescholarshipreportrequests/scholarshipreportrequest/", model, redirectAttributes);
+            return redirect("/integration/sas/managescholarshipreportrequests/scholarshipreportrequest/", model,
+                    redirectAttributes);
         } catch (DomainException de) {
             addErrorMessage(" Error creating due to " + de.getLocalizedMessage(), model);
-            return createscholarshipreportrequeststep2(model, executionYear, firstYearOfCycle);
+            return createscholarshipreportrequeststep2(model, executionYear, firstYearOfCycle, contractualisation);
         } catch (IOException e) {
             //TODO what to do here?
             addErrorMessage(" Error reading submitted file", model);
-            return createscholarshipreportrequeststep2(model, executionYear, firstYearOfCycle);
+            return createscholarshipreportrequeststep2(model, executionYear, firstYearOfCycle, contractualisation);
         }
     }
 
     @Atomic
     public ScholarshipReportRequest createScholarshipReportRequest(ExecutionYear executionYear, boolean firstYearOfCycle,
-            String name, byte[] file) {
+            boolean contractualisation, String name, byte[] file) {
         ScholarshipReportRequest scholarshipReportRequest =
-                new ScholarshipReportRequest(executionYear, firstYearOfCycle, name, file);
+                new ScholarshipReportRequest(executionYear, firstYearOfCycle, contractualisation, name, file);
         return scholarshipReportRequest;
     }
 
     @RequestMapping(value = "/createscholarshipreportrequeststep2/backtostep1")
-    public String processCreatescholarshipreportrequeststep2ToBackToStep1(Model model, @RequestParam(value = "executionyear",
-            required = false) ExecutionYear executionYear,
+    public String processCreatescholarshipreportrequeststep2ToBackToStep1(Model model,
+            @RequestParam(value = "executionyear", required = false) ExecutionYear executionYear,
             @RequestParam(value = "firstyearofcycle", required = false) boolean firstYearOfCycle,
+            @RequestParam(value = "contractualisation", required = false) boolean contractualisation,
             RedirectAttributes redirectAttributes) {
 
         redirectAttributes.addAttribute("executionyear", executionYear.getExternalId());
         redirectAttributes.addAttribute("firstyearofcycle", firstYearOfCycle);
-        return redirect("/integration/sas/managescholarshipreportrequests/scholarshipreportrequest/createscholarshipreportrequeststep1",
+        redirectAttributes.addAttribute("contractualisation", contractualisation);
+        return redirect(
+                "/integration/sas/managescholarshipreportrequests/scholarshipreportrequest/createscholarshipreportrequeststep1",
                 model, redirectAttributes);
     }
 

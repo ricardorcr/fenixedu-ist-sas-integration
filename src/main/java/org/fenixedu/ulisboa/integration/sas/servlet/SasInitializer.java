@@ -8,6 +8,7 @@ import org.fenixedu.bennu.core.domain.Bennu;
 import org.fenixedu.ulisboa.integration.sas.domain.SchoolLevelTypeMapping;
 import org.fenixedu.ulisboa.integration.sas.domain.SocialServicesConfiguration;
 import org.fenixedu.ulisboa.integration.sas.service.DailyEnrolmentsIndexing;
+import org.fenixedu.ulisboa.integration.sas.service.sicabe.SicabeExternalService;
 import org.fenixedu.ulisboa.integration.sas.webservices.ActiveStudentsWebService;
 
 import pt.ist.fenixframework.Atomic;
@@ -27,6 +28,8 @@ public class SasInitializer implements ServletContextListener {
         SchoolLevelTypeMapping.registerEvents();
         // Load the class so the update thread starts
         ActiveStudentsWebService.class.getName();
+        
+        SicabeExternalService.init();
     }
 
     @Override

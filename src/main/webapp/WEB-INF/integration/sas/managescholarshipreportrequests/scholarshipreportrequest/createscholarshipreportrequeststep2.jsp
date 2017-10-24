@@ -34,7 +34,7 @@ ${portal.toolkit()}
 
 <%-- NAVIGATION --%>
 <div class="well well-sm" style="display:inline-block">
-<span class="glyphicon  glyphicon-arrow-left" aria-hidden="true"></span>&nbsp;<a class="" href="${pageContext.request.contextPath}/integration/sas/managescholarshipreportrequests/scholarshipreportrequest/createscholarshipreportrequeststep2/backtostep1?firstyearofcycle=${param.firstyearofcycle}&executionyear=${param.executionyear}"><spring:message code="label.event.manageScholarshipReportRequests.backToStep1"  /></a>
+<span class="glyphicon  glyphicon-arrow-left" aria-hidden="true"></span>&nbsp;<a class="" href="${pageContext.request.contextPath}/integration/sas/managescholarshipreportrequests/scholarshipreportrequest/createscholarshipreportrequeststep2/backtostep1?firstyearofcycle=${param.firstyearofcycle}&contractualisation=${param.contractualisation}&executionyear=${param.executionyear}"><spring:message code="label.event.manageScholarshipReportRequests.backToStep1"  /></a>
 	
 </div>
 	<c:if test="${not empty infoMessages}">
@@ -69,19 +69,29 @@ ${portal.toolkit()}
 <div class="panel panel-default">
   <div class="panel-body">
 <div class="form-group row">
-<div class="col-sm-2 control-label"><spring:message code="label.ScholarshipReportRequest.executionYear"/></div> 
+	<div class="col-sm-2 control-label"><spring:message code="label.ScholarshipReportRequest.executionYear"/></div> 
 	<input type="hidden" name="executionyear" value="${executionyear.externalId}"/>
 	<div class="col-sm-4">
-	<span class="form-control">${executionyear.name}</span>
+		<span class="form-control">${executionyear.name}</span>
 	</div>
-</div>		
+</div>	
+
 <div class="form-group row">
-<div class="col-sm-2 control-label"><spring:message code="label.ScholarshipReportRequest.firstYearOfCycle"/></div> 
+	<div class="col-sm-2 control-label"><spring:message code="label.ScholarshipReportRequest.contractualisation"/></div> 
 	<div class="col-sm-2">
-	<input type="hidden" name="firstyearofcycle" value="${firstyearofcycle}" />
-	<span class="form-control">${firstyearofcycle}</span>
+		<input type="hidden" name="contractualisation" value="${contractualisation}" />
+		<span class="form-control">${contractualisation}</span>
 	</div>
-</div>		
+</div>
+
+<div class="form-group row">
+	<div class="col-sm-2 control-label"><spring:message code="label.ScholarshipReportRequest.firstYearOfCycle"/></div> 
+	<div class="col-sm-2">
+		<input type="hidden" name="firstyearofcycle" value="${firstyearofcycle}" />
+		<span class="form-control">${firstyearofcycle}</span>
+	</div>
+</div>
+
 <div class="form-group row">
 <div class="col-sm-2 control-label"><spring:message code="label.ScholarshipReportRequest.parameterFile"/></div> 
 

@@ -22,8 +22,9 @@ public class ScholarshipStudentOtherYearBean extends AbstractScholarshipStudentB
     public static Integer CURRENT_YEAR_HAS_MADE_DEGREE_CHANGE = 12;
     public static Integer REGISTERED = 13;
     public static Integer REGISTRATION_DATE = 14;
+    
     public static Integer REGIME = 15;
-    public static Integer CODE1 = 16;
+    public static Integer CODE1 = 16;//not filled
     public static Integer CYCLE_INGRESSION_YEAR = 17;
     public static Integer CYCLE_NUMBER_OF_ENROLMENT_YEARS = 18;
     public static Integer CYCLE_COUNT_NUMBER_OF_ENROLMENTS_YEARS_IN_INTEGRAL_REGIME = 19;
@@ -45,9 +46,20 @@ public class ScholarshipStudentOtherYearBean extends AbstractScholarshipStudentB
     public static Integer OWNER_OF_HIGHER_QUALIFICATION = 35;
     public static Integer OBSERVATIONS = 36;
     public static Integer LAST_ENROLMENT_EXECUTION_YEAR = 37;
-    public static Integer FISCAL_CODE = 38;
+    public static Integer FISCAL_CODE = 38;//not filled
     public static Integer LAST_ACADEMIC_ACT_DATE_LAST_YEAR = 39;
     public static Integer DOCUMENT_BI = 40;
+    
+    
+    public static Integer CONTRACTUALISATION_NUMBER_OF_ECTS = 15;
+    public static Integer CONTRACTUALISATION_REGIME = 16;
+    public static Integer CONTRACTUALISATION_CODE1 = 17;//not filled
+    public static Integer CONTRACTUALISATION_GRATUITY = 18;
+    public static Integer CONTRACTUALISATION_NUMBER_OF_MONTHS_EXECUTION_YEAR = 19;
+    public static Integer CONTRACTUALISATION_FIRST_MONTH_EXECUTION_YEAR = 20;
+    public static Integer CONTRACTUALISATION_FISCAL_CODE = 21; //not filled
+    public static Integer CONTRACTUALISATION_DOCUMENT_BI = 22;
+    
 
     private Integer numberOfDegreeChanges;
     private Boolean hasMadeDegreeChangeOnCurrentYear;

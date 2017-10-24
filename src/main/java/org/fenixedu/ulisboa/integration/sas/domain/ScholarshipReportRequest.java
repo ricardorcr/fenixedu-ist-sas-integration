@@ -11,10 +11,12 @@ import pt.ist.fenixframework.Atomic.TxMode;
 
 public class ScholarshipReportRequest extends ScholarshipReportRequest_Base {
 
-    public ScholarshipReportRequest(ExecutionYear executionYear, boolean firstYearOfCycle, String fileName, byte[] content) {
+    public ScholarshipReportRequest(ExecutionYear executionYear, boolean firstYearOfCycle, boolean contractualisation,
+            String fileName, byte[] content) {
         super();
         setExecutionYear(executionYear);
         setFirstYearOfCycle(firstYearOfCycle);
+        setContractualisation(contractualisation);
         ScholarshipReportFile scholarshipReportFile = new ScholarshipReportFile(fileName, content);
         setParameterFile(scholarshipReportFile);
         Bennu bennu = Bennu.getInstance();

@@ -11,6 +11,7 @@ class ScholarshipReportRequest {
 	DateTime whenProcessed;
 	LocalizedString error;
 	protected boolean firstYearOfCycle;
+	boolean contractualisation;
 }
 
 //Since the same kind of file will be used as input and as output, we are only creating one entity

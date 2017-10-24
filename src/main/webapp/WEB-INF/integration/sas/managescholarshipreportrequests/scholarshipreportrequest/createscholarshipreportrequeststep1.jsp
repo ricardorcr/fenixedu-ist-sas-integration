@@ -66,29 +66,41 @@ ${portal.toolkit()}
 <form method="post" class="form-horizontal">
 <div class="panel panel-default">
   <div class="panel-body">
-<div class="form-group row">
-<div class="col-sm-2 control-label"><spring:message code="label.ScholarshipReportRequest.executionYear"/></div> 
-
-<div class="col-sm-4">
-	<%-- Relation to side 1 drop down rendered in input --%>
-		 <select id="scholarshipReportRequest_executionYear" class="js-example-basic-single" name="executionyear">
-		 <option value=""></option> <%-- empty option remove it if you don't want to have it or give it a label CHANGE_ME --%> 
-		</select>
-				</div>
-</div>		
-<div class="form-group row">
-<div class="col-sm-2 control-label"><spring:message code="label.ScholarshipReportRequest.firstYearOfCycle"/></div> 
-
-<div class="col-sm-2">
-<select id="scholarshipReportRequest_firstYearOfCycle" name="firstyearofcycle" class="form-control">
-<option value="false"><spring:message code="label.no"/></option>
-<option value="true"><spring:message code="label.yes"/></option>				
-</select>
-	<script>
-		$("#scholarshipReportRequest_firstYearOfCycle").val('<c:out value='${not empty param.firstyearofcycle ? param.firstyearofcycle : scholarshipReportRequest.firstYearOfCycle }'/>');
-	</script>	
-</div>
-</div>		
+		<div class="form-group row">
+		<div class="col-sm-2 control-label"><spring:message code="label.ScholarshipReportRequest.executionYear"/></div> 
+		
+		<div class="col-sm-4">
+			<%-- Relation to side 1 drop down rendered in input --%>
+				 <select id="scholarshipReportRequest_executionYear" class="js-example-basic-single" name="executionyear">
+				 <option value=""></option> <%-- empty option remove it if you don't want to have it or give it a label CHANGE_ME --%> 
+				</select>
+						</div>
+		</div>		
+		<div class="form-group row">
+			<div class="col-sm-2 control-label"><spring:message code="label.ScholarshipReportRequest.contractualisation"/></div> 
+			
+			<div class="col-sm-2">
+				<select id="scholarshipReportRequest_contractualisation" name="contractualisation" class="form-control">
+					<option value="false"><spring:message code="label.no"/></option>
+					<option value="true"><spring:message code="label.yes"/></option>				
+				</select>
+				<script>
+					$("#scholarshipReportRequest_contractualisation").val('<c:out value='${not empty param.contractualisation ? param.contractualisation : scholarshipReportRequest.contractualisation }'/>');
+				</script>	
+			</div>
+		</div>
+		<div class="form-group row" id="firstYearOfCycleField">
+			<div class="col-sm-2 control-label"><spring:message code="label.ScholarshipReportRequest.firstYearOfCycle"/></div>
+			<div class="col-sm-2">
+				<select id="scholarshipReportRequest_firstYearOfCycle" name="firstyearofcycle" class="form-control">
+				<option value="false"><spring:message code="label.no"/></option>
+				<option value="true"><spring:message code="label.yes"/></option>				
+				</select>
+				<script>
+					$("#scholarshipReportRequest_firstYearOfCycle").val('<c:out value='${not empty param.firstyearofcycle ? param.firstyearofcycle : scholarshipReportRequest.firstYearOfCycle }'/>');
+				</script>	
+			</div>
+		</div>
   </div>
   <div class="panel-footer">
 		<input type="submit" class="btn btn-default" role="button" value="<spring:message code="label.nextStep" />"/>
@@ -97,6 +109,18 @@ ${portal.toolkit()}
 </form>
 
 <script>
+
+function showHideFirstYearOfCycleField(value){
+	if (value == 'true') {				  
+	  	$('#firstYearOfCycleField').hide();
+	  	$('#scholarshipReportRequest_firstYearOfCycle').val('false');
+	  }
+	  else {
+	  	$('#firstYearOfCycleField').show();
+	  }
+	
+}
+
 $(document).ready(function() {
 
 		<%-- Block for providing executionYear options --%>
@@ -121,6 +145,13 @@ $(document).ready(function() {
 	    $("#scholarshipReportRequest_executionYear").select2().select2('val', '<c:out value='${param.executionyear}'/>');
 	
 		<%-- End block for providing executionYear options --%>
+		
+		
+		$('#scholarshipReportRequest_contractualisation').on('change', function() {
+			showHideFirstYearOfCycleField(this.value);	  
+		})
+		
+		showHideFirstYearOfCycleField(${param.contractualisation != null && param.contractualisation ? "'true'" : "'false'"});
 	
 	
 	});
