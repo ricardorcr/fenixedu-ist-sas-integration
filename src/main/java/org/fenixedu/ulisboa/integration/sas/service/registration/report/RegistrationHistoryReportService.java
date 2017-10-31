@@ -102,7 +102,7 @@ public class RegistrationHistoryReportService {
     private RegistrationHistoryReport processRegistration(Registration registration, ExecutionYear executionYear) {
         final RegistrationHistoryReport result = new RegistrationHistoryReport(registration, executionYear);
 
-        final StudentCurricularPlan studentCurricularPlan = registration.getStudentCurricularPlan(executionYear);
+        final StudentCurricularPlan studentCurricularPlan = getStudentCurricularPlan(registration, executionYear);
         if (studentCurricularPlan == null) {
             throw new DomainException("error.RegistrationHistoryReportService.unable.to.find.student.curricular.plan.for.year",
                     registration.getStudent().getNumber().toString(), executionYear.getQualifiedName());
@@ -158,6 +158,14 @@ public class RegistrationHistoryReportService {
         return result;
     }
 
+    private StudentCurricularPlan getStudentCurricularPlan(Registration registration, ExecutionYear executionYear) {
+        if (registration.getStudentCurricularPlansSet().size() == 1) {
+            return registration.getLastStudentCurricularPlan();
+        }
+
+        return registration.getStudentCurricularPlan(executionYear);
+    }
+
     static private Set<ExecutionYear> getEnrolmentYearsIncludingPrecedentRegistrations(final Registration input) {
 
         return AbstractFillScholarshipService.getExecutionYears(input, r -> r.getEnrolmentsExecutionYears().stream(), ey -> true);
@@ -188,7 +196,7 @@ public class RegistrationHistoryReportService {
             }
         }
 
-        final StudentCurricularPlan studentCurricularPlan = registration.getStudentCurricularPlan(executionYear);
+        final StudentCurricularPlan studentCurricularPlan = getStudentCurricularPlan(registration, executionYear);
         final Collection<Enrolment> normalEnrolments =
                 getFilteredEnrolments(studentCurricularPlan, executionYear, new NormalEnrolmentsPredicate());
 
