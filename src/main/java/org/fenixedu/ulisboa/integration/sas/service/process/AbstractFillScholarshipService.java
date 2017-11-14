@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -397,29 +398,43 @@ public class AbstractFillScholarshipService {
     private Registration findRegistration(Student student, AbstractScholarshipStudentBean bean,
             ScholarshipReportRequest request) {
 
+        
         final Set<Degree> degrees = findDegree(bean);
+        
+        // TODO: erasmus dismissal should also be considered
+        final Predicate<Registration> hasActiveEnrolments = r -> r.getEnrolments(request.getExecutionYear()).stream().anyMatch(e -> !e.isAnnulled());
 
         final Set<Registration> registrations = Sets.newHashSet();
         for (final Degree degree : degrees) {
-            registrations.addAll(student.getRegistrationsFor(degree));
+            registrations.addAll(student.getRegistrationsFor(degree).stream().filter(hasActiveEnrolments).collect(Collectors.toSet()));
         }
 
         if (registrations.size() == 1) {
             return registrations.iterator().next();
 
         } else if (registrations.size() > 1) {
-
-            for (final Registration registration : registrations) {
-                final RegistrationState registrationState = registration.getLastRegistrationState(request.getExecutionYear());
-                if (registrationState != null && registrationState.isActive()) {
-                    return registration;
-                }
-            }
-
             addError(bean, "Múltiplas matrículas para o mesmo curso activas no mesmo ano.");
             throw new FillScholarshipException();
         } else {
-            addError(bean, "Nao foi possível encontrar a matrícula para o curso.");
+
+            final DegreeType degreeType = DEGREE_TYPE_MAPPING.get(bean.getDegreeTypeName());
+            final Collection<Registration> registrationsByDegreeTypes = student.getRegistrationsByDegreeTypes(degreeType).stream()
+                    .filter(hasActiveEnrolments)
+                    .collect(Collectors.toSet());
+
+            if (registrationsByDegreeTypes.size() == 1) {
+                final Registration registration = registrationsByDegreeTypes.iterator().next();
+                addWarning(bean,
+                        "O curso indicado no ficheiro não coincide com o curso onde o aluno tem inscrições no ano lectivo do inquérito. Seleccionado o curso "
+                                + registration.getDegree().getCode());
+                return registration;
+            } else if (registrationsByDegreeTypes.size() > 1) {
+                addError(bean,
+                        "Não foi encontrada a matrícula para o curso indicado no ficheiro e não foi possível determinar a matrícula porque existe mais do que uma com inscrições no ano lectivo do inquérito");
+            } else {
+                addError(bean, "Nao foi possível encontrar a matrícula para o curso indicado no ficheiro.");
+            }
+
             throw new FillScholarshipException();
         }
 

@@ -229,6 +229,7 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
             return null;
         }
 
+        // TODO: check erasmus
         final ExecutionYear lastEnrolmentYear = allEnrolmentYears.last();
         for (final Map.Entry<Registration, Collection<ExecutionYear>> entry : enrolmentYearsByRegistration.asMap().entrySet()) {
             if (entry.getValue().contains(lastEnrolmentYear)) {
