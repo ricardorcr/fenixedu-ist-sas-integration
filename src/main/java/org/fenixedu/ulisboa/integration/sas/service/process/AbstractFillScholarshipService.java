@@ -90,6 +90,11 @@ public class AbstractFillScholarshipService {
             try {
                 final Student student = findStudent(bean, request);
                 final Registration registration = findRegistration(student, bean, request);
+
+                if (registration == null) {
+                    continue;
+                }
+
                 validateStudentNumber(bean, registration);
                 checkPreconditions(bean, registration, request);
                 final RegistrationHistoryReport currentYearRegistrationReport =
@@ -398,15 +403,16 @@ public class AbstractFillScholarshipService {
     private Registration findRegistration(Student student, AbstractScholarshipStudentBean bean,
             ScholarshipReportRequest request) {
 
-        
         final Set<Degree> degrees = findDegree(bean);
-        
+
         // TODO: erasmus dismissal should also be considered
-        final Predicate<Registration> hasActiveEnrolments = r -> r.getEnrolments(request.getExecutionYear()).stream().anyMatch(e -> !e.isAnnulled());
+        final Predicate<Registration> hasActiveEnrolments =
+                r -> r.getEnrolments(request.getExecutionYear()).stream().anyMatch(e -> !e.isAnnulled());
 
         final Set<Registration> registrations = Sets.newHashSet();
         for (final Degree degree : degrees) {
-            registrations.addAll(student.getRegistrationsFor(degree).stream().filter(hasActiveEnrolments).collect(Collectors.toSet()));
+            registrations
+                    .addAll(student.getRegistrationsFor(degree).stream().filter(hasActiveEnrolments).collect(Collectors.toSet()));
         }
 
         if (registrations.size() == 1) {
@@ -419,8 +425,7 @@ public class AbstractFillScholarshipService {
 
             final DegreeType degreeType = DEGREE_TYPE_MAPPING.get(bean.getDegreeTypeName());
             final Collection<Registration> registrationsByDegreeTypes = student.getRegistrationsByDegreeTypes(degreeType).stream()
-                    .filter(hasActiveEnrolments)
-                    .collect(Collectors.toSet());
+                    .filter(hasActiveEnrolments).collect(Collectors.toSet());
 
             if (registrationsByDegreeTypes.size() == 1) {
                 final Registration registration = registrationsByDegreeTypes.iterator().next();
@@ -435,7 +440,8 @@ public class AbstractFillScholarshipService {
                 addError(bean, "Nao foi possível encontrar a matrícula para o curso indicado no ficheiro.");
             }
 
-            throw new FillScholarshipException();
+            return null;
+            //throw new FillScholarshipException();
         }
 
     }
