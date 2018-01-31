@@ -69,6 +69,8 @@ public class AbstractFillScholarshipService {
         // id document types mapping
         ID_DOCUMENT_TYPE_MAPPING.put("BI / N.º ID CIVIL", IDDocumentType.IDENTITY_CARD);
         ID_DOCUMENT_TYPE_MAPPING.put("Autorização de residência", IDDocumentType.RESIDENCE_AUTHORIZATION);
+        ID_DOCUMENT_TYPE_MAPPING.put("Passaporte", IDDocumentType.PASSPORT);
+        ID_DOCUMENT_TYPE_MAPPING.put("Outros", IDDocumentType.OTHER);
 
         // degree types mapping
 
