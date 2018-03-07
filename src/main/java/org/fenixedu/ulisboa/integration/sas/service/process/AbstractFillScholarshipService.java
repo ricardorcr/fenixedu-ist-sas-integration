@@ -107,8 +107,7 @@ public class AbstractFillScholarshipService {
             return registrations.iterator().next();
 
         } else if (registrations.size() > 1) {
-            addError(bean, "Múltiplas matrículas para o mesmo curso activas no mesmo ano.");
-            throw new FillScholarshipException();
+            throw new FillScholarshipException("Múltiplas matrículas para o mesmo curso activas no mesmo ano.");
         } else {
 
             final Collection<DegreeType> possibleDegreeTypes =
@@ -124,26 +123,25 @@ public class AbstractFillScholarshipService {
                                 + registration.getDegree().getCode());
                 return registration;
             } else if (registrationsWithActiveEnrolments.size() > 1) {
-                addError(bean,
+                throw new FillScholarshipException(
                         "Não foi encontrada a matrícula para o curso indicado no ficheiro e não foi possível determinar a matrícula porque existe mais do que uma com inscrições no ano lectivo do inquérito.");
             } else {
-                addError(bean,
+                throw new FillScholarshipException(
                         "Não foi possível encontrar a matrícula para o curso indicado no ficheiro ou o aluno não se encontra inscrito no corrente ano letivo.");
             }
 
-            return null;
-            //throw new FillScholarshipException();
         }
 
     }
 
     private Collection<Degree> findDegree(AbstractScholarshipStudentBean bean) {
-        final Collection<Degree> degrees = Bennu.getInstance().getDegreesSet().stream()
-                .filter(d -> Objects.equals(d.getMinistryCode(), bean.getDegreeCode())).collect(Collectors.toSet());
+        final Collection<Degree> degrees =
+                Bennu.getInstance().getDegreesSet().stream().filter(d -> Objects.equals(d.getMinistryCode(), bean.getDegreeCode())
+                        || Objects.equals(d.getCode(), bean.getDegreeCode())).collect(Collectors.toSet());
 
         if (degrees.isEmpty()) {
             addError(bean, "Não foi possível encontrar o curso.");
-            throw new FillScholarshipException();
+            throw new FillScholarshipException("Não foi possível encontrar o curso.");
         }
 
         return degrees;
@@ -153,13 +151,11 @@ public class AbstractFillScholarshipService {
 
         final Person person = findPerson(bean, requestYear);
         if (person == null) {
-            addError(bean, "Não foi possível encontrar a pessoa.");
-            throw new FillScholarshipException();
+            throw new FillScholarshipException("Não foi possível encontrar a pessoa.");
         }
 
         if (person.getStudent() == null) {
-            addError(bean, "A pessoa encontrada não é um aluno.");
-            throw new FillScholarshipException();
+            throw new FillScholarshipException("A pessoa encontrada não é um aluno.");
         }
 
         if (bean.getStudentNumber() == null) {
@@ -273,8 +269,7 @@ public class AbstractFillScholarshipService {
 
         if (person.getIdDocumentType() != ID_DOCUMENT_TYPE_MAPPING.get(bean.getDocumentTypeName())
                 && !person.getIdDocumentType().name().equalsIgnoreCase(bean.getDocumentTypeName())) {
-            addError(bean, "O tipo de documento não corresponde com o tipo definido no sistema.");
-            throw new FillScholarshipException();
+            throw new FillScholarshipException("O tipo de documento não corresponde com o tipo definido no sistema.");
         }
 
         return person;
@@ -309,10 +304,9 @@ public class AbstractFillScholarshipService {
     private void checkPreconditions(AbstractScholarshipStudentBean bean, Registration registration, ExecutionYear requestYear,
             boolean firstYearOfCycle) {
 
-        if (!hasNormalEnrolments(registration, requestYear)) {
-            addError(bean, "A matrícula não tem inscrições para o ano lectivo " + requestYear.getQualifiedName() + ".");
-
-            throw new FillScholarshipException();
+        if (getEnroledCurriculumLines(registration, requestYear).isEmpty()) {
+            throw new FillScholarshipException(
+                    "A matrícula não tem inscrições para o ano lectivo " + requestYear.getQualifiedName() + ".");
         }
 
         final RegistrationState lastRegistrationState = registration.getLastRegistrationState(requestYear);
