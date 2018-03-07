@@ -1,26 +1,20 @@
 package org.fenixedu.ulisboa.integration.sas.service.process;
 
 import java.math.BigDecimal;
-import java.util.Calendar;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Locale;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.fenixedu.academic.domain.Degree;
-import org.fenixedu.academic.domain.Enrolment;
 import org.fenixedu.academic.domain.ExecutionYear;
 import org.fenixedu.academic.domain.Person;
 import org.fenixedu.academic.domain.SchoolLevelType;
 import org.fenixedu.academic.domain.StudentCurricularPlan;
-import org.fenixedu.academic.domain.candidacy.IngressionType;
 import org.fenixedu.academic.domain.degree.DegreeType;
 import org.fenixedu.academic.domain.degreeStructure.CycleType;
 import org.fenixedu.academic.domain.person.IDDocumentType;
@@ -29,16 +23,16 @@ import org.fenixedu.academic.domain.student.Registration;
 import org.fenixedu.academic.domain.student.RegistrationRegimeType;
 import org.fenixedu.academic.domain.student.Student;
 import org.fenixedu.academic.domain.student.registrationStates.RegistrationState;
-import org.fenixedu.academic.domain.student.registrationStates.RegistrationStateType;
+import org.fenixedu.academic.domain.studentCurriculum.CurriculumLine;
 import org.fenixedu.academic.domain.treasury.IAcademicTreasuryEvent;
 import org.fenixedu.academic.domain.treasury.TreasuryBridgeAPIFactory;
 import org.fenixedu.bennu.core.domain.Bennu;
-import org.fenixedu.ulisboa.integration.sas.domain.ScholarshipReportRequest;
 import org.fenixedu.ulisboa.integration.sas.domain.SchoolLevelTypeMapping;
 import org.fenixedu.ulisboa.integration.sas.domain.SocialServicesConfiguration;
 import org.fenixedu.ulisboa.integration.sas.dto.AbstractScholarshipStudentBean;
-import org.fenixedu.ulisboa.integration.sas.service.registration.report.RegistrationHistoryReport;
-import org.fenixedu.ulisboa.integration.sas.service.registration.report.RegistrationHistoryReportService;
+import org.fenixedu.ulisboa.specifications.domain.services.RegistrationServices;
+import org.fenixedu.ulisboa.specifications.domain.services.statute.StatuteServices;
+import org.fenixedu.ulisboa.specifications.domain.studentCurriculum.CreditsReasonType;
 import org.joda.time.DateTime;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -52,17 +46,19 @@ public class AbstractFillScholarshipService {
 
     protected static final Map<String, IDDocumentType> ID_DOCUMENT_TYPE_MAPPING = Maps.newHashMap();
 
-    protected static final Map<String, DegreeType> DEGREE_TYPE_MAPPING = Maps.newHashMap();
+    public static final String REGIME_FULL_TIME = "Tempo integral";
 
-    private static final String REGIME_FULL_TIME = "Tempo integral";
+    public static final String REGIME_FULL_TIME_WORKING_STUDENT = "Trabalhador estudante tempo integral";
 
-    private static final String REGIME_FULL_TIME_WORKING_STUDENT = "Trabalhador estudante tempo integral";
+    public static final String REGIME_PARTIAL_TIME = "Tempo parcial";
 
-    private static final String REGIME_PARTIAL_TIME = "Tempo parcial";
+    public static final String REGIME_PARTIAL_TIME_WORKING_STUDENT = "Trabalhador estudante tempo parcial";
 
-    private static final String REGIME_PARTIAL_TIME_WORKING_STUDENT = "Trabalhador estudante tempo parcial";
+    public static final String REGIME_PROFESSIONAL_INTERNSHIP = "Estágio Profissional";
 
-    private static final String REGIME_PROFESSIONAL_INTERNSHIP = "Estágio Profissional";
+    public static final String ERROR_OBSERVATION = "ERRO";
+
+    public static final String WARNING_OBSERVATION = "AVISO";
 
     static {
 
@@ -72,349 +68,39 @@ public class AbstractFillScholarshipService {
         ID_DOCUMENT_TYPE_MAPPING.put("Passaporte", IDDocumentType.PASSPORT);
         ID_DOCUMENT_TYPE_MAPPING.put("Outros", IDDocumentType.OTHER);
 
-        // degree types mapping
-
-        DEGREE_TYPE_MAPPING.put("Mestrado Integrado", findDegreeTypeByPredicate(DegreeType::isIntegratedMasterDegree));
-        DEGREE_TYPE_MAPPING.put("Licenciatura 1º Ciclo", findDegreeTypeByPredicate(DegreeType::isBolonhaDegree));
-        DEGREE_TYPE_MAPPING.put("Mestrado 2º Ciclo", findDegreeTypeByPredicate(DegreeType::isBolonhaMasterDegree));
     }
 
-    private static DegreeType findDegreeTypeByPredicate(Predicate<? super DegreeType> predicate) {
-        return Bennu.getInstance().getDegreeTypeSet().stream().filter(predicate).findAny().orElse(null);
-    }
-
-    public void fillAllInfo(Collection<AbstractScholarshipStudentBean> scholarshipStudentBeans,
-            ScholarshipReportRequest request) {
+    public void fillAllInfo(Collection<AbstractScholarshipStudentBean> scholarshipStudentBeans, ExecutionYear requestYear,
+            boolean firstYearOfCycle) {
 
         messages.clear();
 
         for (final AbstractScholarshipStudentBean bean : scholarshipStudentBeans) {
             try {
-                final Student student = findStudent(bean, request);
-                final Registration registration = findRegistration(student, bean, request);
-
-                if (registration == null) {
-                    continue;
-                }
-
-                validateStudentNumber(bean, registration);
-                checkPreconditions(bean, registration, request);
-                final RegistrationHistoryReport currentYearRegistrationReport =
-                        new RegistrationHistoryReportService().generateReport(registration, request.getExecutionYear());
-
-                fillCommonInfo(bean, currentYearRegistrationReport, request);
-                fillSpecificInfo(bean, currentYearRegistrationReport, request);
+                fillAllInfo(bean, getRegistrationByAbstractScholarshipStudentBean(bean, requestYear), requestYear,
+                        firstYearOfCycle);
             } catch (FillScholarshipException e) {
-                // ignore FillScholarshipException
-            } finally {
+                //ignore FillScholarshipException
+                addError(bean, e.getMessage());
                 bean.setObservations(formatObservations(bean));
             }
-
         }
     }
 
-    private void validateStudentNumber(final AbstractScholarshipStudentBean bean, final Registration registration) {
-        if (bean.getStudentNumber() != null && registration.getNumber().intValue() != bean.getStudentNumber().intValue()) {
-            addWarning(bean, "O número de aluno indicado no ficheiro de entrada não corresponde ao número de aluno no sistema.");
-        }
+    public Registration getRegistrationByAbstractScholarshipStudentBean(AbstractScholarshipStudentBean bean,
+            ExecutionYear requestYear) {
+        return findRegistration(findStudent(bean, requestYear), bean, requestYear);
     }
 
-    private void checkPreconditions(AbstractScholarshipStudentBean bean, Registration registration,
-            ScholarshipReportRequest request) {
+    private Registration findRegistration(Student student, AbstractScholarshipStudentBean bean, ExecutionYear requestYear) {
 
-        if (registration.getEnrolments(request.getExecutionYear()).isEmpty()) {
-            addWarning(bean,
-                    "A matrícula não tem inscrições para o ano lectivo " + request.getExecutionYear().getQualifiedName() + ".");
-        }
+        final Collection<Degree> degrees = findDegree(bean);
 
-        final RegistrationState lastRegistrationState = registration.getLastRegistrationState(request.getExecutionYear());
-        if (lastRegistrationState != null && !lastRegistrationState.isActive()) {
-            addWarning(bean, "A matrícula não está activa em " + request.getExecutionYear().getQualifiedName() + ".");
-        }
-
-        if (isInMobility(registration, request.getExecutionYear())) {
-            addWarning(bean, "A matrícula está em mobilidade.");
-        }
-
-        if (isEnroledInStandaloneOnly(registration, request.getExecutionYear())) {
-
-            final IngressionType ingression = getRootRegistration(registration).getStudentCandidacy().getIngressionType();
-            addWarning(bean, "A matrícula apenas tem inscrições em isoladas (ingresso: "
-                    + (ingression != null ? ingression.getDescription() : "n/a") + ").");
-        }
-
-        if (request.getFirstYearOfCycle() && !isFirstTimeInCycle(registration, request.getExecutionYear())) {
-            addWarning(bean, "O aluno não é primeira vez.");
-        }
-    }
-
-    private boolean isFirstTimeInCycle(Registration registration, ExecutionYear executionYear) {
-
-        Predicate<Registration> hasSameDegreeType = r -> r.getDegreeType() == registration.getDegreeType();
-        Predicate<Registration> differentRegistration = r -> r != registration;
-        if (registration.getStudent().getRegistrationsSet().stream().filter(differentRegistration.and(hasSameDegreeType))
-                .findAny().isPresent()) {
-            return false;
-        }
-
-        return registration.getFirstEnrolmentExecutionYear() == executionYear;
-
-    }
-
-    private boolean isEnroledInStandaloneOnly(Registration registration, ExecutionYear executionYear) {
-
-        final Collection<Enrolment> enrolments = registration.getEnrolments(executionYear);
-
-        if (enrolments.isEmpty()) {
-            return false;
-        }
-
-        for (final Enrolment enrolment : enrolments) {
-            if (!enrolment.getCurriculumGroup().isStandalone()) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    protected boolean isInMobility(Registration registration, ExecutionYear executionYear) {
-
-        for (final RegistrationState registrationState : registration.getRegistrationStates(executionYear)) {
-            if (registrationState.getStateType() == RegistrationStateType.MOBILITY) {
-                return true;
-            }
-        }
-
-        //TODO wth?
-//        for (final MobilityRegistrationInformation mobility : registration.getMobilityRegistrationInformationsSet()) {
-//            final ExecutionSemester begin = mobility.getBegin();
-//            final ExecutionSemester end = mobility.getEnd();
-//
-//            if (!executionYear.isBefore(begin.getExecutionYear())
-//                    && (end == null || !executionYear.isAfter(end.getExecutionYear()))) {
-//                return true;
-//            }
-//        }
-
-        return false;
-    }
-
-    private void fillCommonInfo(AbstractScholarshipStudentBean bean, RegistrationHistoryReport currentYearRegistrationReport,
-            ScholarshipReportRequest request) {
-
-        final Registration registration = currentYearRegistrationReport.getRegistration();
-
-        // replace the student number (provided by input file) by the system value
-        bean.setStudentNumber(registration.getNumber());
-
-        bean.setNumberOfMonthsExecutionYear(SocialServicesConfiguration.getInstance().getNumberOfMonthsOfAcademicYear());
-        bean.setGratuityAmount(calculateGratuityAmount(registration, request));
-        bean.setFirstMonthExecutionYear(calculateFirstMonthOfExecutionYear(request));
-
-        bean.setCetQualificationOwner(isCETQualificationOwner(registration));
-        bean.setCtspQualificationOwner(isCTSPQualificationOwner(registration));
-        bean.setDegreeQualificationOwner(isDegreeQualificationOwner(registration));
-        bean.setMasterQualificationOwner(isMasterQualificationOwner(registration));
-        bean.setPhdQualificationOwner(isPhdQualificationOwner(registration));
-
-        // add warning if person is enrolled in a degree that already exists as a completed qualification
-        checkIfRegistrationDegreeIsCompleted(bean, registration);
-
-        bean.setNumberOfDegreeCurricularYears(calculateNumberOfDegreeCurricularYears(bean, registration, request));
-
-        bean.setRegime(calculateRegime(bean, currentYearRegistrationReport));
-        bean.setRegistrationDate(currentYearRegistrationReport.getEnrolmentDate());
-        bean.setRegistered(isRegistered(registration, request));
-        bean.setNumberOfEnrolledECTS(currentYearRegistrationReport.getTotalEnroledCredits());
-
-    }
-
-    private void checkIfRegistrationDegreeIsCompleted(AbstractScholarshipStudentBean bean, Registration registration) {
-        SchoolLevelTypeMapping schoolLevelTypeMapping = registration.getDegreeType().getSchoolLevelTypeMapping();
-        SchoolLevelType schoolLevelType = schoolLevelTypeMapping == null ? null : schoolLevelTypeMapping.getSchoolLevel();
-        if (bean.getCetQualificationOwner() && SchoolLevelTypeMapping.isCET(schoolLevelType)) {
-            addWarning(bean, "O grau da qualificação concluida (CET) é igual ao grau que o aluno frequenta.");
-        }
-
-        if (bean.getCtspQualificationOwner() && SchoolLevelTypeMapping.isCTSP(schoolLevelType)) {
-            // check if current registration degree is the same of completed qualification
-            addWarning(bean, "O grau da qualificação concluida (CTSP) é igual ao grau que o aluno frequenta.");
-        }
-
-        if (bean.getDegreeQualificationOwner() && SchoolLevelTypeMapping.isDegree(schoolLevelType)) {
-            // check if current registration degree is the same of completed qualification
-            addWarning(bean, "O grau da qualificação concluida (licenciatura) é igual ao grau que o aluno frequenta.");
-        }
-
-        if (bean.getMasterQualificationOwner() && SchoolLevelTypeMapping.isMasterDegree(schoolLevelType)) {
-            // check if current registration degree is the same of completed qualification
-            addWarning(bean, "O grau da qualificação concluida (mestrado) é igual ao grau que o aluno frequenta.");
-        }
-
-        if (bean.getPhdQualificationOwner() && SchoolLevelTypeMapping.isPhd(schoolLevelType)) {
-            // check if current registration degree is the same of completed qualification
-            addWarning(bean, "O grau da qualificação concluida (douturamento) é igual ao grau que o aluno frequenta.");
-        }
-    }
-
-    private Boolean isRegistered(Registration registration, ScholarshipReportRequest request) {
-        final RegistrationState stateInDate = registration.getStateInDate(new DateTime());
-
-        return stateInDate != null && stateInDate.isActive() && !registration.getEnrolments(request.getExecutionYear()).isEmpty();
-    }
-
-    private Integer calculateNumberOfDegreeCurricularYears(AbstractScholarshipStudentBean bean, Registration registration,
-            ScholarshipReportRequest request) {
-        final StudentCurricularPlan studentCurricularPlan =
-                findStudentCurricularPlan(bean, registration, request.getExecutionYear());
-        final float weight = studentCurricularPlan.getDegreeCurricularPlan().getDegreeStructure().getAcademicPeriod().getWeight();
-        return (int) Math.ceil(weight);
-    }
-
-    private String calculateRegime(AbstractScholarshipStudentBean bean, RegistrationHistoryReport registrationHistoryReport) {
-
-        final boolean partialRegime = registrationHistoryReport.getRegimeType() == RegistrationRegimeType.PARTIAL_TIME;
-        final boolean workingStudent = registrationHistoryReport.isWorkingStudent();
-
-        //TODO: not supported
-        final boolean professionalInternship = false;
-
-        if (professionalInternship) {
-            return REGIME_PROFESSIONAL_INTERNSHIP;
-        }
-
-        if (partialRegime) {
-
-            if (workingStudent) {
-                return REGIME_PARTIAL_TIME_WORKING_STUDENT;
-            }
-
-            return REGIME_PARTIAL_TIME;
-        }
-
-        if (workingStudent) {
-            return REGIME_FULL_TIME_WORKING_STUDENT;
-        }
-
-        return REGIME_FULL_TIME;
-
-    }
-
-    private Boolean isPhdQualificationOwner(Registration registration) {
-        return getPersonSchoolLevelTypes(registration.getPerson()).stream().filter(SchoolLevelTypeMapping::isPhd).findAny()
-                .isPresent();
-    }
-
-    private Boolean isMasterQualificationOwner(Registration registration) {
-        return getPersonSchoolLevelTypes(registration.getPerson()).stream().filter(SchoolLevelTypeMapping::isMasterDegree)
-                .findAny().isPresent();
-    }
-
-    private Boolean isDegreeQualificationOwner(Registration registration) {
-        return getPersonSchoolLevelTypes(registration.getPerson()).stream().filter(SchoolLevelTypeMapping::isDegree).findAny()
-                .isPresent();
-    }
-
-    private Boolean isCETQualificationOwner(Registration registration) {
-        return getPersonSchoolLevelTypes(registration.getPerson()).stream().filter(SchoolLevelTypeMapping::isCET).findAny()
-                .isPresent();
-    }
-
-    private Boolean isCTSPQualificationOwner(Registration registration) {
-        return getPersonSchoolLevelTypes(registration.getPerson()).stream().filter(SchoolLevelTypeMapping::isCTSP).findAny()
-                .isPresent();
-    }
-
-    private Collection<SchoolLevelType> getPersonSchoolLevelTypes(final Person person) {
-        final Set<SchoolLevelType> result = Sets.newHashSet();
-        result.addAll(getCompletedQualificationsSchoolLevelTypes(person));
-        result.addAll(getCompletedRegistrationSchoolLevelTypes(person.getStudent()));
-
-        return result;
-
-    }
-
-    private Collection<SchoolLevelType> getCompletedRegistrationSchoolLevelTypes(final Student student) {
-        final Set<SchoolLevelType> result = Sets.newHashSet();
-        for (final Registration registration : student.getRegistrationsSet()) {
-
-            //TODO: find cleaner solution
-            if (registration.getDegreeType().isIntegratedMasterDegree()
-                    && registration.hasConcludedCycle(CycleType.FIRST_CYCLE)) {
-                result.add(SchoolLevelType.DEGREE);
-            }
-
-            if (registration.isConcluded() || registration.hasConcluded()) {
-                final SchoolLevelTypeMapping schoolLevelTypeMapping = registration.getDegreeType().getSchoolLevelTypeMapping();
-                if (schoolLevelTypeMapping != null) {
-                    result.add(schoolLevelTypeMapping.getSchoolLevel());
-                }
-            }
-
-        }
-
-        return result;
-    }
-
-    private Collection<SchoolLevelType> getCompletedQualificationsSchoolLevelTypes(final Person person) {
-        return person.getStudent().getPersonalIngressionsDataSet().stream()
-                .flatMap(x -> x.getPrecedentDegreesInformationsSet().stream()).map(x -> x.getSchoolLevel())
-                .collect(Collectors.toSet());
-    }
-
-    protected StudentCurricularPlan findStudentCurricularPlan(AbstractScholarshipStudentBean bean, Registration registration,
-            ExecutionYear executionYear) {
-        final StudentCurricularPlan studentCurricularPlan = registration.getStudentCurricularPlan(executionYear);
-
-        if (studentCurricularPlan == null) {
-            addError(bean, "Não foi possível encontrar o plano curricular para o ano lectivo fornecido.");
-        }
-
-        return studentCurricularPlan;
-    }
-
-    private String calculateFirstMonthOfExecutionYear(ScholarshipReportRequest request) {
-        final Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.MONTH, request.getExecutionYear().getBeginLocalDate().getMonthOfYear() - 1);
-
-        return cal.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.forLanguageTag("pt-PT"));
-    }
-
-    private BigDecimal calculateGratuityAmount(Registration registration, ScholarshipReportRequest request) {
-
-        IAcademicTreasuryEvent tuitionForRegistrationTreasuryEvent = TreasuryBridgeAPIFactory.implementation()
-                .getTuitionForRegistrationTreasuryEvent(registration, request.getExecutionYear());
-
-        if (tuitionForRegistrationTreasuryEvent == null) {
-            return BigDecimal.ZERO;
-        }
-
-        return tuitionForRegistrationTreasuryEvent.getAmountToPay()
-                .subtract(tuitionForRegistrationTreasuryEvent.getInterestsAmountToPay());
-    }
-
-    private String formatObservations(final AbstractScholarshipStudentBean bean) {
-        if (!messages.containsKey(bean)) {
-            return "";
-        }
-
-        return messages.get(bean).stream().collect(Collectors.joining("\n"));
-    }
-
-    private Registration findRegistration(Student student, AbstractScholarshipStudentBean bean,
-            ScholarshipReportRequest request) {
-
-        final Set<Degree> degrees = findDegree(bean);
-
-        // TODO: erasmus dismissal should also be considered
-        final Predicate<Registration> hasActiveEnrolments =
-                r -> r.getEnrolments(request.getExecutionYear()).stream().anyMatch(e -> !e.isAnnulled());
+        final Predicate<Registration> isEnroled = r -> !getEnroledCurriculumLines(r, requestYear).isEmpty();
 
         final Set<Registration> registrations = Sets.newHashSet();
         for (final Degree degree : degrees) {
-            registrations
-                    .addAll(student.getRegistrationsFor(degree).stream().filter(hasActiveEnrolments).collect(Collectors.toSet()));
+            registrations.addAll(student.getRegistrationsFor(degree).stream().filter(isEnroled).collect(Collectors.toSet()));
         }
 
         if (registrations.size() == 1) {
@@ -425,21 +111,24 @@ public class AbstractFillScholarshipService {
             throw new FillScholarshipException();
         } else {
 
-            final DegreeType degreeType = DEGREE_TYPE_MAPPING.get(bean.getDegreeTypeName());
-            final Collection<Registration> registrationsByDegreeTypes = student.getRegistrationsByDegreeTypes(degreeType).stream()
-                    .filter(hasActiveEnrolments).collect(Collectors.toSet());
+            final Collection<DegreeType> possibleDegreeTypes =
+                    degrees.stream().map(d -> d.getDegreeType()).collect(Collectors.toSet());
+            final Predicate<Registration> degreeTypePredicate = r -> possibleDegreeTypes.contains(r.getDegreeType());
+            final Collection<Registration> registrationsWithActiveEnrolments =
+                    student.getRegistrationsSet().stream().filter(isEnroled.and(degreeTypePredicate)).collect(Collectors.toSet());
 
-            if (registrationsByDegreeTypes.size() == 1) {
-                final Registration registration = registrationsByDegreeTypes.iterator().next();
+            if (registrationsWithActiveEnrolments.size() == 1) {
+                final Registration registration = registrationsWithActiveEnrolments.iterator().next();
                 addWarning(bean,
                         "O curso indicado no ficheiro não coincide com o curso onde o aluno tem inscrições no ano lectivo do inquérito. Seleccionado o curso "
                                 + registration.getDegree().getCode());
                 return registration;
-            } else if (registrationsByDegreeTypes.size() > 1) {
+            } else if (registrationsWithActiveEnrolments.size() > 1) {
                 addError(bean,
-                        "Não foi encontrada a matrícula para o curso indicado no ficheiro e não foi possível determinar a matrícula porque existe mais do que uma com inscrições no ano lectivo do inquérito");
+                        "Não foi encontrada a matrícula para o curso indicado no ficheiro e não foi possível determinar a matrícula porque existe mais do que uma com inscrições no ano lectivo do inquérito.");
             } else {
-                addError(bean, "Nao foi possível encontrar a matrícula para o curso indicado no ficheiro.");
+                addError(bean,
+                        "Não foi possível encontrar a matrícula para o curso indicado no ficheiro ou o aluno não se encontra inscrito no corrente ano letivo.");
             }
 
             return null;
@@ -448,12 +137,9 @@ public class AbstractFillScholarshipService {
 
     }
 
-    private Set<Degree> findDegree(AbstractScholarshipStudentBean bean) {
-
-        Set<Degree> degrees = Bennu.getInstance().getDegreesSet().stream()
-                .filter(d -> d.getDegreeType() == DEGREE_TYPE_MAPPING.get(bean.getDegreeTypeName())
-                        && (bean.getDegreeCode().equals(d.getMinistryCode()) || bean.getDegreeCode().equals(d.getCode())))
-                .collect(Collectors.toSet());
+    private Collection<Degree> findDegree(AbstractScholarshipStudentBean bean) {
+        final Collection<Degree> degrees = Bennu.getInstance().getDegreesSet().stream()
+                .filter(d -> Objects.equals(d.getMinistryCode(), bean.getDegreeCode())).collect(Collectors.toSet());
 
         if (degrees.isEmpty()) {
             addError(bean, "Não foi possível encontrar o curso.");
@@ -463,9 +149,9 @@ public class AbstractFillScholarshipService {
         return degrees;
     }
 
-    private Student findStudent(AbstractScholarshipStudentBean bean, ScholarshipReportRequest request) {
+    private Student findStudent(AbstractScholarshipStudentBean bean, ExecutionYear requestYear) {
 
-        final Person person = findPerson(bean, request);
+        final Person person = findPerson(bean, requestYear);
         if (person == null) {
             addError(bean, "Não foi possível encontrar a pessoa.");
             throw new FillScholarshipException();
@@ -485,7 +171,7 @@ public class AbstractFillScholarshipService {
 
     }
 
-    protected Person findPerson(AbstractScholarshipStudentBean bean, ScholarshipReportRequest request) {
+    protected Person findPerson(AbstractScholarshipStudentBean bean, ExecutionYear requestYear) {
 
         final Collection<Person> withDocumentId = Person.readByDocumentIdNumber(bean.getDocumentNumber());
 
@@ -557,7 +243,7 @@ public class AbstractFillScholarshipService {
                 final Collection<Person> studentsWithSameName =
                         Person.readPersonsByNameAndRoleType(bean.getStudentName(), RoleType.STUDENT);
                 for (Person person : studentsWithSameName) {
-                    Registration findRegistration = findRegistration(person.getStudent(), bean, request);
+                    Registration findRegistration = findRegistration(person.getStudent(), bean, requestYear);
                     if (findRegistration.getNumber().equals(bean.getStudentNumber())) {
                         addWarning(bean,
                                 "Não foi possível encontrar o aluno usando o documento de identificação, no entanto o nome e número de aluno correspondem aos do sistema.");
@@ -585,7 +271,8 @@ public class AbstractFillScholarshipService {
 
     private Person ensureDocumentIdType(final Person person, final AbstractScholarshipStudentBean bean) {
 
-        if (person.getIdDocumentType() != ID_DOCUMENT_TYPE_MAPPING.get(bean.getDocumentTypeName())) {
+        if (person.getIdDocumentType() != ID_DOCUMENT_TYPE_MAPPING.get(bean.getDocumentTypeName())
+                && !person.getIdDocumentType().name().equalsIgnoreCase(bean.getDocumentTypeName())) {
             addError(bean, "O tipo de documento não corresponde com o tipo definido no sistema.");
             throw new FillScholarshipException();
         }
@@ -594,44 +281,128 @@ public class AbstractFillScholarshipService {
 
     }
 
-    protected void fillSpecificInfo(AbstractScholarshipStudentBean bean, RegistrationHistoryReport currentYearRegistrationReport,
-            ScholarshipReportRequest request) {
-        //nothing to be done
+    public void fillAllInfo(final AbstractScholarshipStudentBean bean, Registration registration, ExecutionYear requestYear,
+            boolean firstYearOfCycle) {
+
+        try {
+
+            validateStudentNumber(bean, registration);
+            checkPreconditions(bean, registration, requestYear, firstYearOfCycle);
+
+            fillCommonInfo(bean, registration, requestYear);
+            fillSpecificInfo(bean, registration, requestYear);
+
+        } catch (FillScholarshipException e) {
+            // ignore FillScholarshipException
+            addError(bean, e.getMessage());
+        } finally {
+            bean.setObservations(formatObservations(bean));
+        }
     }
 
-    protected void addError(AbstractScholarshipStudentBean bean, String message) {
-        messages.put(bean, "ERRO: " + message);
+    private void validateStudentNumber(final AbstractScholarshipStudentBean bean, final Registration registration) {
+        if (bean.getStudentNumber() != null && registration.getNumber().intValue() != bean.getStudentNumber().intValue()) {
+            addWarning(bean, "O número de aluno indicado no ficheiro de entrada não corresponde ao número de aluno no sistema.");
+        }
     }
 
-    protected void addWarning(AbstractScholarshipStudentBean bean, String message) {
-        messages.put(bean, "AVISO: " + message);
+    private void checkPreconditions(AbstractScholarshipStudentBean bean, Registration registration, ExecutionYear requestYear,
+            boolean firstYearOfCycle) {
+
+        if (!hasNormalEnrolments(registration, requestYear)) {
+            addError(bean, "A matrícula não tem inscrições para o ano lectivo " + requestYear.getQualifiedName() + ".");
+
+            throw new FillScholarshipException();
+        }
+
+        final RegistrationState lastRegistrationState = registration.getLastRegistrationState(requestYear);
+        if (lastRegistrationState != null && !lastRegistrationState.isActive()) {
+            addWarning(bean, "A matrícula não está activa em " + requestYear.getQualifiedName() + ".");
+        }
+
+        if (firstYearOfCycle && !isFirstTimeInCycle(registration, requestYear)) {
+            addWarning(bean, "O aluno não é primeira vez.");
+        }
+
     }
 
-    // TODO Methods should be inserted into Registration@academic
-    protected Registration getRootRegistration(Registration registration) {
-        final SortedSet<Registration> registrations = Sets.newTreeSet(Registration.COMPARATOR_BY_START_DATE);
-        registrations.add(registration);
-        registrations.addAll(getPrecedentDegreeRegistrations(registration));
-
-        return registrations.first();
+    private boolean hasNormalEnrolments(Registration registration, ExecutionYear executionYear) {
+        return registration.getEnrolments(executionYear).stream()
+                .anyMatch(e -> !e.getCurriculumGroup().isNoCourseGroupCurriculumGroup());
     }
 
-    public static Collection<Registration> getPrecedentDegreeRegistrations(Registration registration) {
+    static public boolean isFirstTimeInCycle(Registration registration, ExecutionYear requestYear) {
+        final List<Registration> cycleRegistrations = getCycleRegistrations(registration);
+        final List<ExecutionYear> cycleEnrolmentYears = getCycleEnrolmentYears(registration, requestYear);
 
-        final Set<Degree> precedentDegreesUntilRoot = getPrecedentDegreesUntilRoot(registration.getDegree());
-        final Set<Registration> result = Sets.newHashSet();
-        for (final Registration iteratedRegistration : registration.getStudent().getRegistrationsSet()) {
+        return cycleRegistrations.size() > 1 ? false : cycleEnrolmentYears.size() == 1
+                && cycleEnrolmentYears.iterator().next() == requestYear;
+    }
 
-            if (registration == iteratedRegistration) {
-                continue;
+    private void fillCommonInfo(AbstractScholarshipStudentBean bean, Registration registration, ExecutionYear requestYear) {
+
+        bean.setGratuityAmount(getTuitionAmount(registration, requestYear));
+        bean.setNumberOfMonthsExecutionYear(SocialServicesConfiguration.getInstance().getNumberOfMonthsOfAcademicYear());
+        bean.setFirstMonthExecutionYear(getFirstMonthOfExecutionYear(requestYear));
+
+        // replace the student number (provided by input file) by the system value
+        bean.setStudentNumber(registration.getNumber());
+
+        bean.setRegime(getRegime(bean, registration, requestYear));
+
+        bean.setEnroled(isEnroled(registration, requestYear));
+        bean.setEnrolmentDate(RegistrationServices.getEnrolmentDate(registration, requestYear));
+
+        bean.setNumberOfEnrolledECTS(getEnroledCredits(registration, requestYear));
+
+        bean.setCetQualificationOwner(isCETQualificationOwner(registration));
+        bean.setCtspQualificationOwner(isCTSPQualificationOwner(registration));
+        bean.setDegreeQualificationOwner(isDegreeQualificationOwner(registration));
+        bean.setMasterQualificationOwner(isMasterQualificationOwner(registration));
+        bean.setPhdQualificationOwner(isPhdQualificationOwner(registration));
+
+        // add warning if person is enrolled in a degree that already exists as a completed qualification
+        checkIfRegistrationDegreeIsCompleted(bean, registration);
+
+        bean.setCycleIngressionYear(getCycleIngressionYear(bean, registration));
+        bean.setCycleNumberOfEnrolmentsYears(getCycleEnrolmentYears(registration, requestYear).size());
+
+        bean.setNumberOfDegreeCurricularYears(getNumberOfDegreeCurricularYears(registration, requestYear));
+    }
+
+    private Boolean isEnroled(Registration registration, ExecutionYear requestYear) {
+        final RegistrationState stateInDate = registration.getStateInDate(new DateTime());
+        return stateInDate != null && stateInDate.isActive() && !getEnroledCurriculumLines(registration, requestYear).isEmpty();
+    }
+
+    private Integer getNumberOfDegreeCurricularYears(Registration registration, ExecutionYear requestYear) {
+        return getStudentCurricularPlan(registration, requestYear).getDegreeCurricularPlan().getDurationInYears();
+    }
+
+    private Collection<SchoolLevelType> getPersonSchoolLevelTypes(final Person person) {
+        final Set<SchoolLevelType> result = Sets.newHashSet();
+        result.addAll(getCompletedQualificationsSchoolLevelTypes(person));
+        result.addAll(getCompletedRegistrationSchoolLevelTypes(person.getStudent()));
+
+        return result;
+
+    }
+
+    private Collection<SchoolLevelType> getCompletedRegistrationSchoolLevelTypes(final Student student) {
+        final Set<SchoolLevelType> result = Sets.newHashSet();
+        for (final Registration registration : student.getRegistrationsSet()) {
+
+            //TODO: find cleaner solution
+            if (registration.getDegreeType().isIntegratedMasterDegree()
+                    && registration.hasConcludedCycle(CycleType.FIRST_CYCLE)) {
+                result.add(SchoolLevelType.DEGREE);
             }
 
-            if (iteratedRegistration.isCanceled() || iteratedRegistration.isConcluded() || iteratedRegistration.hasConcluded()) {
-                continue;
-            }
-
-            if (precedentDegreesUntilRoot.contains(iteratedRegistration.getDegree())) {
-                result.add(iteratedRegistration);
+            if (registration.isConcluded() || registration.hasConcluded()) {
+                final SchoolLevelTypeMapping schoolLevelTypeMapping = registration.getDegreeType().getSchoolLevelTypeMapping();
+                if (schoolLevelTypeMapping != null) {
+                    result.add(schoolLevelTypeMapping.getSchoolLevel());
+                }
             }
 
         }
@@ -639,19 +410,187 @@ public class AbstractFillScholarshipService {
         return result;
     }
 
-    static public Set<ExecutionYear> getExecutionYears(final Registration registration,
-            final Function<Registration, Stream<ExecutionYear>> mapper, final Predicate<ExecutionYear> predicate) {
-
-        final Collection<Registration> toInspect = getPrecedentDegreeRegistrations(registration);
-        toInspect.add(registration);
-
-        return toInspect.stream().flatMap(mapper).filter(predicate).collect(Collectors.toSet());
+    private Collection<SchoolLevelType> getCompletedQualificationsSchoolLevelTypes(final Person person) {
+        return person.getStudent().getPersonalIngressionsDataSet().stream()
+                .flatMap(x -> x.getPrecedentDegreesInformationsSet().stream()).map(x -> x.getSchoolLevel())
+                .collect(Collectors.toSet());
     }
 
-    // TODO Method should be inserted in Degree@academic
-    protected static Set<Degree> getPrecedentDegreesUntilRoot(Degree degree) {
-        //TODO IMPLEMENT
-        return Collections.EMPTY_SET;
+    private BigDecimal getTuitionAmount(Registration registration, ExecutionYear requestYear) {
+
+        final IAcademicTreasuryEvent treasuryEvent =
+                TreasuryBridgeAPIFactory.implementation().getTuitionForRegistrationTreasuryEvent(registration, requestYear);
+        if (treasuryEvent == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return treasuryEvent.getAmountToPay().subtract(treasuryEvent.getInterestsAmountToPay());
+    }
+
+    private Integer getFirstMonthOfExecutionYear(ExecutionYear requestYear) {
+        return requestYear.getBeginLocalDate().getMonthOfYear();
+    }
+
+    private String getRegime(AbstractScholarshipStudentBean bean, Registration registration, ExecutionYear requestYear) {
+
+        final boolean partialRegime = registration.getRegimeType(requestYear) == RegistrationRegimeType.PARTIAL_TIME;
+
+        final boolean workingStudent =
+                StatuteServices.findStatuteTypes(registration, requestYear).stream().anyMatch(s -> s.isWorkingStudentStatute());
+
+        //TODO: not supported
+        final boolean professionalInternship = false;
+
+        if (professionalInternship) {
+            return REGIME_PROFESSIONAL_INTERNSHIP;
+        }
+
+        if (partialRegime) {
+
+            if (workingStudent) {
+                return REGIME_PARTIAL_TIME_WORKING_STUDENT;
+            }
+
+            return REGIME_PARTIAL_TIME;
+        }
+
+        if (workingStudent) {
+            return REGIME_FULL_TIME_WORKING_STUDENT;
+        }
+
+        return REGIME_FULL_TIME;
+
+    }
+
+    public Integer getCycleIngressionYear(AbstractScholarshipStudentBean bean, Registration registration) {
+
+        final Registration cycleFirstRegistration = getCycleRegistrations(registration).iterator().next();
+        final Integer cycleIngressionYear = cycleFirstRegistration.getStartExecutionYear().getBeginDateYearMonthDay().getYear();
+
+        if (bean.getCycleIngressionYear() != null && !bean.getCycleIngressionYear().equals(cycleIngressionYear)) {
+            String message = "o ano de ingresso no ciclo de estudos declarado no ficheiro (" + bean.getCycleIngressionYear()
+                    + ") não corresponde ao ano de início do sistema (" + cycleIngressionYear + ").";
+            addWarning(bean, message);
+        }
+
+        return cycleIngressionYear;
+    }
+
+    static protected List<ExecutionYear> getCycleEnrolmentYears(Registration registration, ExecutionYear requestYear) {
+        return getCycleRegistrations(registration).stream().flatMap(r -> RegistrationServices.getEnrolmentYears(r).stream())
+                .distinct().filter(ey -> ey.isBeforeOrEquals(requestYear)).sorted(ExecutionYear.COMPARATOR_BY_BEGIN_DATE)
+                .collect(Collectors.toList());
+    }
+
+    static protected List<Registration> getCycleRegistrations(final Registration registration) {
+        return registration.getStudent().getRegistrationsByDegreeTypes(registration.getDegreeType()).stream()
+                .filter(r -> r.getStartExecutionYear().isBeforeOrEquals(registration.getStartExecutionYear()))
+                .flatMap(r -> Stream.concat(Stream.of(r), Stream.of(RegistrationServices.getRootRegistration(r)))).distinct()
+                .sorted(Registration.COMPARATOR_BY_START_DATE).collect(Collectors.toList());
+    }
+
+    public String formatObservations(final AbstractScholarshipStudentBean bean) {
+        if (!messages.containsKey(bean)) {
+            return "";
+        }
+
+        return messages.get(bean).stream().collect(Collectors.joining("\n"));
+    }
+
+    protected void addError(AbstractScholarshipStudentBean bean, String message) {
+        messages.put(bean, ERROR_OBSERVATION + ": " + message);
+    }
+
+    protected void addWarning(AbstractScholarshipStudentBean bean, String message) {
+        messages.put(bean, WARNING_OBSERVATION + ": " + message);
+    }
+
+    private StudentCurricularPlan getStudentCurricularPlan(Registration registration, ExecutionYear executionYear) {
+        final StudentCurricularPlan studentCurricularPlan =
+                RegistrationServices.getStudentCurricularPlan(registration, executionYear);
+        if (studentCurricularPlan == null) {
+            throw new FillScholarshipException("Plano curricular não encontrado no ano lectivo");
+        }
+
+        return studentCurricularPlan;
+    }
+
+    protected BigDecimal getEnroledCredits(Registration registration, ExecutionYear executionYear) {
+        return sumCredits(getEnroledCurriculumLines(registration, executionYear).stream());
+    }
+
+    protected BigDecimal getApprovedCredits(Registration registration, ExecutionYear executionYear) {
+        return sumCredits(getEnroledCurriculumLines(registration, executionYear).stream().filter(l -> l.isApproved()));
+    }
+
+    private Set<CurriculumLine> getEnroledCurriculumLines(Registration registration, ExecutionYear executionYear) {
+        return RegistrationServices.getNormalEnroledCurriculumLines(registration, executionYear, true,
+                getDismissalTypesToConsider());
+    }
+
+    private Set<CreditsReasonType> getDismissalTypesToConsider() {
+        return Bennu.getInstance().getSocialServicesConfiguration().getCreditsReasonTypesSet();
+    }
+
+    private BigDecimal sumCredits(final Stream<CurriculumLine> linesStream) {
+        return linesStream.map(line -> line.getEctsCreditsForCurriculum()).reduce((x, y) -> x.add(y)).orElse(BigDecimal.ZERO);
+    }
+
+    private Boolean isCETQualificationOwner(Registration registration) {
+        return getPersonSchoolLevelTypes(registration.getPerson()).stream().filter(SchoolLevelTypeMapping::isCET).findAny()
+                .isPresent();
+    }
+
+    private Boolean isCTSPQualificationOwner(Registration registration) {
+        return getPersonSchoolLevelTypes(registration.getPerson()).stream().filter(SchoolLevelTypeMapping::isCTSP).findAny()
+                .isPresent();
+    }
+
+    private Boolean isDegreeQualificationOwner(Registration registration) {
+        return getPersonSchoolLevelTypes(registration.getPerson()).stream().filter(SchoolLevelTypeMapping::isDegree).findAny()
+                .isPresent();
+    }
+
+    private Boolean isMasterQualificationOwner(Registration registration) {
+        return getPersonSchoolLevelTypes(registration.getPerson()).stream().filter(SchoolLevelTypeMapping::isMasterDegree)
+                .findAny().isPresent();
+    }
+
+    private Boolean isPhdQualificationOwner(Registration registration) {
+        return getPersonSchoolLevelTypes(registration.getPerson()).stream().filter(SchoolLevelTypeMapping::isPhd).findAny()
+                .isPresent();
+    }
+
+    private void checkIfRegistrationDegreeIsCompleted(AbstractScholarshipStudentBean bean, Registration registration) {
+        SchoolLevelTypeMapping schoolLevelTypeMapping = registration.getDegreeType().getSchoolLevelTypeMapping();
+        SchoolLevelType schoolLevelType = schoolLevelTypeMapping == null ? null : schoolLevelTypeMapping.getSchoolLevel();
+        if (bean.getCetQualificationOwner() && SchoolLevelTypeMapping.isCET(schoolLevelType)) {
+            addWarning(bean, "O grau da qualificação concluida (CET) é igual ao grau que o aluno frequenta.");
+        }
+
+        if (bean.getCtspQualificationOwner() && SchoolLevelTypeMapping.isCTSP(schoolLevelType)) {
+            // check if current registration degree is the same of completed qualification
+            addWarning(bean, "O grau da qualificação concluida (CTSP) é igual ao grau que o aluno frequenta.");
+        }
+
+        if (bean.getDegreeQualificationOwner() && SchoolLevelTypeMapping.isDegree(schoolLevelType)) {
+            // check if current registration degree is the same of completed qualification
+            addWarning(bean, "O grau da qualificação concluida (licenciatura) é igual ao grau que o aluno frequenta.");
+        }
+
+        if (bean.getMasterQualificationOwner() && SchoolLevelTypeMapping.isMasterDegree(schoolLevelType)) {
+            // check if current registration degree is the same of completed qualification
+            addWarning(bean, "O grau da qualificação concluida (mestrado) é igual ao grau que o aluno frequenta.");
+        }
+
+        if (bean.getPhdQualificationOwner() && SchoolLevelTypeMapping.isPhd(schoolLevelType)) {
+            // check if current registration degree is the same of completed qualification
+            addWarning(bean, "O grau da qualificação concluida (douturamento) é igual ao grau que o aluno frequenta.");
+        }
+    }
+
+    protected void fillSpecificInfo(AbstractScholarshipStudentBean bean, Registration registration, ExecutionYear requestYear) {
+        //nothing to be done
     }
 
 }

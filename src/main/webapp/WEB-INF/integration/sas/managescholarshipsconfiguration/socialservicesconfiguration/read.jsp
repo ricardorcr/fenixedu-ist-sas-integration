@@ -60,12 +60,36 @@ ${portal.toolkit()}
 	</td> 
 </tr>
 <tr>
+	<th scope="row" class="col-xs-3"><spring:message code="label.SocialServicesConfiguration.email"/></th> 
+	<td>
+		<c:out value='${socialServicesConfiguration.email}'/>
+	</td> 
+</tr>
+<tr>
+	<th scope="row" class="col-xs-3"><spring:message code="label.SocialServicesConfiguration.institutionCode"/></th> 
+	<td>
+		<c:out value='${socialServicesConfiguration.institutionCode}'/>
+	</td> 
+</tr>
+<tr>
 	<th scope="row" class="col-xs-3"><spring:message code="label.SocialServicesConfiguration.ingressionTypeWhichAreDegreeTransfer"/></th> 
 	<td>
 		<ul>
 		<c:forEach items="${socialServicesConfiguration.ingressionTypeWhichAreDegreeTransfer}" var="element">
 			<li>
 				<c:out value="${element.localizedName}" /> 
+			</li>
+		</c:forEach>
+		<ul>
+	</td> 
+</tr>
+<tr>
+	<th scope="row" class="col-xs-3"><spring:message code="label.SocialServicesConfiguration.creditsReasonType"/></th> 
+	<td>
+		<ul>
+		<c:forEach items="${socialServicesConfiguration.creditsReasonTypes}" var="element">
+			<li>
+				<c:out value="${element.reason}" /> 
 			</li>
 		</c:forEach>
 		<ul>
