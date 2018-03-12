@@ -26,10 +26,13 @@ import org.fenixedu.academic.domain.student.registrationStates.RegistrationState
 import org.fenixedu.academic.domain.studentCurriculum.CurriculumLine;
 import org.fenixedu.academic.domain.treasury.IAcademicTreasuryEvent;
 import org.fenixedu.academic.domain.treasury.TreasuryBridgeAPIFactory;
+import org.fenixedu.bennu.SasSpringConfiguration;
 import org.fenixedu.bennu.core.domain.Bennu;
+import org.fenixedu.bennu.core.i18n.BundleUtil;
 import org.fenixedu.ulisboa.integration.sas.domain.SchoolLevelTypeMapping;
 import org.fenixedu.ulisboa.integration.sas.domain.SocialServicesConfiguration;
 import org.fenixedu.ulisboa.integration.sas.dto.AbstractScholarshipStudentBean;
+import org.fenixedu.ulisboa.integration.sas.service.SasDataShareAuthorizationServices;
 import org.fenixedu.ulisboa.specifications.domain.services.RegistrationServices;
 import org.fenixedu.ulisboa.specifications.domain.services.statute.StatuteServices;
 import org.fenixedu.ulisboa.specifications.domain.studentCurriculum.CreditsReasonType;
@@ -80,7 +83,6 @@ public class AbstractFillScholarshipService {
                 fillAllInfo(bean, getRegistrationByAbstractScholarshipStudentBean(bean, requestYear), requestYear,
                         firstYearOfCycle);
             } catch (FillScholarshipException e) {
-                //ignore FillScholarshipException
                 addError(bean, e.getMessage());
                 bean.setObservations(formatObservations(bean));
             }
@@ -107,7 +109,8 @@ public class AbstractFillScholarshipService {
             return registrations.iterator().next();
 
         } else if (registrations.size() > 1) {
-            throw new FillScholarshipException("Múltiplas matrículas para o mesmo curso activas no mesmo ano.");
+            addError(bean, "message.error.multiple.registrations");
+            throw new FillScholarshipException("message.error.multiple.registrations");
         } else {
 
             final Collection<DegreeType> possibleDegreeTypes =
@@ -118,16 +121,15 @@ public class AbstractFillScholarshipService {
 
             if (registrationsWithActiveEnrolments.size() == 1) {
                 final Registration registration = registrationsWithActiveEnrolments.iterator().next();
-                addWarning(bean,
-                        "O curso indicado no ficheiro não coincide com o curso onde o aluno tem inscrições no ano lectivo do inquérito. Seleccionado o curso "
-                                + registration.getDegree().getCode());
+                addWarning(bean, "message.warning.input.degree.code.not.equals.to.active.degree.code",
+                        registration.getDegree().getCode());
                 return registration;
             } else if (registrationsWithActiveEnrolments.size() > 1) {
-                throw new FillScholarshipException(
-                        "Não foi encontrada a matrícula para o curso indicado no ficheiro e não foi possível determinar a matrícula porque existe mais do que uma com inscrições no ano lectivo do inquérito.");
+                addError(bean, "message.error.input.registration.not.found.and.multiple.active.registrations");
+                throw new FillScholarshipException("message.error.input.registration.not.found.and.multiple.active.registrations");
             } else {
-                throw new FillScholarshipException(
-                        "Não foi possível encontrar a matrícula para o curso indicado no ficheiro ou o aluno não se encontra inscrito no corrente ano letivo.");
+                addError(bean, "message.error.input.registration.not.found.and.no.active.registrations");
+                throw new FillScholarshipException("message.error.input.registration.not.found.and.no.active.registrations");
             }
 
         }
@@ -140,8 +142,8 @@ public class AbstractFillScholarshipService {
                         || Objects.equals(d.getCode(), bean.getDegreeCode())).collect(Collectors.toSet());
 
         if (degrees.isEmpty()) {
-            addError(bean, "Não foi possível encontrar o curso.");
-            throw new FillScholarshipException("Não foi possível encontrar o curso.");
+            addError(bean, "message.error.degree.not.found");
+            throw new FillScholarshipException("message.error.degree.not.found");
         }
 
         return degrees;
@@ -151,16 +153,17 @@ public class AbstractFillScholarshipService {
 
         final Person person = findPerson(bean, requestYear);
         if (person == null) {
-            throw new FillScholarshipException("Não foi possível encontrar a pessoa.");
+            addError(bean, "message.error.person.not.found");
+            throw new FillScholarshipException("message.error.person.not.found");
         }
 
         if (person.getStudent() == null) {
-            throw new FillScholarshipException("A pessoa encontrada não é um aluno.");
+            addError(bean, "message.error.degree.not.found");
+            throw new FillScholarshipException("message.error.person.is.not.a.student");
         }
 
         if (bean.getStudentNumber() == null) {
-            addWarning(bean,
-                    "Não foi possível verificar o número de aluno com o do sistema (o campo encontrava-se vazio no Excel, mas foi preenchido).");
+            addWarning(bean, "message.warning.input.student.number.is.empty");
         }
 
         return person.getStudent();
@@ -175,7 +178,7 @@ public class AbstractFillScholarshipService {
             return ensureDocumentIdType(withDocumentId.iterator().next(), bean);
 
         } else if (withDocumentId.size() > 1) {
-            addWarning(bean, "Encontradas múltiplas pessoas com o mesmo documento de identificação.");
+            addWarning(bean, "message.warning.multiple.people.found.with.same.document.id");
             return findPersonByName(withDocumentId, bean);
         } else {
             // try partial id document number and with the student number and name
@@ -190,8 +193,7 @@ public class AbstractFillScholarshipService {
 
                 if (withPartialDocumentId.size() == 1) {
                     if (bean.getDocumentBINumber() == null || !bean.getDocumentBINumber().equals(documentIdWithoutCheckDigit)) {
-                        addWarning(bean,
-                                "O número de BI indicado na última coluna não corresponde ao número de documento (sem o dígito de controlo) de identificação.");
+                        addWarning(bean, "message.warning.input.document.id.not.equals.without.control.digit");
                     }
 
                     return ensureDocumentIdType(withPartialDocumentId.iterator().next(), bean);
@@ -199,12 +201,11 @@ public class AbstractFillScholarshipService {
 
                 if (withPartialDocumentId.size() > 1) {
                     if (bean.getDocumentBINumber() == null || !bean.getDocumentBINumber().equals(documentIdWithoutCheckDigit)) {
-                        addWarning(bean,
-                                "O número de BI indicado na última coluna não corresponde ao número de documento (sem o dígito de controlo) de identificação.");
+                        addWarning(bean, "message.warning.input.document.id.not.equals.without.control.digit");
                     }
 
-                    addWarning(bean,
-                            "Encontradas múltiplas pessoas com o mesmo número de documento (sem o dígito de controlo) de identificação.");
+                    addWarning(bean, "message.warning.multiple.people.found.with.same.document.id.without.control.digit");
+
                     return findPersonByName(withPartialDocumentId, bean);
                 }
 
@@ -218,8 +219,7 @@ public class AbstractFillScholarshipService {
                 if (withPartialDocumentIdWithoutCCSerial.size() == 1) {
                     if (bean.getDocumentBINumber() == null
                             || !bean.getDocumentBINumber().equals(documentIdWithoutCitizenCardSerial)) {
-                        addWarning(bean,
-                                "O número de BI indicado na última coluna não corresponde ao número de documento (sem o dígito de controlo e sem o número de série) de identificação.");
+                        addWarning(bean, "message.warning.input.document.id.not.equals.without.control.digit.and.serial");
                     }
                     return ensureDocumentIdType(withPartialDocumentIdWithoutCCSerial.iterator().next(), bean);
                 }
@@ -227,11 +227,10 @@ public class AbstractFillScholarshipService {
                 if (withPartialDocumentIdWithoutCCSerial.size() > 1) {
                     if (bean.getDocumentBINumber() == null
                             || !bean.getDocumentBINumber().equals(documentIdWithoutCitizenCardSerial)) {
-                        addWarning(bean,
-                                "O número de BI indicado na última coluna não corresponde ao número de documento (sem o dígito de controlo e sem o número de série) de identificação.");
+                        addWarning(bean, "message.warning.input.document.id.not.equals.without.control.digit.and.serial");
                     }
                     addWarning(bean,
-                            "Encontradas múltiplas pessoas com o mesmo número de documento (sem o dígito de controlo e sem o número de série) de identificação.");
+                            "message.warning.multiple.people.found.with.same.document.id.without.control.digit.and.serial");
                     return findPersonByName(withPartialDocumentIdWithoutCCSerial, bean);
                 }
 
@@ -240,9 +239,9 @@ public class AbstractFillScholarshipService {
                         Person.readPersonsByNameAndRoleType(bean.getStudentName(), RoleType.STUDENT);
                 for (Person person : studentsWithSameName) {
                     Registration findRegistration = findRegistration(person.getStudent(), bean, requestYear);
-                    if (findRegistration.getNumber().equals(bean.getStudentNumber())) {
-                        addWarning(bean,
-                                "Não foi possível encontrar o aluno usando o documento de identificação, no entanto o nome e número de aluno correspondem aos do sistema.");
+                    if (findRegistration.getNumber().equals(bean.getStudentNumber())
+                            || findRegistration.getStudent().getNumber().intValue() == bean.getStudentNumber().intValue()) {
+                        addWarning(bean, "message.warning.student.not.found.with.id.but.name.and.number.match");
                         return person;
                     }
                 }
@@ -269,7 +268,8 @@ public class AbstractFillScholarshipService {
 
         if (person.getIdDocumentType() != ID_DOCUMENT_TYPE_MAPPING.get(bean.getDocumentTypeName())
                 && !person.getIdDocumentType().name().equalsIgnoreCase(bean.getDocumentTypeName())) {
-            throw new FillScholarshipException("O tipo de documento não corresponde com o tipo definido no sistema.");
+            addError(bean, "message.error.identity.document.type");
+            throw new FillScholarshipException("message.error.identity.document.type");
         }
 
         return person;
@@ -288,7 +288,6 @@ public class AbstractFillScholarshipService {
             fillSpecificInfo(bean, registration, requestYear);
 
         } catch (FillScholarshipException e) {
-            // ignore FillScholarshipException
             addError(bean, e.getMessage());
         } finally {
             bean.setObservations(formatObservations(bean));
@@ -297,7 +296,7 @@ public class AbstractFillScholarshipService {
 
     private void validateStudentNumber(final AbstractScholarshipStudentBean bean, final Registration registration) {
         if (bean.getStudentNumber() != null && registration.getNumber().intValue() != bean.getStudentNumber().intValue()) {
-            addWarning(bean, "O número de aluno indicado no ficheiro de entrada não corresponde ao número de aluno no sistema.");
+            addWarning(bean, "message.warning.input.student.number.does.not.match.with.fenix");
         }
     }
 
@@ -305,24 +304,28 @@ public class AbstractFillScholarshipService {
             boolean firstYearOfCycle) {
 
         if (getEnroledCurriculumLines(registration, requestYear).isEmpty()) {
-            throw new FillScholarshipException(
-                    "A matrícula não tem inscrições para o ano lectivo " + requestYear.getQualifiedName() + ".");
+            throw new FillScholarshipException("message.error.registration.without.enrolments", requestYear.getQualifiedName());
         }
 
         final RegistrationState lastRegistrationState = registration.getLastRegistrationState(requestYear);
         if (lastRegistrationState != null && !lastRegistrationState.isActive()) {
-            addWarning(bean, "A matrícula não está activa em " + requestYear.getQualifiedName() + ".");
+            addWarning(bean, "message.warning.registration.is.not.active", requestYear.getQualifiedName());
         }
 
         if (firstYearOfCycle && !isFirstTimeInCycle(registration, requestYear)) {
-            addWarning(bean, "O aluno não é primeira vez.");
+            addWarning(bean, "message.warning.student.is.not.first.time");
         }
 
-    }
+        if (!SasDataShareAuthorizationServices.isAuthorizationTypeConfigured()) {
+            return;
+        }
 
-    private boolean hasNormalEnrolments(Registration registration, ExecutionYear executionYear) {
-        return registration.getEnrolments(executionYear).stream()
-                .anyMatch(e -> !e.getCurriculumGroup().isNoCourseGroupCurriculumGroup());
+        if (!SasDataShareAuthorizationServices.isAnswered(registration.getPerson())) {
+            throw new FillScholarshipException("message.error.student.has.not.answer.data.sharing.survey");
+        } else if (!SasDataShareAuthorizationServices.isDataShareAllowed(registration.getPerson())) {
+            throw new FillScholarshipException("message.error.student.does.not.allow.data.sharing");
+        }
+
     }
 
     static public boolean isFirstTimeInCycle(Registration registration, ExecutionYear requestYear) {
@@ -462,9 +465,8 @@ public class AbstractFillScholarshipService {
         final Integer cycleIngressionYear = cycleFirstRegistration.getStartExecutionYear().getBeginDateYearMonthDay().getYear();
 
         if (bean.getCycleIngressionYear() != null && !bean.getCycleIngressionYear().equals(cycleIngressionYear)) {
-            String message = "o ano de ingresso no ciclo de estudos declarado no ficheiro (" + bean.getCycleIngressionYear()
-                    + ") não corresponde ao ano de início do sistema (" + cycleIngressionYear + ").";
-            addWarning(bean, message);
+            addWarning(bean, "message.warning.input.ingression.date.does.not.match.with.fenix",
+                    String.valueOf(bean.getCycleIngressionYear()), String.valueOf(cycleIngressionYear));
         }
 
         return cycleIngressionYear;
@@ -491,19 +493,19 @@ public class AbstractFillScholarshipService {
         return messages.get(bean).stream().collect(Collectors.joining("\n"));
     }
 
-    protected void addError(AbstractScholarshipStudentBean bean, String message) {
-        messages.put(bean, ERROR_OBSERVATION + ": " + message);
+    protected void addError(AbstractScholarshipStudentBean bean, String message, String... args) {
+        messages.put(bean, ERROR_OBSERVATION + ": " + BundleUtil.getString(SasSpringConfiguration.BUNDLE, message, args));
     }
 
-    protected void addWarning(AbstractScholarshipStudentBean bean, String message) {
-        messages.put(bean, WARNING_OBSERVATION + ": " + message);
+    protected void addWarning(AbstractScholarshipStudentBean bean, String message, String... args) {
+        messages.put(bean, WARNING_OBSERVATION + ": " + BundleUtil.getString(SasSpringConfiguration.BUNDLE, message, args));
     }
 
     private StudentCurricularPlan getStudentCurricularPlan(Registration registration, ExecutionYear executionYear) {
         final StudentCurricularPlan studentCurricularPlan =
                 RegistrationServices.getStudentCurricularPlan(registration, executionYear);
         if (studentCurricularPlan == null) {
-            throw new FillScholarshipException("Plano curricular não encontrado no ano lectivo");
+            throw new FillScholarshipException("message.error.curricular.plan.not.found");
         }
 
         return studentCurricularPlan;
@@ -559,27 +561,27 @@ public class AbstractFillScholarshipService {
         SchoolLevelTypeMapping schoolLevelTypeMapping = registration.getDegreeType().getSchoolLevelTypeMapping();
         SchoolLevelType schoolLevelType = schoolLevelTypeMapping == null ? null : schoolLevelTypeMapping.getSchoolLevel();
         if (bean.getCetQualificationOwner() && SchoolLevelTypeMapping.isCET(schoolLevelType)) {
-            addWarning(bean, "O grau da qualificação concluida (CET) é igual ao grau que o aluno frequenta.");
+            addWarning(bean, "message.warning.cet.level");
         }
 
         if (bean.getCtspQualificationOwner() && SchoolLevelTypeMapping.isCTSP(schoolLevelType)) {
             // check if current registration degree is the same of completed qualification
-            addWarning(bean, "O grau da qualificação concluida (CTSP) é igual ao grau que o aluno frequenta.");
+            addWarning(bean, "message.warning.ctsp.level");
         }
 
         if (bean.getDegreeQualificationOwner() && SchoolLevelTypeMapping.isDegree(schoolLevelType)) {
             // check if current registration degree is the same of completed qualification
-            addWarning(bean, "O grau da qualificação concluida (licenciatura) é igual ao grau que o aluno frequenta.");
+            addWarning(bean, "message.warning.degree.level");
         }
 
         if (bean.getMasterQualificationOwner() && SchoolLevelTypeMapping.isMasterDegree(schoolLevelType)) {
             // check if current registration degree is the same of completed qualification
-            addWarning(bean, "O grau da qualificação concluida (mestrado) é igual ao grau que o aluno frequenta.");
+            addWarning(bean, "message.warning.master.level");
         }
 
         if (bean.getPhdQualificationOwner() && SchoolLevelTypeMapping.isPhd(schoolLevelType)) {
             // check if current registration degree is the same of completed qualification
-            addWarning(bean, "O grau da qualificação concluida (douturamento) é igual ao grau que o aluno frequenta.");
+            addWarning(bean, "message.warning.phd.level");
         }
     }
 

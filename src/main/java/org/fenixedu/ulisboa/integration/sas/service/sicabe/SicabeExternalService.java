@@ -270,7 +270,6 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
             }
 
         } catch (FillScholarshipException e) {
-
             c.changeState(SasScholarshipCandidacyState.PROCESSED_ERRORS);
             writeLog(c, service.formatObservations(tempBean), c.getStateDate());
 
