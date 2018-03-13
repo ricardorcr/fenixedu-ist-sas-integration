@@ -242,7 +242,7 @@ public class AbstractFillScholarshipService {
                 for (Person person : studentsWithSameName) {
                     Registration findRegistration = findRegistration(person.getStudent(), bean, requestYear);
                     if (findRegistration.getNumber().equals(bean.getStudentNumber())
-                            || findRegistration.getStudent().getNumber().intValue() == bean.getStudentNumber().intValue()) {
+                            || (bean.getStudentNumber() != null && findRegistration.getStudent().getNumber().intValue() == bean.getStudentNumber().intValue())) {
                         addWarning(bean, "message.warning.student.not.found.with.id.but.name.and.number.match");
                         return person;
                     }
