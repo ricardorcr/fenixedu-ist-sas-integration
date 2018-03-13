@@ -28,7 +28,7 @@ class SasScholarshipCandidacy {
 	String studentNumber;
 	Integer candidacyNumber;
 	String docIdNumber;
-	IDDocumentType docIdType;
+	String docIdType;
 
 	// Ownership
 	Boolean cetQualificationOwner;

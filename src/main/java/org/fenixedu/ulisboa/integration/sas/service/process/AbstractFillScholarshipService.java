@@ -67,10 +67,12 @@ public class AbstractFillScholarshipService {
 
         // id document types mapping
         ID_DOCUMENT_TYPE_MAPPING.put("BI / N.º ID CIVIL", IDDocumentType.IDENTITY_CARD);
+        //ID_DOCUMENT_TYPE_MAPPING.put("BiNaoNacional", IDDocumentType.FOREIGNER_IDENTITY_CARD);
         ID_DOCUMENT_TYPE_MAPPING.put("Autorização de residência", IDDocumentType.RESIDENCE_AUTHORIZATION);
         ID_DOCUMENT_TYPE_MAPPING.put("Passaporte", IDDocumentType.PASSPORT);
+        ID_DOCUMENT_TYPE_MAPPING.put("NIF", IDDocumentType.OTHER);
         ID_DOCUMENT_TYPE_MAPPING.put("Outros", IDDocumentType.OTHER);
-
+        
     }
 
     public void fillAllInfo(Collection<AbstractScholarshipStudentBean> scholarshipStudentBeans, ExecutionYear requestYear,
@@ -265,7 +267,7 @@ public class AbstractFillScholarshipService {
     }
 
     private Person ensureDocumentIdType(final Person person, final AbstractScholarshipStudentBean bean) {
-
+        
         if (person.getIdDocumentType() != ID_DOCUMENT_TYPE_MAPPING.get(bean.getDocumentTypeName())
                 && !person.getIdDocumentType().name().equalsIgnoreCase(bean.getDocumentTypeName())) {
             addError(bean, "message.error.identity.document.type");

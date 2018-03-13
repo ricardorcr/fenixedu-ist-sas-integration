@@ -1,10 +1,13 @@
 package org.fenixedu.ulisboa.integration.sas.service.sicabe;
 
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -13,6 +16,7 @@ import javax.xml.ws.BindingProvider;
 import org.apache.commons.lang.math.NumberUtils;
 import org.datacontract.schemas._2004._07.sicabe_contracts.AlterarDadosAcademicosContratualizacaoRequest;
 import org.fenixedu.academic.domain.ExecutionYear;
+import org.fenixedu.academic.domain.candidacy.Candidacy;
 import org.fenixedu.academic.domain.exceptions.DomainException;
 import org.fenixedu.academic.domain.person.IDDocumentType;
 import org.fenixedu.academic.domain.student.Registration;
@@ -36,6 +40,7 @@ import org.joda.time.LocalDate;
 import org.springframework.util.StringUtils;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.qubit.solution.fenixedu.bennu.webservices.services.client.BennuWebServiceClient;
 import com.sun.xml.ws.fault.ServerSOAPFaultException;
@@ -91,6 +96,7 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
             DadosAcademicosObterCandidaturasSubmetidasSicabeValidationMessageFaultFaultMessage, ServerSOAPFaultException {
         final ObterCandidaturasSubmetidasRequest parameters = new ObterCandidaturasSubmetidasRequest();
         parameters.setAnoLectivo(executionYear.getBeginCivilYear());
+        
 
         final ObterCandidaturasSubmetidasResponse obterCandidaturasSubmetidas =
                 getClient().obterCandidaturasSubmetidas(parameters);
@@ -102,7 +108,6 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
                     updateOrCreateSasScholarshipCandidacy(c, executionYear);
 
                 });
-
     }
 
     @Atomic
@@ -134,8 +139,8 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
 
         SasScholarshipCandidacy candidacy = SasScholarshipCandidacy.findAll().stream()
                 .filter(c -> c.getExecutionYear() == executionYear && (c.getFiscalNumber().equalsIgnoreCase(input.getNif())
-                        || (c.getDocIdType() == convertCandidacyDocumentType(input.getTipoDocumentoIdentificacao())
-                                && c.getDocIdNumber().equalsIgnoreCase(input.getNumeroDocumentoIdentificacao()))))
+                        || (c.getDocIdType().equalsIgnoreCase(input.getTipoDocumentoIdentificacao().name()))
+                                && c.getDocIdNumber().equalsIgnoreCase(input.getNumeroDocumentoIdentificacao())))
                 .findFirst().orElse(null);
 
         if (candidacy == null) {
@@ -178,7 +183,7 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
                 && Objects.equal(candidacy.getStudentNumber(), input.getNumeroAluno().getValue())
                 && Objects.equal(candidacy.getCandidacyNumber(), input.getNumeroCandidatura())
                 && Objects.equal(candidacy.getDocIdNumber(), input.getNumeroDocumentoIdentificacao())
-                && candidacy.getDocIdType() == convertCandidacyDocumentType(input.getTipoDocumentoIdentificacao()) &&
+                && Objects.equal(candidacy.getDocIdType(), input.getTipoDocumentoIdentificacao().name()) &&
 
                 Objects.equal(candidacy.getCetQualificationOwner(), input.getTitularidade().getValue().isTitularCET())
                 && Objects.equal(candidacy.getCstpQualificationOwner(), input.getTitularidade().getValue().isTitularCSTP())
@@ -217,7 +222,7 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
         candidacy.setStudentNumber(input.getNumeroAluno().getValue());
         candidacy.setCandidacyNumber(input.getNumeroCandidatura());
         candidacy.setDocIdNumber(input.getNumeroDocumentoIdentificacao());
-        candidacy.setDocIdType(convertCandidacyDocumentType(input.getTipoDocumentoIdentificacao()));
+        candidacy.setDocIdType(input.getTipoDocumentoIdentificacao().name());
 
         // Ownership
         candidacy.setCetQualificationOwner(input.getTitularidade().getValue().isTitularCET());
@@ -260,7 +265,8 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
         tempBean.setStudentName(c.getCandidacyName());
         tempBean.setDegreeCode(c.getDegreeCode());
         tempBean.setDocumentNumber(c.getDocIdNumber());
-        tempBean.setDocumentTypeName(c.getDocIdType().name());
+        IDDocumentType candidacyDocumentType = convertCandidacyDocumentType(c.getDocIdType());
+        tempBean.setDocumentTypeName(candidacyDocumentType != null ? candidacyDocumentType.name() : null);
 
         try {
             Registration registration = service.getRegistrationByAbstractScholarshipStudentBean(tempBean, c.getExecutionYear());
@@ -293,33 +299,17 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
         return null;
     }
 
-    protected IDDocumentType convertCandidacyDocumentType(TipoDocumentoIdentificacao idDocumentType) {
-        if (idDocumentType == TipoDocumentoIdentificacao.BI) {
+    protected IDDocumentType convertCandidacyDocumentType(String idDocumentType) {
+        if (idDocumentType.equalsIgnoreCase(TipoDocumentoIdentificacao.BI.name())) {
             return IDDocumentType.IDENTITY_CARD;
-        } else if (idDocumentType == TipoDocumentoIdentificacao.PASSAPORTE) {
+        } else if (idDocumentType.equalsIgnoreCase(TipoDocumentoIdentificacao.PASSAPORTE.name())) {
             return IDDocumentType.PASSPORT;
-        } else if (idDocumentType == TipoDocumentoIdentificacao.AUTORIZACAO_RESIDENCIA) {
+        } else if (idDocumentType.equalsIgnoreCase(TipoDocumentoIdentificacao.AUTORIZACAO_RESIDENCIA.name())) {
             return IDDocumentType.RESIDENCE_AUTHORIZATION;
-        } else if (idDocumentType == TipoDocumentoIdentificacao.BI_NAO_NACIONAL) {
+        } else if (idDocumentType.equalsIgnoreCase(TipoDocumentoIdentificacao.BI_NAO_NACIONAL.name())) {
             return IDDocumentType.FOREIGNER_IDENTITY_CARD;
-        } else if (idDocumentType == TipoDocumentoIdentificacao.OUTROS) {
+        } else if (idDocumentType.equalsIgnoreCase(TipoDocumentoIdentificacao.OUTROS.name())) {
             return IDDocumentType.OTHER;
-        }
-
-        return null;
-    }
-
-    protected TipoDocumentoIdentificacao convertDocumentTypeCandidacy(IDDocumentType idDocumentType) {
-        if (idDocumentType == IDDocumentType.IDENTITY_CARD) {
-            return TipoDocumentoIdentificacao.BI;
-        } else if (idDocumentType == IDDocumentType.PASSPORT) {
-            return TipoDocumentoIdentificacao.PASSAPORTE;
-        } else if (idDocumentType == IDDocumentType.RESIDENCE_AUTHORIZATION) {
-            return TipoDocumentoIdentificacao.AUTORIZACAO_RESIDENCIA;
-        } else if (idDocumentType == IDDocumentType.FOREIGNER_IDENTITY_CARD) {
-            return TipoDocumentoIdentificacao.BI_NAO_NACIONAL;
-        } else if (idDocumentType == IDDocumentType.OTHER) {
-            return TipoDocumentoIdentificacao.OUTROS;
         }
 
         return null;
@@ -388,7 +378,8 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
         bean.setDegreeCode(c.getDegreeCode());
         bean.setDegreeName(c.getDegreeName());
         bean.setDocumentNumber(c.getDocIdNumber());
-        bean.setDocumentTypeName(c.getDocIdType().name());
+        IDDocumentType candidacyDocumentType = convertCandidacyDocumentType(c.getDocIdType());
+        bean.setDocumentTypeName(candidacyDocumentType != null ? candidacyDocumentType.name() : null);
 
         service.fillAllInfo(bean, c.getRegistration(), c.getExecutionYear(), c.getFirstYear());
 
@@ -419,8 +410,6 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
                 || !Objects.equal(bean.getNumberOfEnrolledECTS(), sasScholarshipData.getNumberOfEnrolledECTS())
 
                 || !Objects.equal(bean.getNumberOfMonthsExecutionYear(), sasScholarshipData.getNumberOfMonthsExecutionYear())
-
-                || !Objects.equal(bean.getObservations(), sasScholarshipData.getObservations())
 
                 || !Objects.equal(bean.getRegime(), sasScholarshipData.getRegime())
 
@@ -661,13 +650,13 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
     }
 
     protected IdentificadorCandidatura createIdentificadorCandidaturaData(Integer beginExecutionYear, String docIdNumber,
-            IDDocumentType docIdType, String fiscalNumber) {
+            String docIdType, String fiscalNumber) {
         ObjectFactory factory = new ObjectFactory();
 
         IdentificadorCandidatura idCandidatura = new IdentificadorCandidatura();
         idCandidatura.setAnoLectivo(beginExecutionYear);
         idCandidatura.setDocumentoIdentificacao(factory.createIdentificadorCandidaturaDocumentoIdentificacao(docIdNumber));
-        idCandidatura.setTipoDocumentoIdentificacao(convertDocumentTypeCandidacy(docIdType));
+        idCandidatura.setTipoDocumentoIdentificacao(TipoDocumentoIdentificacao.fromValue(docIdType));
         idCandidatura.setNif(factory.createIdentificadorCandidaturaNif(fiscalNumber));
         return idCandidatura;
     }
@@ -766,57 +755,57 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
     }
 
     /** TODO: to be done **/
-    private void sendRegistrationStudent(Registration registration) {
+    private void sendRegistrationStudent(SasScholarshipCandidacy candidacy) {
 
         RegistarMatriculaAlunoRequest request = new RegistarMatriculaAlunoRequest();
 
-        request.setCodigoCurso(registration.getDegree().getMinistryCode());
+        request.setCodigoCurso(candidacy.getRegistration().getDegree().getMinistryCode());
         request.setCodigoInstituicaoEnsino(-1); // TODO
         request.setDataMatricula(null); // TODO
 
         IdentificadorCandidatura idCandidatura =
-                createIdentificadorCandidaturaData(null /*TODO*/, registration.getPerson().getDocumentIdNumber(),
-                        registration.getPerson().getIdDocumentType(), registration.getPerson().getSocialSecurityNumber());
+                createIdentificadorCandidaturaData(null /*TODO*/, candidacy.getDocIdNumber(),
+                        candidacy.getDocIdType(), candidacy.getFiscalNumber());
         request.setIdentificadorCandidatura(idCandidatura);
 
     }
 
-    private void updateCandidacyState(Registration registration) {
+    private void updateCandidacyState(SasScholarshipCandidacy candidacy) {
         //TODO
 
         ObterEstadoCandidaturaRequest request = new ObterEstadoCandidaturaRequest();
 
         IdentificadorCandidatura idCandidatura =
-                createIdentificadorCandidaturaData(null /*TODO*/, registration.getPerson().getDocumentIdNumber(),
-                        registration.getPerson().getIdDocumentType(), registration.getPerson().getSocialSecurityNumber());
+                createIdentificadorCandidaturaData(null /*TODO*/, candidacy.getDocIdNumber(),
+                        candidacy.getDocIdType(), candidacy.getFiscalNumber());
         request.setIdentificadorCandidatura(idCandidatura);
 
     }
 
-    private void getSubmittedCandidacies(Registration registration) {
+    private void getSubmittedCandidacies(SasScholarshipCandidacy candidacy) {
         //TODO
 
         ObterEstadoCandidaturaRequest request = new ObterEstadoCandidaturaRequest();
 
         IdentificadorCandidatura idCandidatura =
-                createIdentificadorCandidaturaData(null /*TODO*/, registration.getPerson().getDocumentIdNumber(),
-                        registration.getPerson().getIdDocumentType(), registration.getPerson().getSocialSecurityNumber());
+                createIdentificadorCandidaturaData(null /*TODO*/, candidacy.getDocIdNumber(),
+                        candidacy.getDocIdType(), candidacy.getFiscalNumber());
         request.setIdentificadorCandidatura(idCandidatura);
 
     }
 
-    private void changeInstitutionDegree(Registration registration) {
+    private void changeInstitutionDegree(SasScholarshipCandidacy candidacy) {
         //TODO
         ObjectFactory factory = new ObjectFactory();
         AlterarCursoInsituicaoRequest request = new AlterarCursoInsituicaoRequest();
 
         IdentificadorCandidatura idCandidatura =
-                createIdentificadorCandidaturaData(null /*TODO*/, registration.getPerson().getDocumentIdNumber(),
-                        registration.getPerson().getIdDocumentType(), registration.getPerson().getSocialSecurityNumber());
+                createIdentificadorCandidaturaData(null /*TODO*/, candidacy.getDocIdNumber(),
+                        candidacy.getDocIdType(), candidacy.getFiscalNumber());
         request.setIdentificadorCandidatura(idCandidatura);
 
         request.setIdentificadorCandidatura(idCandidatura);
-        request.setCodigoCurso(registration.getDegree().getMinistryCode());
+        request.setCodigoCurso(candidacy.getRegistration().getDegree().getMinistryCode());
         request.setCodigoInstituicaoEnsino(-1);
         request.setDataMudanca(null);
 

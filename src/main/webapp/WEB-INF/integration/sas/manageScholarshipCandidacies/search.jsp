@@ -224,7 +224,7 @@ ${portal.toolkit()}
 					<td>${searchResult.candidacyName}</td>
 					<td>${searchResult.fiscalNumber}</td>
 					<td>${searchResult.docIdNumber}</td>
-					<td>${searchResult.docIdType.localizedName}</td>
+					<td>${searchResult.docIdType}</td>
 					<td>[${searchResult.degreeCode}] ${searchResult.degreeName}</td>
 					
 					<td><joda:format value='${searchResult.importDate}' pattern='yyyy-MM-dd' /></td>

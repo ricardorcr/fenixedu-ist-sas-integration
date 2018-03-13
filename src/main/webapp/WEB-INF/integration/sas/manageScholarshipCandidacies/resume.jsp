@@ -156,7 +156,7 @@ ${portal.toolkit()}
 					
 					<tr>
 						<th scope="row" class="col-xs-3"><spring:message code="label.SasScholarshipCandidacy.docIdType" /></th>
-						<td><c:out value='${sasScholarshipCandidacy.docIdType.localizedName}' /></td>
+						<td><c:out value='${sasScholarshipCandidacy.docIdType}' /></td>
 					</tr>
 					<tr>
 						<th><spring:message code="label.SasScholarshipCandidacy.degreeName" /></th>
