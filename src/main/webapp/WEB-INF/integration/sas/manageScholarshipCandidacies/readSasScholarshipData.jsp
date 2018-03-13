@@ -110,13 +110,6 @@ ${portal.toolkit()}
 
 					<tr>
 						<th scope="row" class="col-xs-3"><spring:message
-								code="label.SasScholarshipData.numberOfEnrolledEctsLastYear" /></th>
-						<td><c:out
-								value='${sasScholarshipCandidacy.sasScholarshipData.numberOfEnrolledEctsLastYear}' /></td>
-					</tr>
-
-					<tr>
-						<th scope="row" class="col-xs-3"><spring:message
 								code="label.SasScholarshipData.numberOfEnrolmentsYears" /></th>
 						<td><c:out
 								value='${sasScholarshipCandidacy.sasScholarshipData.numberOfEnrolmentsYears}' /></td>

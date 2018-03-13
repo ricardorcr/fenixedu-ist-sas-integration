@@ -1,13 +1,10 @@
 package org.fenixedu.ulisboa.integration.sas.service.sicabe;
 
 import java.util.GregorianCalendar;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -16,7 +13,6 @@ import javax.xml.ws.BindingProvider;
 import org.apache.commons.lang.math.NumberUtils;
 import org.datacontract.schemas._2004._07.sicabe_contracts.AlterarDadosAcademicosContratualizacaoRequest;
 import org.fenixedu.academic.domain.ExecutionYear;
-import org.fenixedu.academic.domain.candidacy.Candidacy;
 import org.fenixedu.academic.domain.exceptions.DomainException;
 import org.fenixedu.academic.domain.person.IDDocumentType;
 import org.fenixedu.academic.domain.student.Registration;
@@ -40,7 +36,6 @@ import org.joda.time.LocalDate;
 import org.springframework.util.StringUtils;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.qubit.solution.fenixedu.bennu.webservices.services.client.BennuWebServiceClient;
 import com.sun.xml.ws.fault.ServerSOAPFaultException;
@@ -96,7 +91,6 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
             DadosAcademicosObterCandidaturasSubmetidasSicabeValidationMessageFaultFaultMessage, ServerSOAPFaultException {
         final ObterCandidaturasSubmetidasRequest parameters = new ObterCandidaturasSubmetidasRequest();
         parameters.setAnoLectivo(executionYear.getBeginCivilYear());
-        
 
         final ObterCandidaturasSubmetidasResponse obterCandidaturasSubmetidas =
                 getClient().obterCandidaturasSubmetidas(parameters);
@@ -391,63 +385,92 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
 
     private boolean dataHasChanged(SasScholarshipData sasScholarshipData, AbstractScholarshipStudentBean bean) {
 
-        boolean value = !Objects.equal(bean.getCetQualificationOwner(), sasScholarshipData.getCetQualificationOwner())
+        boolean value = !equal(bean, bean.getCetQualificationOwner(), sasScholarshipData.getCetQualificationOwner(),
+                "cetQualificationOwner")
 
-                || !Objects.equal(bean.getCtspQualificationOwner(), sasScholarshipData.getCtspQualificationOwner())
+                || !equal(bean, bean.getCtspQualificationOwner(), sasScholarshipData.getCtspQualificationOwner(),
+                        "ctspQualificationOwner")
 
-                || !Objects.equal(bean.getPhdQualificationOwner(), sasScholarshipData.getPhdQualificationOwner())
+                || !equal(bean, bean.getPhdQualificationOwner(), sasScholarshipData.getPhdQualificationOwner(),
+                        "phdQualificationOwner")
 
-                || !Objects.equal(bean.getDegreeQualificationOwner(), sasScholarshipData.getDegreeQualificationOwner())
+                || !equal(bean, bean.getDegreeQualificationOwner(), sasScholarshipData.getDegreeQualificationOwner(),
+                        "degreeQualificationOwner")
 
-                || !Objects.equal(bean.getMasterQualificationOwner(), sasScholarshipData.getMasterQualificationOwner())
+                || !equal(bean, bean.getMasterQualificationOwner(), sasScholarshipData.getMasterQualificationOwner(),
+                        "masterQualificationOwner")
 
-                || !Objects.equal(bean.getFirstMonthExecutionYear(), sasScholarshipData.getFirstMonthExecutionYear())
+                || !equal(bean, bean.getFirstMonthExecutionYear(), sasScholarshipData.getFirstMonthExecutionYear(),
+                        "firstMonthExecutionYear")
 
-                || !Objects.equal(bean.getGratuityAmount(), sasScholarshipData.getGratuityAmount())
+                || !equal(bean, bean.getGratuityAmount(), sasScholarshipData.getGratuityAmount(), "gratuityAmount")
 
-                || !Objects.equal(bean.getCycleNumberOfEnrolmentsYears(), sasScholarshipData.getNumberOfEnrolmentsYears())
+                || !equal(bean, bean.getCycleNumberOfEnrolmentsYears(), sasScholarshipData.getNumberOfEnrolmentsYears(),
+                        "numberOfEnrolmentsYears")
 
-                || !Objects.equal(bean.getNumberOfEnrolledECTS(), sasScholarshipData.getNumberOfEnrolledECTS())
+                || !equal(bean, bean.getNumberOfEnrolledECTS(), sasScholarshipData.getNumberOfEnrolledECTS(),
+                        "numberOfEnrolledECTS")
 
-                || !Objects.equal(bean.getNumberOfMonthsExecutionYear(), sasScholarshipData.getNumberOfMonthsExecutionYear())
+                || !equal(bean, bean.getNumberOfMonthsExecutionYear(), sasScholarshipData.getNumberOfMonthsExecutionYear(),
+                        "numberOfMonthsExecutionYear")
 
-                || !Objects.equal(bean.getRegime(), sasScholarshipData.getRegime())
+                || !equal(bean, bean.getRegime(), sasScholarshipData.getRegime(), "regime")
 
-                || !Objects.equal(bean.getEnroled(), sasScholarshipData.getEnroled())
+                || !equal(bean, bean.getEnroled(), sasScholarshipData.getEnroled(), "enroled")
 
-                || !Objects.equal(bean.getNumberOfDegreeCurricularYears(), sasScholarshipData.getNumberOfDegreeCurricularYears())
+                || !equal(bean, bean.getNumberOfDegreeCurricularYears(), sasScholarshipData.getNumberOfDegreeCurricularYears(),
+                        "numberOfDegreeCurricularYears")
 
-                || !Objects.equal(bean.getEnrolmentDate(), sasScholarshipData.getEnrolmentDate());
+                || !equal(bean, bean.getEnrolmentDate(), sasScholarshipData.getEnrolmentDate(), "enrolmentDate");
 
         if (bean instanceof ScholarshipStudentOtherYearBean) {
 
             final ScholarshipStudentOtherYearBean otherYearBean = (ScholarshipStudentOtherYearBean) bean;
 
-            value &= !Objects.equal(otherYearBean.getNumberOfApprovedEcts(), sasScholarshipData.getNumberOfApprovedEcts())
+            value &= !equal(otherYearBean, otherYearBean.getNumberOfApprovedEcts(), sasScholarshipData.getNumberOfApprovedEcts(),
+                    "numberOfApprovedEcts")
 
-                    || !Objects.equal(otherYearBean.getNumberOfApprovedEctsLastYear(),
-                            sasScholarshipData.getNumberOfApprovedEctsLastYear())
+                    || !equal(otherYearBean, otherYearBean.getNumberOfApprovedEctsLastYear(),
+                            sasScholarshipData.getNumberOfApprovedEctsLastYear(), "numberOfApprovedEctsLastYear")
+                    
+                    || !equal(otherYearBean, otherYearBean.getNumberOfEnrolledEctsLastYear(),
+                            sasScholarshipData.getNumberOfEnrolledEctsLastYear(), "numberOfEnrolledEctsLastYear")
 
-                    || !Objects.equal(otherYearBean.getNumberOfDegreeChanges(), sasScholarshipData.getNumberOfDegreeChanges())
+                    || !equal(otherYearBean, otherYearBean.getNumberOfDegreeChanges(),
+                            sasScholarshipData.getNumberOfDegreeChanges(), "numberOfDegreeChanges")
 
-                    || !Objects.equal(otherYearBean.getHasMadeDegreeChangeOnCurrentYear(),
-                            sasScholarshipData.getHasMadeDegreeChangeOnCurrentYear())
+                    || !equal(otherYearBean, otherYearBean.getHasMadeDegreeChangeOnCurrentYear(),
+                            sasScholarshipData.getHasMadeDegreeChangeOnCurrentYear(), "hasMadeDegreeChangeOnCurrentYear")
 
-                    || !Objects.equal(otherYearBean.getLastEnrolmentYear(), sasScholarshipData.getLastEnrolmentYear())
+                    || !equal(otherYearBean, otherYearBean.getLastEnrolmentYear(), sasScholarshipData.getLastEnrolmentYear(),
+                            "lastEnrolmentYear")
 
-                    || !Objects.equal(otherYearBean.getLastAcademicActDateLastYear(),
-                            sasScholarshipData.getLastAcademicActDateLastYear())
+                    || !equal(otherYearBean, otherYearBean.getLastAcademicActDateLastYear(),
+                            sasScholarshipData.getLastAcademicActDateLastYear(), "lastAcademicActDateLastYear")
 
-                    || !Objects.equal(otherYearBean.getCurricularYear(), sasScholarshipData.getCurricularYear())
+                    || !equal(otherYearBean, otherYearBean.getCurricularYear(), sasScholarshipData.getCurricularYear(),
+                            "curricularYear")
 
-                    || !Objects.equal(otherYearBean.getCycleNumberOfEnrolmentsYearsInIntegralRegime(),
-                            sasScholarshipData.getCycleNumberOfEnrolmentsYearsInIntegralRegime())
+                    || !equal(otherYearBean, otherYearBean.getCycleNumberOfEnrolmentsYearsInIntegralRegime(),
+                            sasScholarshipData.getCycleNumberOfEnrolmentsYearsInIntegralRegime(), "cycleNumberOfEnrolmentsYearsInIntegralRegime")
 
-                    || !Objects.equal(bean.getCycleIngressionYear(), sasScholarshipData.getCycleIngressionYear());
+                    || !equal(otherYearBean, bean.getCycleIngressionYear(), sasScholarshipData.getCycleIngressionYear(),
+                            "cycleIngressionYear");
         }
 
         return value;
 
+    }
+
+    private boolean equal(AbstractScholarshipStudentBean bean, Object left, Object right, String fieldName) {
+        if (Objects.equal(left, right)) {
+            return true;
+        }
+
+        bean.setObservations((bean.getObservations() != null ? bean.getObservations() + "\n" : "")
+                + BundleUtil.getString(SasSpringConfiguration.BUNDLE, "message.warning.data.has.changed",
+                        BundleUtil.getString(SasSpringConfiguration.BUNDLE, "label.SasScholarshipData." + fieldName)));
+        return false;
     }
 
     private void updateSasSchoolarshipCandidacyData(AbstractScholarshipStudentBean bean, SasScholarshipCandidacy candidacy) {
@@ -763,9 +786,8 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
         request.setCodigoInstituicaoEnsino(-1); // TODO
         request.setDataMatricula(null); // TODO
 
-        IdentificadorCandidatura idCandidatura =
-                createIdentificadorCandidaturaData(null /*TODO*/, candidacy.getDocIdNumber(),
-                        candidacy.getDocIdType(), candidacy.getFiscalNumber());
+        IdentificadorCandidatura idCandidatura = createIdentificadorCandidaturaData(null /*TODO*/, candidacy.getDocIdNumber(),
+                candidacy.getDocIdType(), candidacy.getFiscalNumber());
         request.setIdentificadorCandidatura(idCandidatura);
 
     }
@@ -775,9 +797,8 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
 
         ObterEstadoCandidaturaRequest request = new ObterEstadoCandidaturaRequest();
 
-        IdentificadorCandidatura idCandidatura =
-                createIdentificadorCandidaturaData(null /*TODO*/, candidacy.getDocIdNumber(),
-                        candidacy.getDocIdType(), candidacy.getFiscalNumber());
+        IdentificadorCandidatura idCandidatura = createIdentificadorCandidaturaData(null /*TODO*/, candidacy.getDocIdNumber(),
+                candidacy.getDocIdType(), candidacy.getFiscalNumber());
         request.setIdentificadorCandidatura(idCandidatura);
 
     }
@@ -787,9 +808,8 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
 
         ObterEstadoCandidaturaRequest request = new ObterEstadoCandidaturaRequest();
 
-        IdentificadorCandidatura idCandidatura =
-                createIdentificadorCandidaturaData(null /*TODO*/, candidacy.getDocIdNumber(),
-                        candidacy.getDocIdType(), candidacy.getFiscalNumber());
+        IdentificadorCandidatura idCandidatura = createIdentificadorCandidaturaData(null /*TODO*/, candidacy.getDocIdNumber(),
+                candidacy.getDocIdType(), candidacy.getFiscalNumber());
         request.setIdentificadorCandidatura(idCandidatura);
 
     }
@@ -799,9 +819,8 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
         ObjectFactory factory = new ObjectFactory();
         AlterarCursoInsituicaoRequest request = new AlterarCursoInsituicaoRequest();
 
-        IdentificadorCandidatura idCandidatura =
-                createIdentificadorCandidaturaData(null /*TODO*/, candidacy.getDocIdNumber(),
-                        candidacy.getDocIdType(), candidacy.getFiscalNumber());
+        IdentificadorCandidatura idCandidatura = createIdentificadorCandidaturaData(null /*TODO*/, candidacy.getDocIdNumber(),
+                candidacy.getDocIdType(), candidacy.getFiscalNumber());
         request.setIdentificadorCandidatura(idCandidatura);
 
         request.setIdentificadorCandidatura(idCandidatura);
