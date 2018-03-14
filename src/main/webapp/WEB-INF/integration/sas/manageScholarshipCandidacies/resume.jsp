@@ -67,7 +67,7 @@ ${portal.toolkit()}
 	<span
 		class="glyphicon glyphicon-export" aria-hidden="true"></span>&nbsp;<a
 		class=""
-		href="#" onclick="showConfirmation('<spring:message code="label.send" />','<spring:message code="message.confirm.send.candidacy" />','${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.SEND_ENTRY_URL%>/${sasScholarshipCandidacy.externalId}');"><spring:message
+		href="#" onclick="showConfirmation('<spring:message code="label.send" />','<spring:message code="message.confirm.send.candidacy" />', '<spring:message code="label.send" />', '${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.SEND_ENTRY_URL%>/${sasScholarshipCandidacy.externalId}');"><spring:message
 			code="label.event.send" /></a> &nbsp;|&nbsp;
 			
 	<span
@@ -78,7 +78,7 @@ ${portal.toolkit()}
 	<span
 		class="glyphicon glyphicon-remove" aria-hidden="true"></span>&nbsp;<a
 		class=""
-		href="#" onclick="showConfirmation('<spring:message code="label.delete" />','<spring:message code="message.confirm.delete.candidacy" />','${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.DELETE_ENTRY_URL%>/${sasScholarshipCandidacy.externalId}');"><spring:message
+		href="#" onclick="showConfirmation('<spring:message code="label.delete" />','<spring:message code="message.confirm.delete.candidacy" />', '<spring:message code="label.delete" />', '${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.DELETE_ENTRY_URL%>/${sasScholarshipCandidacy.externalId}');"><spring:message
 			code="label.event.delete" /></a>
 			
 </div>
@@ -257,7 +257,7 @@ ${portal.toolkit()}
 
 <script>
 
-	function showConfirmation(title, message, url){
+	function showConfirmation(title, message, confirmMessage, url){
 	
 		bootbox.confirm({
 		    title: title,
@@ -267,7 +267,7 @@ ${portal.toolkit()}
 		            label: '<spring:message code="label.cancel" />'
 		        },
 		        confirm: {
-		            label: '<spring:message code="label.delete" />',
+		            label: confirmMessage,
 		            className: 'btn-danger'
 		        }
 		    },

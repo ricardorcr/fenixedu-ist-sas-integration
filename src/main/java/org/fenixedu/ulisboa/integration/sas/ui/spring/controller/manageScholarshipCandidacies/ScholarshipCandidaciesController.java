@@ -239,7 +239,7 @@ public class ScholarshipCandidaciesController extends SasBaseController {
             return redirect(CONTROLLER_URL + "/" + executionYear.getExternalId(), model, redirectAttributes);
 
         } catch (FillScholarshipException e) {
-            addErrorMessage(SasPTUtil.bundle(e.getMessage()), model);
+            addErrorMessage(e.getMessage(), model);
 
             model.addAttribute("sasScholarshipCandidacy", sasScholarshipCandidacy);
 

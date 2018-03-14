@@ -50,10 +50,6 @@ ${portal.toolkit()}
 	</h1>
 </div>
 
-<%-- <bean:define id="deleteConfirm">
-	return confirm('<bean:message key="message.confirm.delete.candidacy"/>')
-</bean:define> --%>
-
 <!-- /.modal -->
 <%-- NAVIGATION --%>
 <div class="well well-sm" style="display: inline-block">
@@ -69,7 +65,7 @@ ${portal.toolkit()}
 	<span
 		class="glyphicon glyphicon-export" aria-hidden="true"></span>&nbsp;<a
 		class=""
-		href="#" onclick="showConfirmation('<spring:message code="label.send" />','<spring:message code="message.confirm.send.all.candidacies" />','${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.SEND_ALL_ENTRIES_URL%>/${executionYear.externalId}');"><spring:message code="label.event.sendAll" /></a>&nbsp;|&nbsp;
+		href="#" onclick="showConfirmation('<spring:message code="label.send" />','<spring:message code="message.confirm.send.all.candidacies" />', '<spring:message code="label.send" />', '${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.SEND_ALL_ENTRIES_URL%>/${executionYear.externalId}');"><spring:message code="label.event.sendAll" /></a>&nbsp;|&nbsp;
 		
  	<span
 		class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span>&nbsp;<a
@@ -79,7 +75,7 @@ ${portal.toolkit()}
 	<span
 		class="glyphicon glyphicon-remove" aria-hidden="true"></span>&nbsp;<a
 		class=""
-		href="#" onclick="showConfirmation('<spring:message code="label.delete" />','<spring:message code="message.confirm.delete.all.candidacies" />','${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.DELETE_ALL_ENTRIES_URL%>/${executionYear.externalId}');"><spring:message code="label.event.deleteAll" /></a>
+		href="#" onclick="showConfirmation('<spring:message code="label.delete" />','<spring:message code="message.confirm.delete.all.candidacies" />', '<spring:message code="label.delete" />', '${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.DELETE_ALL_ENTRIES_URL%>/${executionYear.externalId}');"><spring:message code="label.event.deleteAll" /></a>
 		
 </div>
 
@@ -258,7 +254,7 @@ ${portal.toolkit()}
 
 <script type="text/javascript">
 
-	function showConfirmation(title, message, url){
+	function showConfirmation(title, message, confirmMessage, url){
 		
 		bootbox.confirm({
 		    title: title,
@@ -268,7 +264,7 @@ ${portal.toolkit()}
 		            label: '<spring:message code="label.cancel" />'
 		        },
 		        confirm: {
-		            label: '<spring:message code="label.delete" />',
+		            label: confirmMessage,
 		            className: 'btn-danger'
 		        }
 		    },
