@@ -18,7 +18,6 @@ import org.fenixedu.academic.domain.StudentCurricularPlan;
 import org.fenixedu.academic.domain.degree.DegreeType;
 import org.fenixedu.academic.domain.degreeStructure.CycleType;
 import org.fenixedu.academic.domain.person.IDDocumentType;
-import org.fenixedu.academic.domain.person.RoleType;
 import org.fenixedu.academic.domain.student.Registration;
 import org.fenixedu.academic.domain.student.RegistrationRegimeType;
 import org.fenixedu.academic.domain.student.Student;
@@ -72,7 +71,7 @@ public class AbstractFillScholarshipService {
         ID_DOCUMENT_TYPE_MAPPING.put("Passaporte", IDDocumentType.PASSPORT);
         ID_DOCUMENT_TYPE_MAPPING.put("NIF", IDDocumentType.OTHER);
         ID_DOCUMENT_TYPE_MAPPING.put("Outros", IDDocumentType.OTHER);
-        
+
     }
 
     public void fillAllInfo(Collection<AbstractScholarshipStudentBean> scholarshipStudentBeans, ExecutionYear requestYear,
@@ -128,7 +127,8 @@ public class AbstractFillScholarshipService {
                 return registration;
             } else if (registrationsWithActiveEnrolments.size() > 1) {
                 addError(bean, "message.error.input.registration.not.found.and.multiple.active.registrations");
-                throw new FillScholarshipException("message.error.input.registration.not.found.and.multiple.active.registrations");
+                throw new FillScholarshipException(
+                        "message.error.input.registration.not.found.and.multiple.active.registrations");
             } else {
                 addError(bean, "message.error.input.registration.not.found.and.no.active.registrations");
                 throw new FillScholarshipException("message.error.input.registration.not.found.and.no.active.registrations");
@@ -237,12 +237,12 @@ public class AbstractFillScholarshipService {
                 }
 
                 // try with student name and student number
-                final Collection<Person> studentsWithSameName =
-                        Person.readPersonsByNameAndRoleType(bean.getStudentName(), RoleType.STUDENT);
+                final Collection<Person> studentsWithSameName = Person.findPerson(bean.getStudentName()).stream()
+                        .filter(p -> p.getStudent() != null).collect(Collectors.toSet());
                 for (Person person : studentsWithSameName) {
                     Registration findRegistration = findRegistration(person.getStudent(), bean, requestYear);
-                    if (findRegistration.getNumber().equals(bean.getStudentNumber())
-                            || (bean.getStudentNumber() != null && findRegistration.getStudent().getNumber().intValue() == bean.getStudentNumber().intValue())) {
+                    if (findRegistration.getNumber().equals(bean.getStudentNumber()) || (bean.getStudentNumber() != null
+                            && findRegistration.getStudent().getNumber().intValue() == bean.getStudentNumber().intValue())) {
                         addWarning(bean, "message.warning.student.not.found.with.id.but.name.and.number.match");
                         return person;
                     }
@@ -267,7 +267,7 @@ public class AbstractFillScholarshipService {
     }
 
     private Person ensureDocumentIdType(final Person person, final AbstractScholarshipStudentBean bean) {
-        
+
         if (person.getIdDocumentType() != ID_DOCUMENT_TYPE_MAPPING.get(bean.getDocumentTypeName())
                 && !person.getIdDocumentType().name().equalsIgnoreCase(bean.getDocumentTypeName())) {
             addError(bean, "message.error.identity.document.type");
@@ -318,7 +318,7 @@ public class AbstractFillScholarshipService {
             addWarning(bean, "message.warning.student.is.not.first.time");
         }
 
-        if (!SasDataShareAuthorizationServices.isAuthorizationTypeConfigured()) {
+        if (!SasDataShareAuthorizationServices.isAuthorizationTypeActive()) {
             return;
         }
 

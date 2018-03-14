@@ -8,8 +8,8 @@ public class SasDataShareAuthorizationServices {
 
     private static final String SAS_AUTHORIZATION_CODE = "SAS";
 
-    static public boolean isAuthorizationTypeConfigured() {
-        return getAuthorizationType() != null;
+    static public boolean isAuthorizationTypeActive() {
+        return getAuthorizationType() != null && getAuthorizationType().isActive();
     }
 
     static public boolean isAnswered(Person person) {

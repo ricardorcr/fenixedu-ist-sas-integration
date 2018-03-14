@@ -69,9 +69,9 @@ ${portal.toolkit()}
 	<span
 		class="glyphicon glyphicon-export" aria-hidden="true"></span>&nbsp;<a
 		class=""
-		href="${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.SEND_ALL_ENTRIES_URL%>/${executionYear.externalId}"><spring:message
-			code="label.event.sendAll" /></a> &nbsp;|&nbsp;
-	<span
+		href="#" onclick="showConfirmation('<spring:message code="label.send" />','<spring:message code="message.confirm.send.all.candidacies" />','${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.SEND_ALL_ENTRIES_URL%>/${executionYear.externalId}');"><spring:message code="label.event.sendAll" /></a>&nbsp;|&nbsp;
+		
+ 	<span
 		class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span>&nbsp;<a
 		class=""
 		href="${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.VIEW_LOGS_ENTRIES_URL%>/${executionYear.externalId}"><spring:message

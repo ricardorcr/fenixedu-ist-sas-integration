@@ -67,8 +67,9 @@ ${portal.toolkit()}
 	<span
 		class="glyphicon glyphicon-export" aria-hidden="true"></span>&nbsp;<a
 		class=""
-		href="${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.SEND_ENTRY_URL%>/${sasScholarshipCandidacy.externalId}"><spring:message
+		href="#" onclick="showConfirmation('<spring:message code="label.send" />','<spring:message code="message.confirm.send.candidacy" />','${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.SEND_ENTRY_URL%>/${sasScholarshipCandidacy.externalId}');"><spring:message
 			code="label.event.send" /></a> &nbsp;|&nbsp;
+			
 	<span
 		class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span>&nbsp;<a
 		class=""
