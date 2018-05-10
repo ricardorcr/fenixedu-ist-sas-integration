@@ -200,7 +200,7 @@ $(document).ready(function() {
 		    creditsReasonType_options = [
 				<c:forEach items="${SocialServicesConfiguration_creditsReasonType_options}" var="element"> 
 					{
-						text : "<c:out value='${element.reason}'/>", 
+						text : "<c:out value='${element.reason.content}'/>", 
 						id : "<c:out value='${element.externalId}'/>"
 					},
 				</c:forEach>

@@ -89,7 +89,7 @@ ${portal.toolkit()}
 		<ul>
 		<c:forEach items="${socialServicesConfiguration.creditsReasonTypes}" var="element">
 			<li>
-				<c:out value="${element.reason}" /> 
+				<c:out value="${element.reason.content}" /> 
 			</li>
 		</c:forEach>
 		<ul>
