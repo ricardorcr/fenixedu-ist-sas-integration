@@ -301,7 +301,8 @@ public class ActiveStudentsWebService extends BennuWebService {
             }
 
             activeStudentBean.setIdentificationNumber(student.getPerson().getDocumentIdNumber());
-            activeStudentBean.setFiscalCountryCode(student.getPerson().getFiscalCountry() != null ? student.getPerson().getFiscalCountry().getCode() : "");
+            activeStudentBean.setFiscalCountryCode(
+                    student.getPerson().getFiscalCountry() != null ? student.getPerson().getFiscalCountry().getCode() : "");
             activeStudentBean.setFiscalIdentificationNumber(student.getPerson().getSocialSecurityNumber());
             YearMonthDay dateOfBirthYearMonthDay = student.getPerson().getDateOfBirthYearMonthDay();
             activeStudentBean.setDateOfBirth(dateOfBirthYearMonthDay != null ? dateOfBirthYearMonthDay.toString() : "");
@@ -309,7 +310,7 @@ public class ActiveStudentsWebService extends BennuWebService {
             Country country = student.getPerson().getCountry();
             activeStudentBean.setOriginCountry(country != null ? country.getLocalizedName().getContent(Locale.getDefault()) : "");
             activeStudentBean.setOriginCountryCode(country != null ? country.getCode() : "");
-            
+
             List<Registration> activeRegistrations = student.getActiveRegistrations();
             if (!activeRegistrations.isEmpty()) {
                 if (activeRegistrations.size() > 1) {
@@ -345,6 +346,8 @@ public class ActiveStudentsWebService extends BennuWebService {
                     boolean toPayTuition =
                             TreasuryBridgeAPIFactory.implementation().isToPayTuition(registration, currentExecutionYear);
                     activeStudentBean.setIsPayingSchool(toPayTuition);
+                    activeStudentBean.setCurricularYear(Integer
+                            .toString(RegistrationServices.getCurricularYear(registration, currentExecutionYear).getResult()));
                 }
 
                 if (sortedExecutionYears.size() > 1) {
@@ -356,8 +359,6 @@ public class ActiveStudentsWebService extends BennuWebService {
                             .setApprovedECTTotalInPreviousYear(getApprovedEcts(registration, previousExecutionYear).toString());
                 }
 
-                activeStudentBean.setCurricularYear(
-                        Integer.toString(RegistrationServices.getCurricularYear(registration, (ExecutionYear) null).getResult()));
             } else {
                 return null;
             }
