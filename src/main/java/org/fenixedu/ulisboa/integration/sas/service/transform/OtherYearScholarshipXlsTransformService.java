@@ -137,6 +137,8 @@ public class OtherYearScholarshipXlsTransformService extends AbstractScholarship
                 bean.getEnroled() ? bean.getLastEnrolmentYear() : null);
         writeCellLocalDate(row, ScholarshipStudentOtherYearBean.LAST_ACADEMIC_ACT_DATE_LAST_YEAR,
                 bean.getEnroled() ? bean.getLastAcademicActDateLastYear() : null);
+        writeCellString(row, ScholarshipStudentOtherYearBean.INGRESSION_REGIME,
+                bean.getIngressionRegime());
 
     }
 

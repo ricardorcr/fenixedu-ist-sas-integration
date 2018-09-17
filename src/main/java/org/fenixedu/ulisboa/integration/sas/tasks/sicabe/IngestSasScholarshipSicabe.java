@@ -22,26 +22,26 @@ public class IngestSasScholarshipSicabe extends CronTask {
     @Override
     public void runTask() throws Exception {
 
-        int beforeSasCandidacies = Bennu.getInstance().getSasScholarshipCandidaciesSet().size();
+        final int beforeSasCandidacies = Bennu.getInstance().getSasScholarshipCandidaciesSet().size();
+        final long beforeWithStateModified = getNumberOfCandidaciesWithModifiedState();
 
-        long beforeWithStateModified =
-                Bennu.getInstance().getSasScholarshipCandidaciesSet().stream().filter(c -> c.isModified()).count();
-
-        SicabeExternalService sicabe = new SicabeExternalService();
-        ExecutionYear currentExecutionYear = ExecutionYear.readCurrentExecutionYear();
+        final SicabeExternalService sicabe = new SicabeExternalService();
+        final ExecutionYear currentExecutionYear = ExecutionYear.readCurrentExecutionYear();
         sicabe.fillAllSasScholarshipCandidacies(currentExecutionYear);
 
         sicabe.processAllSasScholarshipCandidacies(currentExecutionYear);
 
-        int afterSasCandidacies = Bennu.getInstance().getSasScholarshipCandidaciesSet().size();
-
-        long afterWithStateModified =
-                Bennu.getInstance().getSasScholarshipCandidaciesSet().stream().filter(c -> c.isModified()).count();
+        final int afterSasCandidacies = Bennu.getInstance().getSasScholarshipCandidaciesSet().size();
+        final long afterWithStateModified = getNumberOfCandidaciesWithModifiedState();
 
         if (beforeSasCandidacies != afterSasCandidacies || beforeWithStateModified != afterWithStateModified) {
             sendEmailForUser();
         }
 
+    }
+
+    private long getNumberOfCandidaciesWithModifiedState() {
+        return Bennu.getInstance().getSasScholarshipCandidaciesSet().stream().filter(c -> c.isModified()).count();
     }
 
     public void sendEmailForUser() {

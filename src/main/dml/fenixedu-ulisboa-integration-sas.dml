@@ -3,6 +3,7 @@ package org.fenixedu.ulisboa.integration.sas.domain;
 external class .org.fenixedu.academic.domain.ExecutionYear;
 external class .org.fenixedu.academic.domain.student.Registration;
 external class .org.fenixedu.academic.domain.person.IDDocumentType;
+external class .org.fenixedu.academic.domain.candidacy.IngressionType;
 
 enum org.fenixedu.ulisboa.integration.sas.domain.CandidacyState										as CandidacyState;
 enum org.fenixedu.ulisboa.integration.sas.domain.SasScholarshipCandidacyState							as SasScholarshipCandidacyState;
@@ -138,8 +139,12 @@ class ScholarshipReportRequest {
 class ScholarshipReportFile extends .org.fenixedu.bennu.io.domain.GenericFile{
 }
 
-class SchoolLevelTypeMapping{
+class SchoolLevelTypeMapping {
 	protected SchoolLevelType schoolLevel;
+}
+
+class IngressionRegimeMapping {
+	String value;
 }
 
 relation BennuSocialServicesConfiguration{
@@ -232,3 +237,18 @@ relation SchoolLevelTypeMappingBennu{
 	}
 }
 
+relation IngressionRegimeMappingIngressionType{
+	protected .org.fenixedu.academic.domain.candidacy.IngressionType playsRole ingressionType{
+		multiplicity 1;
+	}
+	IngressionRegimeMapping playsRole ingressionRegimeMapping;
+}
+
+relation IngressionRegimeMappingBennu{
+	.org.fenixedu.bennu.core.domain.Bennu playsRole bennu {
+		multiplicity 1..1;
+	}
+	IngressionRegimeMapping playsRole IngressionRegimeMapping{
+		multiplicity *;
+	}
+}

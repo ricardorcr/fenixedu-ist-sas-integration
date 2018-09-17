@@ -19,6 +19,7 @@ import org.fenixedu.academic.domain.student.Registration;
 import org.fenixedu.bennu.SasSpringConfiguration;
 import org.fenixedu.bennu.core.domain.Bennu;
 import org.fenixedu.bennu.core.i18n.BundleUtil;
+import org.fenixedu.treasury.services.integration.erp.ERPExternalServiceImplementation.SOAPLoggingHandler;
 import org.fenixedu.ulisboa.integration.sas.domain.CandidacyState;
 import org.fenixedu.ulisboa.integration.sas.domain.SasScholarshipCandidacy;
 import org.fenixedu.ulisboa.integration.sas.domain.SasScholarshipCandidacyState;
@@ -42,6 +43,7 @@ import com.sun.xml.ws.fault.ServerSOAPFaultException;
 
 import pt.dges.schemas.data.sicabe.v1.AlterarCursoInsituicaoRequest;
 import pt.dges.schemas.data.sicabe.v1.AlterarDadosAcademicosPrimeiraVezRequest;
+import pt.dges.schemas.data.sicabe.v1.AlterarDadosAcademicosPrimeiraVezResponse;
 import pt.dges.schemas.data.sicabe.v1.AlterarDadosAcademicosRestantesCasosRequest;
 import pt.dges.schemas.data.sicabe.v1.CandidaturaSubmetida;
 import pt.dges.schemas.data.sicabe.v1.IdentificadorCandidatura;
@@ -138,8 +140,10 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
                 .findFirst().orElse(null);
 
         if (candidacy == null) {
+            
             candidacy = new SasScholarshipCandidacy();
             fillCandidacyInfos(input, executionYear, true, candidacy);
+            
 
         } else if (!equalsDataBetweenCandidacyAndInput(candidacy, input)) {
 
@@ -196,6 +200,7 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
 
     private void fillCandidacyInfos(CandidaturaSubmetida input, ExecutionYear executionYear, boolean isNewCandidacy,
             SasScholarshipCandidacy candidacy) {
+        
         candidacy.setDegreeCode(input.getCodigoCurso());
         candidacy.setInstitutionCode(input.getCodigoInstituicaoEnsino());
         candidacy.setDegreeName(input.getCurso());
@@ -653,7 +658,15 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
 
         candidacy.changeState(SasScholarshipCandidacyState.SENT);
 
-        getClient().alterarDadosAcademicosPrimeiraVez(request);
+        DadosAcademicos client = getClient();
+        
+        final SOAPLoggingHandler loggingHandler = SOAPLoggingHandler.createLoggingHandler((BindingProvider) client);
+                
+        client.alterarDadosAcademicosPrimeiraVez(request);
+        
+        //System.out.println("SENT== FIRST-TIME \n" + loggingHandler.getOutboundMessage());
+        //System.out.println("RECEIVED==  FIRST-TIME \n" + loggingHandler.getInboundMessage());
+        
 
     }
 
@@ -721,6 +734,7 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
 
         getClient().alterarDadosAcademicosContratualizacao(request);
     }
+       
 
     private void sendOtherAcademicData(SasScholarshipCandidacy candidacy)
             throws DadosAcademicosAlterarDadosAcademicosRestantesCasosSicabeBusinessMessageFaultFaultMessage,
@@ -732,7 +746,7 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
         AlterarDadosAcademicosRestantesCasosRequest request = new AlterarDadosAcademicosRestantesCasosRequest();
 
         request.setAnoInscricaoCurso(data.getCycleIngressionYear());
-        request.setAnoLectivoActual(candidacy.getExecutionYear().getBeginCivilYear());
+        request.setAnoLectivoActual(data.getCurricularYear());
         request.setCodigoCurso(candidacy.getDegreeCode());
         request.setCodigoInstituicaoEnsino(candidacy.getInstitutionCode());
         request.setDataConclusaoAtosAcademicosUltimoAnoLectivoInscrito(
@@ -772,8 +786,15 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
         request.setValorPropina(data.getGratuityAmount());
 
         candidacy.changeState(SasScholarshipCandidacyState.SENT);
-
-        getClient().alterarDadosAcademicosRestantesCasos(request);
+        
+        DadosAcademicos client = getClient();
+        
+        final SOAPLoggingHandler loggingHandler = SOAPLoggingHandler.createLoggingHandler((BindingProvider) client);
+                
+        client.alterarDadosAcademicosRestantesCasos(request);
+        
+        //System.out.println("SENT OTHER== \n" + loggingHandler.getOutboundMessage());
+        //System.out.println("RECEIVED OTHER == \n" + loggingHandler.getInboundMessage());
 
     }
 

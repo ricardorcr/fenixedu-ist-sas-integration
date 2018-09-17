@@ -32,6 +32,7 @@ import org.fenixedu.ulisboa.integration.sas.domain.SchoolLevelTypeMapping;
 import org.fenixedu.ulisboa.integration.sas.domain.SocialServicesConfiguration;
 import org.fenixedu.ulisboa.integration.sas.dto.AbstractScholarshipStudentBean;
 import org.fenixedu.ulisboa.integration.sas.service.SasDataShareAuthorizationServices;
+import org.fenixedu.ulisboa.integration.sas.service.mapping.IngressionRegimeMapper;
 import org.fenixedu.ulisboa.specifications.domain.services.RegistrationServices;
 import org.fenixedu.ulisboa.specifications.domain.services.statute.StatuteServices;
 import org.fenixedu.ulisboa.specifications.domain.studentCurriculum.CreditsReasonType;
@@ -286,11 +287,11 @@ public class AbstractFillScholarshipService {
             validateStudentNumber(bean, registration);
             checkPreconditions(bean, registration, requestYear, firstYearOfCycle);
 
-            fillCommonInfo(bean, registration, requestYear);
             fillSpecificInfo(bean, registration, requestYear);
+            fillCommonInfo(bean, registration, requestYear);
 
         } catch (FillScholarshipException e) {
-            addError(bean, e.getMessage());
+            //addError(bean, e.getMessage());
         } finally {
             bean.setObservations(formatObservations(bean));
         }
@@ -306,6 +307,7 @@ public class AbstractFillScholarshipService {
             boolean firstYearOfCycle) {
 
         if (getEnroledCurriculumLines(registration, requestYear).isEmpty()) {
+            addError(bean, "message.error.registration.without.enrolments", requestYear.getQualifiedName());
             throw new FillScholarshipException("message.error.registration.without.enrolments", requestYear.getQualifiedName());
         }
 
@@ -323,8 +325,10 @@ public class AbstractFillScholarshipService {
         }
 
         if (!SasDataShareAuthorizationServices.isAnswered(registration.getPerson())) {
+            addError(bean, "message.error.student.has.not.answer.data.sharing.survey");
             throw new FillScholarshipException("message.error.student.has.not.answer.data.sharing.survey");
         } else if (!SasDataShareAuthorizationServices.isDataShareAllowed(registration.getPerson())) {
+            addError(bean, "message.error.student.does.not.allow.data.sharing");
             throw new FillScholarshipException("message.error.student.does.not.allow.data.sharing");
         }
 
@@ -367,6 +371,8 @@ public class AbstractFillScholarshipService {
         bean.setCycleNumberOfEnrolmentsYears(getCycleEnrolmentYears(registration, requestYear).size());
 
         bean.setNumberOfDegreeCurricularYears(getNumberOfDegreeCurricularYears(registration, requestYear));
+        
+        bean.setIngressionRegime(IngressionRegimeMapper.map(registration));
     }
 
     private Boolean isEnroled(Registration registration, ExecutionYear requestYear) {

@@ -105,6 +105,8 @@ public class FirstYearScholarshipXlsTransformService extends AbstractScholarship
                 bean.getEnroled() ? bean.getCycleNumberOfEnrolmentsYears() : null);
         writeCellBigDecimal(row, ScholarshipStudentFirstYearBean.NUMBER_OF_ECTS,
                 bean.getEnroled() ? bean.getNumberOfEnrolledECTS() : null);
+        writeCellString(row, ScholarshipStudentFirstYearBean.INGRESSION_REGIME,
+                bean.getIngressionRegime());
     }
 
     public FirstYearScholarshipXlsTransformService(POIFSFileSystem poifsFileSystem) {

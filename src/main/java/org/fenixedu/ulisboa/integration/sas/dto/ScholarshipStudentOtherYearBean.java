@@ -49,6 +49,7 @@ public class ScholarshipStudentOtherYearBean extends AbstractScholarshipStudentB
     public static Integer FISCAL_CODE = 38;//not filled
     public static Integer LAST_ACADEMIC_ACT_DATE_LAST_YEAR = 39;
     public static Integer DOCUMENT_BI = 40;
+    public static Integer INGRESSION_REGIME = 41;
     
     
     public static Integer CONTRACTUALISATION_NUMBER_OF_ECTS = 15;

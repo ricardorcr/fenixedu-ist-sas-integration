@@ -1,8 +1,8 @@
 package org.fenixedu.ulisboa.integration.sas.service;
 
 import org.fenixedu.academic.domain.Person;
+import org.fenixedu.academicextensions.domain.person.dataShare.DataShareAuthorization;
 import org.fenixedu.academicextensions.domain.person.dataShare.DataShareAuthorizationType;
-import org.fenixedu.academicextensions.domain.services.person.DataShareAuthorizationServices;
 
 public class SasDataShareAuthorizationServices {
 
@@ -14,12 +14,12 @@ public class SasDataShareAuthorizationServices {
 
     static public boolean isAnswered(Person person) {
         final DataShareAuthorizationType authorizationType = getAuthorizationType();
-        return authorizationType == null ? false : DataShareAuthorizationServices.findLatest(person) != null;
+        return authorizationType == null ? false : DataShareAuthorization.findLatest(person, authorizationType) != null;
     }
 
     static public boolean isDataShareAllowed(Person person) {
         final DataShareAuthorizationType authorizationType = getAuthorizationType();
-        return authorizationType == null ? false : DataShareAuthorizationServices.isDataShareAllowed(person, authorizationType);
+        return authorizationType == null ? false : DataShareAuthorization.isDataShareAllowed(person, authorizationType);
     }
 
     private static DataShareAuthorizationType getAuthorizationType() {

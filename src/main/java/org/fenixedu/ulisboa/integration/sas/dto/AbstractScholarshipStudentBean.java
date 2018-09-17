@@ -38,6 +38,7 @@ public abstract class AbstractScholarshipStudentBean implements Serializable {
     private BigDecimal numberOfEnrolledECTS;
     private String fiscalCode;
     private String documentBINumber;
+    private String ingressionRegime;
 
     public String getInstitutionCode() {
         return institutionCode;
@@ -277,6 +278,14 @@ public abstract class AbstractScholarshipStudentBean implements Serializable {
 
     public void setCycleIngressionYear(Integer ingressionYear) {
         this.cycleIngressionYear = ingressionYear;
+    }
+
+    public String getIngressionRegime() {
+        return ingressionRegime;
+    }
+
+    public void setIngressionRegime(String ingressionRegime) {
+        this.ingressionRegime = ingressionRegime;
     }
 
 }
