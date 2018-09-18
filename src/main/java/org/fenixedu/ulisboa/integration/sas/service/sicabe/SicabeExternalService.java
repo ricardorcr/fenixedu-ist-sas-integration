@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -12,7 +13,9 @@ import javax.xml.ws.BindingProvider;
 
 import org.apache.commons.lang.math.NumberUtils;
 import org.datacontract.schemas._2004._07.sicabe_contracts.AlterarDadosAcademicosContratualizacaoRequest;
+import org.fenixedu.academic.domain.Country;
 import org.fenixedu.academic.domain.ExecutionYear;
+import org.fenixedu.academic.domain.Person;
 import org.fenixedu.academic.domain.exceptions.DomainException;
 import org.fenixedu.academic.domain.person.IDDocumentType;
 import org.fenixedu.academic.domain.student.Registration;
@@ -269,6 +272,7 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
 
         try {
             Registration registration = service.getRegistrationByAbstractScholarshipStudentBean(tempBean, c.getExecutionYear());
+            
             if (registration != null) {
                 c.setRegistration(registration);
                 c.setFirstYear(AbstractFillScholarshipService.isFirstTimeInCycle(registration, c.getExecutionYear()));
@@ -587,6 +591,7 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
         }
     }
 
+
     private boolean stateAllow2SendCandicacy(SasScholarshipCandidacyState state) {
         return state == SasScholarshipCandidacyState.PROCESSED || state == SasScholarshipCandidacyState.PROCESSED_WARNINGS;
     }
@@ -664,8 +669,8 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
                 
         client.alterarDadosAcademicosPrimeiraVez(request);
         
-        //System.out.println("SENT== FIRST-TIME \n" + loggingHandler.getOutboundMessage());
-        //System.out.println("RECEIVED==  FIRST-TIME \n" + loggingHandler.getInboundMessage());
+        System.out.println("SENT== FIRST-TIME \n" + loggingHandler.getOutboundMessage());
+        System.out.println("RECEIVED==  FIRST-TIME \n" + loggingHandler.getInboundMessage());
         
 
     }
@@ -692,7 +697,8 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
         IdentificadorCandidatura idCandidatura = new IdentificadorCandidatura();
         idCandidatura.setAnoLectivo(beginExecutionYear);
         idCandidatura.setDocumentoIdentificacao(factory.createIdentificadorCandidaturaDocumentoIdentificacao(docIdNumber));
-        idCandidatura.setTipoDocumentoIdentificacao(TipoDocumentoIdentificacao.fromValue(docIdType));
+    
+        idCandidatura.setTipoDocumentoIdentificacao(TipoDocumentoIdentificacao.valueOf(docIdType));
         idCandidatura.setNif(factory.createIdentificadorCandidaturaNif(fiscalNumber));
         return idCandidatura;
     }
@@ -793,8 +799,8 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
                 
         client.alterarDadosAcademicosRestantesCasos(request);
         
-        //System.out.println("SENT OTHER== \n" + loggingHandler.getOutboundMessage());
-        //System.out.println("RECEIVED OTHER == \n" + loggingHandler.getInboundMessage());
+        System.out.println("SENT OTHER== \n" + loggingHandler.getOutboundMessage());
+        System.out.println("RECEIVED OTHER == \n" + loggingHandler.getInboundMessage());
 
     }
 

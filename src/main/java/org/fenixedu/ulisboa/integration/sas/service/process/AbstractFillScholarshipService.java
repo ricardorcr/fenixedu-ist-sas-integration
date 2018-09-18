@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.fenixedu.academic.domain.Country;
 import org.fenixedu.academic.domain.Degree;
 import org.fenixedu.academic.domain.ExecutionYear;
 import org.fenixedu.academic.domain.Person;
@@ -108,7 +109,14 @@ public class AbstractFillScholarshipService {
         }
 
         if (registrations.size() == 1) {
-            return registrations.iterator().next();
+            
+            
+            // TODO remove...
+            final Registration registration = registrations.iterator().next();
+            allowNationality(registration, bean);
+            return registration;
+            
+            //return registrations.iterator().next();
 
         } else if (registrations.size() > 1) {
             addError(bean, "message.error.multiple.registrations");
@@ -125,6 +133,10 @@ public class AbstractFillScholarshipService {
                 final Registration registration = registrationsWithActiveEnrolments.iterator().next();
                 addWarning(bean, "message.warning.input.degree.code.not.equals.to.active.degree.code",
                         registration.getDegree().getCode());
+                
+                //TODO remove...
+                allowNationality(registration, bean);
+                
                 return registration;
             } else if (registrationsWithActiveEnrolments.size() > 1) {
                 addError(bean, "message.error.input.registration.not.found.and.multiple.active.registrations");
@@ -137,6 +149,19 @@ public class AbstractFillScholarshipService {
 
         }
 
+    }
+    
+    private boolean allowNationality(Registration registration, AbstractScholarshipStudentBean bean) {
+
+        // TODO to remove...
+        if (!Country.DEFAULT_COUNTRY_NATIONALITY.equalsIgnoreCase(registration.getPerson().getCountry().getCountryNationality().getContent())) {
+            addError(bean, "message.error.updateSasSchoolarshipCandidacyData.invalidNationality");
+            throw new FillScholarshipException(
+                    "message.error.updateSasSchoolarshipCandidacyData.invalidNationality");
+        }
+        return true;
+        
+        
     }
 
     private Collection<Degree> findDegree(AbstractScholarshipStudentBean bean) {
