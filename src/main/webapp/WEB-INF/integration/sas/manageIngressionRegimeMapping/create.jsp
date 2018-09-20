@@ -26,7 +26,7 @@ ${portal.toolkit()}
 
 <%-- TITLE --%>
 <div class="page-header">
-	<h1><spring:message code="label.manageIngressionRegimeMapping.createIngressionRegimeMapping" />
+	<h1><spring:message code="label.manageIngressionRegimeMapping.create" />
 		<small></small>
 	</h1>
 </div>
@@ -73,27 +73,34 @@ ${portal.toolkit()}
 <div class="panel panel-default">
   <div class="panel-body">
 <div class="form-group row">
-<div class="col-sm-2 control-label"><spring:message code="label.IngressionRegimeMapping.ingression"/></div> 
+<div class="col-sm-2 control-label"><spring:message code="label.ingressionRegimeMapping.ingression"/></div> 
 
 <div class="col-sm-4">
-	<select id="ingressionRegimeMapping_ingression" class="form-control" name="schoollevel">
-		<c:forEach items="${regimeIngressionValues}" var="field">
-			<option value='<c:out value='${field}'/>'><c:out value='${field.localizedName}'/></option>
+	<select id="ingressionRegimeMapping_ingression" class="form-control" name="ingression">
+		<c:forEach items="${ingressionValues}" var="ingressionType">
+			<option value='<c:out value='${ingressionType.externalId}'/>'><c:out value='${ingressionType.localizedName}'/></option>
 		</c:forEach>
 	</select>
-	//TODO
+
 	<script>	
-		$("#ingressionRegimeMapping_ingression").val('<c:out value='${not empty param.schoollevel ? param.schoollevel : schoolLevelTypeMapping.schoolLevel }'/>');
-	</script>	
+		$("#ingressionRegimeMapping_ingression").val('<c:out value='${not empty param.ingression ? param.ingression : ingressionRegimeMapping.ingressionType.externalId }'/>');
+	</script>
 </div>
 </div>		
 <div class="form-group row">
-<div class="col-sm-2 control-label"><spring:message code="label.IngressionRegimeMapping.value"/></div> 
+<div class="col-sm-2 control-label"><spring:message code="label.ingressionRegimeMapping.regime"/></div> 
 
 <div class="col-sm-4">
-		 <select id="ingressionRegimeMapping_value" class="js-example-basic-single" name="degreetype">
+		<select id="ingressionRegimeMapping_regime" class="form-control" name="regime">
+			<c:forEach items="${regimeValues}" var="field">
+				<option value='<c:out value='${field}'/>'><c:out value='${field}'/></option>
+			</c:forEach>
 		</select>
-				</div>
+		
+		<script>	
+		$("#ingressionRegimeMapping_regime").val('<c:out value='${not empty param.regime ? param.regime : ingressionRegimeMapping.regime }'/>');
+		</script>
+</div>
 </div>		
   </div>
   <div class="panel-footer">
@@ -101,28 +108,3 @@ ${portal.toolkit()}
 	</div>
 </div>
 </form>
-
-<script>
-$(document).ready(function() {
-
-	degreeType_options = [
-		<c:forEach items="${SchoolLevelTypeMapping_degreeType_options}" var="element"> 
-			{
-				text : "<c:out value='${element.name.content}'/>",  
-				id : "<c:out value='${element.externalId}'/>"
-			},
-		</c:forEach>
-	];
-	
-	$("#ingressionRegimeMapping_value").select2(
-		{
-			data : degreeType_options,
-		}	  
-    );
-    
-    
-    
-    $("#ingressionRegimeMapping_value").select2().select2('val', '<c:out value='${param.degreetype}'/>');
-
-	});
-</script>

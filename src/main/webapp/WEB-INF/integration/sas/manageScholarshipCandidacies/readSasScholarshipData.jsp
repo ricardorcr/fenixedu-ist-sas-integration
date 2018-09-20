@@ -273,6 +273,12 @@ ${portal.toolkit()}
 								code="label.SasScholarshipData.numberOfApprovedEcts" /></th>
 						<td><c:out value='${sasScholarshipCandidacy.sasScholarshipData.numberOfApprovedEcts}' /></td>
 					</tr>
+					
+					<tr>
+						<th scope="row" class="col-xs-3"><spring:message
+								code="label.SasScholarshipData.ingressionRegime" /></th>
+						<td><c:out value='${sasScholarshipCandidacy.sasScholarshipData.ingressionRegime}' /></td>
+					</tr>
 
 				</tbody>
 			</table>

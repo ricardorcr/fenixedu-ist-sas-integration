@@ -29,11 +29,11 @@ import org.fenixedu.academic.domain.treasury.TreasuryBridgeAPIFactory;
 import org.fenixedu.bennu.SasSpringConfiguration;
 import org.fenixedu.bennu.core.domain.Bennu;
 import org.fenixedu.bennu.core.i18n.BundleUtil;
+import org.fenixedu.ulisboa.integration.sas.domain.SasIngressionRegimeMapping;
 import org.fenixedu.ulisboa.integration.sas.domain.SchoolLevelTypeMapping;
 import org.fenixedu.ulisboa.integration.sas.domain.SocialServicesConfiguration;
 import org.fenixedu.ulisboa.integration.sas.dto.AbstractScholarshipStudentBean;
 import org.fenixedu.ulisboa.integration.sas.service.SasDataShareAuthorizationServices;
-import org.fenixedu.ulisboa.integration.sas.service.mapping.IngressionRegimeMapper;
 import org.fenixedu.ulisboa.specifications.domain.services.RegistrationServices;
 import org.fenixedu.ulisboa.specifications.domain.services.statute.StatuteServices;
 import org.fenixedu.ulisboa.specifications.domain.studentCurriculum.CreditsReasonType;
@@ -109,13 +109,12 @@ public class AbstractFillScholarshipService {
         }
 
         if (registrations.size() == 1) {
-            
-            
+
             // TODO remove...
             final Registration registration = registrations.iterator().next();
             allowNationality(registration, bean);
             return registration;
-            
+
             //return registrations.iterator().next();
 
         } else if (registrations.size() > 1) {
@@ -133,10 +132,10 @@ public class AbstractFillScholarshipService {
                 final Registration registration = registrationsWithActiveEnrolments.iterator().next();
                 addWarning(bean, "message.warning.input.degree.code.not.equals.to.active.degree.code",
                         registration.getDegree().getCode());
-                
+
                 //TODO remove...
                 allowNationality(registration, bean);
-                
+
                 return registration;
             } else if (registrationsWithActiveEnrolments.size() > 1) {
                 addError(bean, "message.error.input.registration.not.found.and.multiple.active.registrations");
@@ -150,18 +149,17 @@ public class AbstractFillScholarshipService {
         }
 
     }
-    
+
     private boolean allowNationality(Registration registration, AbstractScholarshipStudentBean bean) {
 
         // TODO to remove...
-        if (!Country.DEFAULT_COUNTRY_NATIONALITY.equalsIgnoreCase(registration.getPerson().getCountry().getCountryNationality().getContent())) {
+        if (!Country.DEFAULT_COUNTRY_NATIONALITY
+                .equalsIgnoreCase(registration.getPerson().getCountry().getCountryNationality().getContent())) {
             addError(bean, "message.error.updateSasSchoolarshipCandidacyData.invalidNationality");
-            throw new FillScholarshipException(
-                    "message.error.updateSasSchoolarshipCandidacyData.invalidNationality");
+            throw new FillScholarshipException("message.error.updateSasSchoolarshipCandidacyData.invalidNationality");
         }
         return true;
-        
-        
+
     }
 
     private Collection<Degree> findDegree(AbstractScholarshipStudentBean bean) {
@@ -396,8 +394,10 @@ public class AbstractFillScholarshipService {
         bean.setCycleNumberOfEnrolmentsYears(getCycleEnrolmentYears(registration, requestYear).size());
 
         bean.setNumberOfDegreeCurricularYears(getNumberOfDegreeCurricularYears(registration, requestYear));
+
+        bean.setIngressionRegime(Bennu.getInstance().getSasIngressionRegimeMappingsSet().stream()
+                .filter(ir -> ir.getIngressionType() == registration.getIngressionType()).map(SasIngressionRegimeMapping::getRegime).findFirst().orElse(null));
         
-        bean.setIngressionRegime(IngressionRegimeMapper.map(registration));
     }
 
     private Boolean isEnroled(Registration registration, ExecutionYear requestYear) {

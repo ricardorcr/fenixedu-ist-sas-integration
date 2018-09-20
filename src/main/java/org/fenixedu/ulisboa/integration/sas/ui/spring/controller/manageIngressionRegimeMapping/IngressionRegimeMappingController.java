@@ -30,13 +30,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.fenixedu.academic.domain.SchoolLevelType;
-import org.fenixedu.academic.domain.degree.DegreeType;
+import org.fenixedu.academic.domain.candidacy.IngressionType;
 import org.fenixedu.bennu.SasSpringConfiguration;
 import org.fenixedu.bennu.core.domain.Bennu;
 import org.fenixedu.bennu.core.i18n.BundleUtil;
 import org.fenixedu.bennu.spring.portal.SpringFunctionality;
-import org.fenixedu.ulisboa.integration.sas.domain.SchoolLevelTypeMapping;
+import org.fenixedu.ulisboa.integration.sas.domain.SasIngressionRegimeMapping;
 import org.fenixedu.ulisboa.integration.sas.ui.spring.controller.SasBaseController;
 import org.fenixedu.ulisboa.integration.sas.ui.spring.controller.SasController;
 import org.springframework.ui.Model;
@@ -59,17 +58,17 @@ public class IngressionRegimeMappingController extends SasBaseController {
         return search(model);
     }
 
-    private SchoolLevelTypeMapping getSchoolLevelTypeMapping(Model model) {
-        return (SchoolLevelTypeMapping) model.asMap().get("schoolLevelTypeMapping");
+    private SasIngressionRegimeMapping getIngressionRegimeMapping(Model model) {
+        return (SasIngressionRegimeMapping) model.asMap().get("ingressionRegimeMapping");
     }
 
-    private void setSchoolLevelTypeMapping(SchoolLevelTypeMapping schoolLevelTypeMapping, Model model) {
-        model.addAttribute("schoolLevelTypeMapping", schoolLevelTypeMapping);
+    private void setIngressionRegimeMapping(SasIngressionRegimeMapping ingressionRegimeMapping, Model model) {
+        model.addAttribute("ingressionRegimeMapping", ingressionRegimeMapping);
     }
 
     @Atomic
-    public void deleteSchoolLevelTypeMapping(SchoolLevelTypeMapping schoolLevelTypeMapping) {
-        schoolLevelTypeMapping.delete();
+    public void deleteIngressionRegimeMapping(SasIngressionRegimeMapping ingressionRegimeMapping) {
+        ingressionRegimeMapping.delete();
     }
 
     private static final String _SEARCH_URI = "/";
@@ -77,19 +76,19 @@ public class IngressionRegimeMappingController extends SasBaseController {
 
     @RequestMapping(value = _SEARCH_URI)
     public String search(Model model) {
-        List<SchoolLevelTypeMapping> searchschoolleveltypemappingResultsDataSet = filterSearchSchoolLevelTypeMapping();
+        List<SasIngressionRegimeMapping> searchIngressionRegimeMappingResultsDataSet = filterSearchIngressionRegimeMapping();
 
         //add the results dataSet to the model
-        model.addAttribute("searchschoolleveltypemappingResultsDataSet", searchschoolleveltypemappingResultsDataSet);
-        return "integration/sas/manageschoolleveltypemapping/schoolleveltypemapping/search";
+        model.addAttribute("searchsIngressionRegimeMappingResultsDataSet", searchIngressionRegimeMappingResultsDataSet);
+        return "integration/sas/manageIngressionRegimeMapping/search";
     }
 
-    private Stream<SchoolLevelTypeMapping> getSearchUniverseSearchSchoolLevelTypeMappingDataSet() {
-        return SchoolLevelTypeMapping.findAll();
+    private Stream<SasIngressionRegimeMapping> getSearchUniverseSearchIngressionRegimeMappingDataSet() {
+        return SasIngressionRegimeMapping.findAll();
     }
 
-    private List<SchoolLevelTypeMapping> filterSearchSchoolLevelTypeMapping() {
-        return getSearchUniverseSearchSchoolLevelTypeMappingDataSet().collect(Collectors.toList());
+    private List<SasIngressionRegimeMapping> filterSearchIngressionRegimeMapping() {
+        return getSearchUniverseSearchIngressionRegimeMappingDataSet().collect(Collectors.toList());
     }
 
     private static final String _CREATE_URI = "/create";
@@ -97,31 +96,22 @@ public class IngressionRegimeMappingController extends SasBaseController {
 
     @RequestMapping(value = _CREATE_URI, method = RequestMethod.GET)
     public String create(Model model) {
-        model.addAttribute("schoolLevelValues", SchoolLevelType.values());
+        model.addAttribute("ingressionValues", Bennu.getInstance().getIngressionTypesSet().stream().sorted((x, y) -> x.getDescription().compareTo(y.getDescription())).collect(Collectors.toList()));
+        model.addAttribute("regimeValues", SasIngressionRegimeMapping.readAllRegimes());
 
-        model.addAttribute("SchoolLevelTypeMapping_degreeType_options", getSelectableElements());
-
-        return "integration/sas/manageschoolleveltypemapping/schoolleveltypemapping/create";
-    }
-
-    //We are only interested in degree types which have no mapping associated
-    private List<DegreeType> getSelectableElements() {
-        return Bennu.getInstance().getDegreeTypeSet().stream().filter(dt -> dt.getSchoolLevelTypeMapping() == null)
-                .collect(Collectors.toList());
+        return "integration/sas/manageIngressionRegimeMapping/create";
     }
 
     @RequestMapping(value = _CREATE_URI, method = RequestMethod.POST)
-    public String create(@RequestParam(value = "schoollevel", required = false) SchoolLevelType schoolLevel, @RequestParam(
-            value = "degreetype", required = false) DegreeType degreeType, Model model, RedirectAttributes redirectAttributes) {
+    public String create(@RequestParam(value = "ingression", required = false) IngressionType ingressionType, @RequestParam(
+            value = "regime", required = false) String regime, Model model, RedirectAttributes redirectAttributes) {
 
         try {
-
-            SchoolLevelTypeMapping schoolLevelTypeMapping = createSchoolLevelTypeMapping(schoolLevel, degreeType);
-
-            return redirect("/integration/sas/manageschoolleveltypemapping/schoolleveltypemapping/", model, redirectAttributes);
+            createIngressionRegimeMapping(ingressionType, regime);
+            return redirect("/integration/sas/manageIngressionRegimeMapping/", model, redirectAttributes);
         } catch (Exception de) {
 
-            addErrorMessage(BundleUtil.getString(SasSpringConfiguration.BUNDLE, "label.error.create") + de.getLocalizedMessage(),
+            addErrorMessage(BundleUtil.getString(SasSpringConfiguration.BUNDLE, "label.error.create", de.getLocalizedMessage()),
                     model);
             return create(model);
         }
@@ -131,68 +121,69 @@ public class IngressionRegimeMappingController extends SasBaseController {
     public static final String SEARCH_TO_DELETE_ACTION_URL = CONTROLLER_URL + _SEARCH_TO_DELETE_ACTION_URI;
 
     @RequestMapping(value = _SEARCH_TO_DELETE_ACTION_URI + "{oid}", method = RequestMethod.POST)
-    public String processSearchToDeleteAction(@PathVariable("oid") SchoolLevelTypeMapping schoolLevelTypeMapping, Model model,
+    public String processSearchToDeleteAction(@PathVariable("oid") SasIngressionRegimeMapping ingressionRegimeMapping, Model model,
             RedirectAttributes redirectAttributes) {
-        setSchoolLevelTypeMapping(schoolLevelTypeMapping, model);
+        
+        setIngressionRegimeMapping(ingressionRegimeMapping, model);
         try {
-            deleteSchoolLevelTypeMapping(schoolLevelTypeMapping);
+            deleteIngressionRegimeMapping(ingressionRegimeMapping);
 
-            addInfoMessage("Sucess deleting SchoolLevelTypeMapping ...", model);
-            return redirect("/integration/sas/manageschoolleveltypemapping/schoolleveltypemapping/", model, redirectAttributes);
+            addInfoMessage(BundleUtil.getString(SasSpringConfiguration.BUNDLE, "label.manageIngressionRegimeMapping.success.delete"), model);
+            return redirect("/integration/sas/manageIngressionRegimeMapping/", model, redirectAttributes);
         } catch (Exception ex) {
-            addErrorMessage(BundleUtil.getString(SasSpringConfiguration.BUNDLE, "label.error.update") + ex.getLocalizedMessage(),
+            addErrorMessage(BundleUtil.getString(SasSpringConfiguration.BUNDLE, "label.error.update", ex.getLocalizedMessage()),
                     model);
         }
 
-        return "integration/sas/manageschoolleveltypemapping/schoolleveltypemapping/search";
+        return "integration/sas/manageIngressionRegimeMapping/search";
     }
 
     @Atomic
-    public SchoolLevelTypeMapping createSchoolLevelTypeMapping(SchoolLevelType schoolLevel, DegreeType degreeType) {
+    public SasIngressionRegimeMapping createIngressionRegimeMapping(IngressionType ingressionType, String regime) {
 
-        return SchoolLevelTypeMapping.create(schoolLevel, degreeType);
+        return SasIngressionRegimeMapping.create(ingressionType, regime);
     }
 
     private static final String _UPDATE_URI = "/update/";
     public static final String UPDATE_URL = CONTROLLER_URL + _UPDATE_URI;
 
     @RequestMapping(value = _UPDATE_URI + "{oid}", method = RequestMethod.GET)
-    public String update(@PathVariable("oid") SchoolLevelTypeMapping schoolLevelTypeMapping, Model model) {
-        model.addAttribute("schoolLevelValues", SchoolLevelType.values());
-        List<DegreeType> selectableElements = getSelectableElements();
-        selectableElements.add(schoolLevelTypeMapping.getDegreeType());
-        model.addAttribute("SchoolLevelTypeMapping_degreeType_options", selectableElements);
-        setSchoolLevelTypeMapping(schoolLevelTypeMapping, model);
-
-        return "integration/sas/manageschoolleveltypemapping/schoolleveltypemapping/update";
+    public String update(@PathVariable("oid") SasIngressionRegimeMapping ingressionRegimeMapping, Model model) {
+        
+        model.addAttribute("ingressionValues", Bennu.getInstance().getIngressionTypesSet());
+        model.addAttribute("regimeValues", SasIngressionRegimeMapping.readAllRegimes());
+        
+        setIngressionRegimeMapping(ingressionRegimeMapping, model);
+        
+        return "integration/sas/manageIngressionRegimeMapping/update";
 
     }
 
     @RequestMapping(value = _UPDATE_URI + "{oid}", method = RequestMethod.POST)
-    public String update(@PathVariable("oid") SchoolLevelTypeMapping schoolLevelTypeMapping, @RequestParam(value = "schoollevel",
-            required = false) SchoolLevelType schoolLevel,
-            @RequestParam(value = "degreetype", required = false) DegreeType degreeType, Model model,
+    public String update(@PathVariable("oid") SasIngressionRegimeMapping ingressionRegimeMapping, @RequestParam(value = "ingression",
+            required = false) IngressionType ingressionType,
+            @RequestParam(value = "regime", required = false) String regime, Model model,
             RedirectAttributes redirectAttributes) {
 
-        setSchoolLevelTypeMapping(schoolLevelTypeMapping, model);
+        setIngressionRegimeMapping(ingressionRegimeMapping, model);
 
         try {
 
-            updateSchoolLevelTypeMapping(schoolLevel, degreeType, model);
+            updateIngressionRegimeMapping(ingressionType, regime, model);
 
-            return redirect("/integration/sas/manageschoolleveltypemapping/schoolleveltypemapping/", model, redirectAttributes);
+            return redirect("/integration/sas/manageIngressionRegimeMapping/", model, redirectAttributes);
         } catch (Exception de) {
 
             addErrorMessage(BundleUtil.getString(SasSpringConfiguration.BUNDLE, "label.error.update") + de.getLocalizedMessage(),
                     model);
-            return update(schoolLevelTypeMapping, model);
+            return update(ingressionRegimeMapping, model);
 
         }
     }
 
     @Atomic
-    public void updateSchoolLevelTypeMapping(SchoolLevelType schoolLevel, DegreeType degreeType, Model model) {
-        getSchoolLevelTypeMapping(model).edit(schoolLevel, degreeType);
+    public void updateIngressionRegimeMapping(IngressionType ingression, String regime, Model model) {
+        getIngressionRegimeMapping(model).edit(ingression, regime);
     }
 
 }

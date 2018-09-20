@@ -431,7 +431,10 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
                 || !equal(bean, bean.getNumberOfDegreeCurricularYears(), sasScholarshipData.getNumberOfDegreeCurricularYears(),
                         "numberOfDegreeCurricularYears")
 
-                || !equal(bean, bean.getEnrolmentDate(), sasScholarshipData.getEnrolmentDate(), "enrolmentDate");
+                || !equal(bean, bean.getEnrolmentDate(), sasScholarshipData.getEnrolmentDate(), "enrolmentDate")
+                
+                || !equal(bean, bean.getIngressionRegime(), sasScholarshipData.getIngressionRegime(),
+                        "ingressionRegime");
 
         if (bean instanceof ScholarshipStudentOtherYearBean) {
 
@@ -515,6 +518,8 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
         data.setNumberOfEnrolmentsYears(bean.getCycleNumberOfEnrolmentsYears());
         data.setNumberOfDegreeCurricularYears(bean.getNumberOfDegreeCurricularYears());
         data.setObservations(bean.getObservations());
+        
+        data.setIngressionRegime(bean.getIngressionRegime());
 
         if (bean instanceof ScholarshipStudentOtherYearBean) {
 

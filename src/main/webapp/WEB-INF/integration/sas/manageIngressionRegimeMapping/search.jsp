@@ -26,13 +26,13 @@ ${portal.toolkit()}
 
 <%-- TITLE --%>
 <div class="page-header">
-	<h1><spring:message code="label.manageSchoolLevelTypeMapping.searchSchoolLevelTypeMapping" />
+	<h1><spring:message code="label.manageIngressionRegimeMapping.search" />
 		<small></small>
 	</h1>
 </div>
 <%-- NAVIGATION --%>
 <div class="well well-sm" style="display:inline-block">
-	<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>&nbsp;<a class="" href="${pageContext.request.contextPath}/integration/sas/manageschoolleveltypemapping/schoolleveltypemapping/create"   ><spring:message code="label.event.create" /></a>
+	<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>&nbsp;<a class="" href="${pageContext.request.contextPath}/integration/sas/manageIngressionRegimeMapping/create"   ><spring:message code="label.event.create" /></a>
 </div>
 	<c:if test="${not empty infoMessages}">
 				<div class="alert alert-info" role="alert">
@@ -71,7 +71,7 @@ ${portal.toolkit()}
 
 <script type="text/javascript">
 	  function processDelete(externalId) {
-	    url = "${pageContext.request.contextPath}/integration/sas/manageschoolleveltypemapping/schoolleveltypemapping/search/delete/" + externalId;
+	    url = "${pageContext.request.contextPath}/integration/sas/manageIngressionRegimeMapping/search/delete/" + externalId;
 	    $("#deleteForm").attr("action", url);
 	    $('#deleteModal').modal('toggle')
 	  }
@@ -87,7 +87,7 @@ ${portal.toolkit()}
         <h4 class="modal-title"><spring:message code="label.confirmation"/></h4>
       </div>
       <div class="modal-body">
-        <p><spring:message code = "label.manageSchoolLevelTypeMapping.searchSchoolLevelTypeMapping.confirmDelete"/></p>
+        <p><spring:message code = "label.manageIngressionRegimeMapping.searchIngressionRegimeMapping.confirmDelete"/></p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal"><spring:message code = "label.close"/></button>
@@ -101,13 +101,13 @@ ${portal.toolkit()}
 
 
 <c:choose>
-	<c:when test="${not empty searchschoolleveltypemappingResultsDataSet}">
-		<table id="searchschoolleveltypemappingTable" class="table responsive table-bordered table-hover">
+	<c:when test="${not empty searchsIngressionRegimeMappingResultsDataSet}">
+		<table id="searchIngressionRegimeMappingTable" class="table responsive table-bordered table-hover">
 			<thead>
 				<tr>
 					<%--!!!  Field names here --%>
-<th><spring:message code="label.SchoolLevelTypeMapping.schoolLevel"/></th>
-<th><spring:message code="label.SchoolLevelTypeMapping.degreeType"/></th>
+					<th><spring:message code="label.ingressionRegimeMapping.ingression"/></th>
+					<th><spring:message code="label.ingressionRegimeMapping.regime"/></th>
 					<th></th>
 				</tr>
 			</thead>
@@ -119,7 +119,7 @@ ${portal.toolkit()}
 	<c:otherwise>
 				<div class="alert alert-warning" role="alert">
 					
-					<p> <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true">&nbsp;</span>			<spring:message code="label.noResultsFound" /></p>
+					<p> <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true">&nbsp;</span>	<spring:message code="label.noResultsFound" /></p>
 					
 				</div>	
 		
@@ -128,14 +128,14 @@ ${portal.toolkit()}
 
 <script>
 	var searchschoolleveltypemappingDataSet = [
-			<c:forEach items="${searchschoolleveltypemappingResultsDataSet}" var="searchResult">
+			<c:forEach items="${searchsIngressionRegimeMappingResultsDataSet}" var="searchResult">
 				{
 				"DT_RowId" : '<c:out value='${searchResult.externalId}'/>',
-"schoollevel" : "<c:out value='${searchResult.schoolLevel.localizedName}'/>",
-"degreetype" : "<c:out value='${searchResult.degreeType.name.content}'/>",
-"actions" :
-" <a  class=\"btn btn-xs btn-danger\" href=\"#\" onClick=\"javascript:processDelete('${searchResult.externalId}')\"><span class=\"glyphicon glyphicon-trash\" aria-hidden=\"true\"></span>&nbsp;<spring:message code='label.delete'/></a>" +
-" <a  class=\"btn btn-default btn-xs\" href=\"${pageContext.request.contextPath}/integration/sas/manageschoolleveltypemapping/schoolleveltypemapping/update/${searchResult.externalId}\"><spring:message code='label.manageSchoolLevelTypeMapping.update'/></a>" +
+				"ingression" : "<c:out value='${searchResult.ingressionType.localizedName}'/>",
+				"regime" : "<c:out value='${searchResult.regime}'/>",
+				"actions" :
+				" <a  class=\"btn btn-xs btn-danger\" href=\"#\" onClick=\"javascript:processDelete('${searchResult.externalId}')\"><span class=\"glyphicon glyphicon-trash\" aria-hidden=\"true\"></span>&nbsp;<spring:message code='label.delete'/></a>" +
+				" <a  class=\"btn btn-default btn-xs\" href=\"${pageContext.request.contextPath}/integration/sas/manageIngressionRegimeMapping/update/${searchResult.externalId}\"><spring:message code='label.manageIngressionRegimeMapping.update'/></a>" +
                 "" 
 			},
             </c:forEach>
@@ -146,12 +146,12 @@ ${portal.toolkit()}
 	
 
 
-		var table = $('#searchschoolleveltypemappingTable').DataTable({language : {
+		var table = $('#searchIngressionRegimeMappingTable').DataTable({language : {
 			url : "${datatablesI18NUrl}",			
 		},
 		"columns": [
-			{ data: 'schoollevel' },
-			{ data: 'degreetype' },
+			{ data: 'ingression' },
+			{ data: 'regime' },
 			{ data: 'actions' }
 			
 		],
@@ -159,14 +159,14 @@ ${portal.toolkit()}
 		               { "width": "148px", "targets": 2 } 
 		             ],
 		"data" : searchschoolleveltypemappingDataSet,
-"dom": '<"col-sm-6"l><"col-sm-3"f><"col-sm-3"T>rtip',
+		"dom": '<"col-sm-6"l>rtip', // FilterBox = NO && ExportOptions = NO
         "tableTools": {
             "sSwfPath": "${pageContext.request.contextPath}/webjars/datatables-tools/2.2.4/swf/copy_csv_xls_pdf.swf"        	
         }
 		});
 		table.columns.adjust().draw();
 		
-		  $('#searchschoolleveltypemappingTable tbody').on( 'click', 'tr', function () {
+		  $('#searchIngressionRegimeMappingTable tbody').on( 'click', 'tr', function () {
 		        $(this).toggleClass('selected');
 		    } );
 		  

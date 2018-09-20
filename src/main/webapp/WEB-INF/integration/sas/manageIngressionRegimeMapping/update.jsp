@@ -26,14 +26,14 @@ ${portal.toolkit()}
 
 <%-- TITLE --%>
 <div class="page-header">
-	<h1><spring:message code="label.manageSchoolLevelTypeMapping.updateSchoolLevelTypeMapping" />
+	<h1><spring:message code="label.manageIngressionRegimeMapping.update" />
 		<small></small>
 	</h1>
 </div>
 
 <%-- NAVIGATION --%>
 <div class="well well-sm" style="display:inline-block">
-	<span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>&nbsp;<a class="" href="${pageContext.request.contextPath}/integration/sas/manageschoolleveltypemapping/schoolleveltypemapping/" ><spring:message code="label.event.back" /></a>
+	<span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>&nbsp;<a class="" href="${pageContext.request.contextPath}/integration/sas/manageIngressionRegimeMapping/" ><spring:message code="label.event.back" /></a>
 </div>
 	<c:if test="${not empty infoMessages}">
 				<div class="alert alert-info" role="alert">
@@ -74,54 +74,38 @@ ${portal.toolkit()}
 <div class="panel panel-default">
   <div class="panel-body">
 <div class="form-group row">
-<div class="col-sm-2 control-label"><spring:message code="label.SchoolLevelTypeMapping.schoolLevel"/></div> 
+<div class="col-sm-2 control-label"><spring:message code="label.ingressionRegimeMapping.ingression"/></div> 
 
 <div class="col-sm-4">
-	<select id="schoolLevelTypeMapping_schoolLevel" class="form-control" name="schoollevel">
-		<c:forEach items="${schoolLevelValues}" var="field">
-			<option value='<c:out value='${field}'/>'><c:out value='${field.localizedName}'/></option>
+	<select id="ingressionRegimeMapping_ingression" class="form-control" name="ingression">
+		<c:forEach items="${ingressionValues}" var="ingressionType">
+			<option value='<c:out value='${ingressionType.externalId}'/>'><c:out value='${ingressionType.localizedName}'/></option>
 		</c:forEach>
 	</select>
-	<script>
-		$("#schoolLevelTypeMapping_schoolLevel").val('<c:out value='${not empty param.schoollevel ? param.schoollevel : schoolLevelTypeMapping.schoolLevel }'/>');
-	</script>	
+
+	<script>	
+		$("#ingressionRegimeMapping_ingression").val('<c:out value='${not empty param.ingression ? param.ingression : ingressionRegimeMapping.ingressionType.externalId }'/>');
+	</script>
 </div>
 </div>		
 <div class="form-group row">
-<div class="col-sm-2 control-label"><spring:message code="label.SchoolLevelTypeMapping.degreeType"/></div> 
+<div class="col-sm-2 control-label"><spring:message code="label.ingressionRegimeMapping.regime"/></div> 
 
 <div class="col-sm-4">
-		 <select id="schoolLevelTypeMapping_degreeType" class="js-example-basic-single" name="degreetype">
+		 <select id="ingressionRegimeMapping_regime" class="form-control" name="regime">
+			<c:forEach items="${regimeValues}" var="field">
+				<option value='<c:out value='${field}'/>'><c:out value='${field}'/></option>
+			</c:forEach>
 		</select>
-				</div>
-</div>		
+		
+		<script>	
+			$("#ingressionRegimeMapping_regime").val('<c:out value='${not empty param.regime ? param.regime : ingressionRegimeMapping.regime }'/>');
+		</script>
+</div>
+</div>	
   </div>
   <div class="panel-footer">
 		<input type="submit" class="btn btn-default" role="button" value="<spring:message code="label.submit" />"/>
 	</div>
 </div>
 </form>
-
-<script>
-$(document).ready(function() {
-
-degreeType_options = [
-	<c:forEach items="${SchoolLevelTypeMapping_degreeType_options}" var="element"> 
-		{
-			text : "<c:out value='${element.name.content}'/>", 
-			id : "<c:out value='${element.externalId}'/>"
-		},
-	</c:forEach>
-];
-
-$("#schoolLevelTypeMapping_degreeType").select2(
-	{
-		data : degreeType_options,
-	}	  
-		    );
-		    
-		    
-		    $("#schoolLevelTypeMapping_degreeType").select2().select2('val', '<c:out value='${not empty param.degreetype ? param.degreetype : schoolLevelTypeMapping.degreeType.externalId }'/>');
-
-	});
-</script>

@@ -104,6 +104,7 @@ class SasScholarshipData {
 	BigDecimal gratuityAmount; //ValorPropina
 	Boolean enroled; //iInscritoAnoLectivoActual
 	BigDecimal numberOfApprovedEcts; //totalECTScursoAtingirGrau
+	String ingressionRegime; //IngressionRegime
 	
 }
 
@@ -143,8 +144,8 @@ class SchoolLevelTypeMapping {
 	protected SchoolLevelType schoolLevel;
 }
 
-class IngressionRegimeMapping {
-	String value;
+class SasIngressionRegimeMapping {
+	String regime;
 }
 
 relation BennuSocialServicesConfiguration{
@@ -232,23 +233,25 @@ relation SchoolLevelTypeMappingBennu{
 	.org.fenixedu.bennu.core.domain.Bennu playsRole bennu {
 		multiplicity 1..1;
 	}
-	SchoolLevelTypeMapping playsRole schoolLevelTypeMapping{
+	SchoolLevelTypeMapping playsRole schoolLevelTypeMapping {
 		multiplicity *;
 	}
 }
 
-relation IngressionRegimeMappingIngressionType{
-	protected .org.fenixedu.academic.domain.candidacy.IngressionType playsRole ingressionType{
-		multiplicity 1;
+relation SasIngressionRegimeMappingIngressionType {
+	.org.fenixedu.academic.domain.candidacy.IngressionType playsRole ingressionType {
+		multiplicity 1..1;
 	}
-	IngressionRegimeMapping playsRole ingressionRegimeMapping;
+	
+	SasIngressionRegimeMapping playsRole sasIngressionRegimeMapping;
 }
 
-relation IngressionRegimeMappingBennu{
+relation SasIngressionRegimeMappingBennu {
 	.org.fenixedu.bennu.core.domain.Bennu playsRole bennu {
 		multiplicity 1..1;
 	}
-	IngressionRegimeMapping playsRole IngressionRegimeMapping{
+	
+	SasIngressionRegimeMapping playsRole sasIngressionRegimeMappings {
 		multiplicity *;
 	}
 }
