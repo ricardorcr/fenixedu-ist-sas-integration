@@ -19,7 +19,7 @@ public class FirstYearScholarshipXlsTransformService extends AbstractScholarship
         // return sheet.getMergedRegion(0) == null;
 
         final int columnsRead = Integer.valueOf(String.valueOf(sheet.getRow(0).getLastCellNum()));
-        final int columnsExpected = ScholarshipStudentFirstYearBean.DOCUMENT_BI + 1;
+        final int columnsExpected = ScholarshipStudentFirstYearBean.INGRESSION_REGIME + 1;
 
         if (columnsRead == columnsExpected) {
             return true;
@@ -80,8 +80,7 @@ public class FirstYearScholarshipXlsTransformService extends AbstractScholarship
 
         writeCellLocalDate(row, ScholarshipStudentFirstYearBean.REGISTRATION_DATE,
                 bean.getEnroled() ? bean.getEnrolmentDate() : null);
-        writeCellBigDecimal(row, ScholarshipStudentFirstYearBean.GRATUITY,
-                bean.getEnroled() ? bean.getGratuityAmount() : null);
+        writeCellBigDecimal(row, ScholarshipStudentFirstYearBean.GRATUITY, bean.getEnroled() ? bean.getGratuityAmount() : null);
         writeCellInteger(row, ScholarshipStudentFirstYearBean.NUMBER_OF_MONTHS_EXECUTION_YEAR,
                 bean.getEnroled() ? bean.getNumberOfMonthsExecutionYear() : null);
         writeCellString(row, ScholarshipStudentFirstYearBean.FIRST_MONTH_EXECUTION_YEAR,
@@ -96,7 +95,8 @@ public class FirstYearScholarshipXlsTransformService extends AbstractScholarship
                 bean.getEnroled() ? booleanToString(bean.getMasterQualificationOwner()) : null);
         writeCellString(row, ScholarshipStudentFirstYearBean.OWNER_PHD,
                 bean.getEnroled() ? booleanToString(bean.getPhdQualificationOwner()) : null);
-        writeCellString(row, ScholarshipStudentFirstYearBean.OBSERVATIONS, bean.getObservations() != null ? bean.getObservations() : null);
+        writeCellString(row, ScholarshipStudentFirstYearBean.OBSERVATIONS,
+                bean.getObservations() != null ? bean.getObservations() : null);
         writeCellString(row, ScholarshipStudentFirstYearBean.REGIME, bean.getEnroled() ? bean.getRegime() : null);
 
         writeCellInteger(row, ScholarshipStudentFirstYearBean.NUMBER_OF_YEARS_DEGREE,
@@ -105,8 +105,7 @@ public class FirstYearScholarshipXlsTransformService extends AbstractScholarship
                 bean.getEnroled() ? bean.getCycleNumberOfEnrolmentsYears() : null);
         writeCellBigDecimal(row, ScholarshipStudentFirstYearBean.NUMBER_OF_ECTS,
                 bean.getEnroled() ? bean.getNumberOfEnrolledECTS() : null);
-        writeCellString(row, ScholarshipStudentFirstYearBean.INGRESSION_REGIME,
-                bean.getIngressionRegime());
+        writeCellString(row, ScholarshipStudentFirstYearBean.INGRESSION_REGIME, bean.getIngressionRegime());
     }
 
     public FirstYearScholarshipXlsTransformService(POIFSFileSystem poifsFileSystem) {

@@ -18,8 +18,8 @@ public class OtherYearScholarshipXlsTransformService extends AbstractScholarship
     @Override
     public boolean checkExcelFormat(HSSFSheet sheet) throws IOException {
         final int columnsRead = Integer.valueOf(String.valueOf(sheet.getRow(0).getLastCellNum()));
-        final int columnsExpected = ScholarshipStudentOtherYearBean.DOCUMENT_BI + 1;
-        final int columnsAlternative = ScholarshipStudentFirstYearBean.DOCUMENT_BI + 1;
+        final int columnsExpected = ScholarshipStudentOtherYearBean.INGRESSION_REGIME + 1;
+        final int columnsAlternative = ScholarshipStudentFirstYearBean.INGRESSION_REGIME + 1;
 
         if (columnsRead == columnsExpected) {
             return true;
