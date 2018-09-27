@@ -10,7 +10,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.fenixedu.academic.domain.Country;
 import org.fenixedu.academic.domain.Degree;
 import org.fenixedu.academic.domain.ExecutionYear;
 import org.fenixedu.academic.domain.Person;
@@ -109,13 +108,7 @@ public class AbstractFillScholarshipService {
         }
 
         if (registrations.size() == 1) {
-
-            // TODO remove...
-            final Registration registration = registrations.iterator().next();
-            allowNationality(registration, bean);
-            return registration;
-
-            //return registrations.iterator().next();
+            return registrations.iterator().next();
 
         } else if (registrations.size() > 1) {
             addError(bean, "message.error.multiple.registrations");
@@ -133,9 +126,6 @@ public class AbstractFillScholarshipService {
                 addWarning(bean, "message.warning.input.degree.code.not.equals.to.active.degree.code",
                         registration.getDegree().getCode());
 
-                //TODO remove...
-                allowNationality(registration, bean);
-
                 return registration;
             } else if (registrationsWithActiveEnrolments.size() > 1) {
                 addError(bean, "message.error.input.registration.not.found.and.multiple.active.registrations");
@@ -147,18 +137,6 @@ public class AbstractFillScholarshipService {
             }
 
         }
-
-    }
-
-    private boolean allowNationality(Registration registration, AbstractScholarshipStudentBean bean) {
-
-        // TODO to remove...
-        if (!Country.DEFAULT_COUNTRY_NATIONALITY
-                .equalsIgnoreCase(registration.getPerson().getCountry().getCountryNationality().getContent())) {
-            addError(bean, "message.error.updateSasSchoolarshipCandidacyData.invalidNationality");
-            throw new FillScholarshipException("message.error.updateSasSchoolarshipCandidacyData.invalidNationality");
-        }
-        return true;
 
     }
 
@@ -395,8 +373,15 @@ public class AbstractFillScholarshipService {
 
         bean.setNumberOfDegreeCurricularYears(getNumberOfDegreeCurricularYears(registration, requestYear));
 
-        bean.setIngressionRegime(Bennu.getInstance().getSasIngressionRegimeMappingsSet().stream()
-                .filter(ir -> ir.getIngressionType() == registration.getIngressionType()).map(SasIngressionRegimeMapping::getRegime).findFirst().orElse(null));
+        bean.setIngressionRegimeCodeWithDescription(Bennu.getInstance().getSasIngressionRegimeMappingsSet().stream()
+                .filter(ir -> ir.getIngressionType() == registration.getIngressionType()).map(SasIngressionRegimeMapping::getRegimeCodeWithDescription).findFirst().orElse(null));
+        
+        bean.setIngressionRegimeCode(Bennu.getInstance().getSasIngressionRegimeMappingsSet().stream()
+                .filter(ir -> ir.getIngressionType() == registration.getIngressionType()).map(SasIngressionRegimeMapping::getRegimeCode).findFirst().orElse(null));
+        
+        if(bean.getIngressionRegimeCode() == null || bean.getIngressionRegimeCodeWithDescription() == null) {
+            addError(bean, "message.error.ingression.regime.mapping.is.missing", registration.getIngressionType().getLocalizedName());
+        }
         
     }
 

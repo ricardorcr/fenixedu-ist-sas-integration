@@ -38,7 +38,8 @@ public abstract class AbstractScholarshipStudentBean implements Serializable {
     private BigDecimal numberOfEnrolledECTS;
     private String fiscalCode;
     private String documentBINumber;
-    private String ingressionRegime;
+    private String ingressionRegimeCodeWithDescription;
+    private String ingressionRegimeCode;
 
     public String getInstitutionCode() {
         return institutionCode;
@@ -280,12 +281,35 @@ public abstract class AbstractScholarshipStudentBean implements Serializable {
         this.cycleIngressionYear = ingressionYear;
     }
 
-    public String getIngressionRegime() {
-        return ingressionRegime;
+    public Integer getCycleNumberOfEnrolmentYears() {
+        return cycleNumberOfEnrolmentYears;
     }
 
-    public void setIngressionRegime(String ingressionRegime) {
-        this.ingressionRegime = ingressionRegime;
+    public void setCycleNumberOfEnrolmentYears(Integer cycleNumberOfEnrolmentYears) {
+        this.cycleNumberOfEnrolmentYears = cycleNumberOfEnrolmentYears;
     }
+    
+    public String getIngressionRegimeCode() {
+        return ingressionRegimeCode;
+    }
+    
+    public void setIngressionRegimeCode(String ingressionRegimeCode) {
+        this.ingressionRegimeCode = ingressionRegimeCode;
+    }
+
+    public String getIngressionRegimeCodeWithDescription() {
+        return ingressionRegimeCodeWithDescription;
+    }
+
+    public void setIngressionRegimeCodeWithDescription(String ingressionRegimeCodeWithDescription) {
+        this.ingressionRegimeCodeWithDescription = ingressionRegimeCodeWithDescription;
+    }
+
+    
+
+    
+    
+
+    
 
 }

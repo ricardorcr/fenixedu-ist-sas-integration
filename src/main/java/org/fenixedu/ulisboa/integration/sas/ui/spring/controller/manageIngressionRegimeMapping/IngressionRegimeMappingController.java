@@ -97,17 +97,18 @@ public class IngressionRegimeMappingController extends SasBaseController {
     @RequestMapping(value = _CREATE_URI, method = RequestMethod.GET)
     public String create(Model model) {
         model.addAttribute("ingressionValues", Bennu.getInstance().getIngressionTypesSet().stream().sorted((x, y) -> x.getDescription().compareTo(y.getDescription())).collect(Collectors.toList()));
-        model.addAttribute("regimeValues", SasIngressionRegimeMapping.readAllRegimes());
-
+        
         return "integration/sas/manageIngressionRegimeMapping/create";
     }
 
     @RequestMapping(value = _CREATE_URI, method = RequestMethod.POST)
-    public String create(@RequestParam(value = "ingression", required = false) IngressionType ingressionType, @RequestParam(
-            value = "regime", required = false) String regime, Model model, RedirectAttributes redirectAttributes) {
+    public String create(@RequestParam(value = "ingression", required = false) IngressionType ingressionType,
+            @RequestParam(value = "regimeCode", required = false) String regimeCode, 
+            @RequestParam(value = "regimeCodeWithDescription", required = false) String regimeCodeWithDescription,
+            Model model, RedirectAttributes redirectAttributes) {
 
         try {
-            createIngressionRegimeMapping(ingressionType, regime);
+            createIngressionRegimeMapping(ingressionType, regimeCode, regimeCodeWithDescription);
             return redirect("/integration/sas/manageIngressionRegimeMapping/", model, redirectAttributes);
         } catch (Exception de) {
 
@@ -139,9 +140,9 @@ public class IngressionRegimeMappingController extends SasBaseController {
     }
 
     @Atomic
-    public SasIngressionRegimeMapping createIngressionRegimeMapping(IngressionType ingressionType, String regime) {
+    public SasIngressionRegimeMapping createIngressionRegimeMapping(IngressionType ingressionType, String regimeCode, String regimeCodeWithDescription) {
 
-        return SasIngressionRegimeMapping.create(ingressionType, regime);
+        return SasIngressionRegimeMapping.create(ingressionType, regimeCode, regimeCodeWithDescription);
     }
 
     private static final String _UPDATE_URI = "/update/";
@@ -151,8 +152,6 @@ public class IngressionRegimeMappingController extends SasBaseController {
     public String update(@PathVariable("oid") SasIngressionRegimeMapping ingressionRegimeMapping, Model model) {
         
         model.addAttribute("ingressionValues", Bennu.getInstance().getIngressionTypesSet());
-        model.addAttribute("regimeValues", SasIngressionRegimeMapping.readAllRegimes());
-        
         setIngressionRegimeMapping(ingressionRegimeMapping, model);
         
         return "integration/sas/manageIngressionRegimeMapping/update";
@@ -162,14 +161,15 @@ public class IngressionRegimeMappingController extends SasBaseController {
     @RequestMapping(value = _UPDATE_URI + "{oid}", method = RequestMethod.POST)
     public String update(@PathVariable("oid") SasIngressionRegimeMapping ingressionRegimeMapping, @RequestParam(value = "ingression",
             required = false) IngressionType ingressionType,
-            @RequestParam(value = "regime", required = false) String regime, Model model,
+            @RequestParam(value = "regimeCode", required = false) String regimeCode, 
+            @RequestParam(value = "regimeCodeWithDescription", required = false) String regimeCodeWithDescription, Model model,
             RedirectAttributes redirectAttributes) {
 
         setIngressionRegimeMapping(ingressionRegimeMapping, model);
 
         try {
 
-            updateIngressionRegimeMapping(ingressionType, regime, model);
+            updateIngressionRegimeMapping(ingressionType, regimeCode, regimeCodeWithDescription, model);
 
             return redirect("/integration/sas/manageIngressionRegimeMapping/", model, redirectAttributes);
         } catch (Exception de) {
@@ -182,8 +182,8 @@ public class IngressionRegimeMappingController extends SasBaseController {
     }
 
     @Atomic
-    public void updateIngressionRegimeMapping(IngressionType ingression, String regime, Model model) {
-        getIngressionRegimeMapping(model).edit(ingression, regime);
+    public void updateIngressionRegimeMapping(IngressionType ingression, String regimeCode, String regimeCodeWithDescription, Model model) {
+        getIngressionRegimeMapping(model).edit(ingression, regimeCode, regimeCodeWithDescription);
     }
 
 }

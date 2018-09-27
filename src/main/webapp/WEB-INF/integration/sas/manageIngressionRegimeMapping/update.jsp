@@ -89,20 +89,27 @@ ${portal.toolkit()}
 </div>
 </div>		
 <div class="form-group row">
-<div class="col-sm-2 control-label"><spring:message code="label.ingressionRegimeMapping.regime"/></div> 
+<div class="col-sm-2 control-label"><spring:message code="label.ingressionRegimeMapping.regimeCode"/></div> 
 
 <div class="col-sm-4">
-		 <select id="ingressionRegimeMapping_regime" class="form-control" name="regime">
-			<c:forEach items="${regimeValues}" var="field">
-				<option value='<c:out value='${field}'/>'><c:out value='${field}'/></option>
-			</c:forEach>
-		</select>
-		
+		<input id="ingressionRegimeMapping_regimeCode" class="form-control" type="text" name="regimeCode" />
 		<script>	
-			$("#ingressionRegimeMapping_regime").val('<c:out value='${not empty param.regime ? param.regime : ingressionRegimeMapping.regime }'/>');
-		</script>
+		$("#ingressionRegimeMapping_regimeCode").val('<c:out value='${not empty param.regimeCode ? param.regimeCode : ingressionRegimeMapping.regimeCode }'/>');
+		</script> 
+</div>
+</div>
+
+<div class="form-group row">
+<div class="col-sm-2 control-label"><spring:message code="label.ingressionRegimeMapping.regimeCodeWithDescription"/></div> 
+
+<div class="col-sm-4">
+		<input id="ingressionRegimeMapping_regimeCodeWithDescription" class="form-control" type="text" name="regimeCodeWithDescription" />
+		<script>	
+		$("#ingressionRegimeMapping_regimeCodeWithDescription").val('<c:out value='${not empty param.regimeCodeWithDescription ? param.regimeCodeWithDescription : ingressionRegimeMapping.regimeCodeWithDescription }'/>');
+		</script> 
 </div>
 </div>	
+
   </div>
   <div class="panel-footer">
 		<input type="submit" class="btn btn-default" role="button" value="<spring:message code="label.submit" />"/>

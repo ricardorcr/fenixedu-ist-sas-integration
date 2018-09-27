@@ -116,7 +116,7 @@ public class ScholarshipCandidaciesController extends SasBaseController {
 
         SicabeExternalService sicabe = new SicabeExternalService();
         try {
-            sicabe.fillSasScholarshipCandidacies(sasScholarshipCandidacies, executionYear);
+            sicabe.loadSasScholarshipCandidacies(sasScholarshipCandidacies, executionYear);
             addInfoMessage(SasPTUtil.bundle("label.info.sync", String.valueOf(sasScholarshipCandidacies.size())), model);
         } catch (DadosAcademicosObterCandidaturasSubmetidasSicabeBusinessMessageFaultFaultMessage
                 | DadosAcademicosObterCandidaturasSubmetidasSicabeErrorMessageFaultFaultMessage
@@ -138,7 +138,7 @@ public class ScholarshipCandidaciesController extends SasBaseController {
 
         SicabeExternalService sicabe = new SicabeExternalService();
         try {
-            sicabe.fillAllSasScholarshipCandidacies(executionYear);
+            sicabe.loadAllSasScholarshipCandidacies(executionYear);
             addInfoMessage(SasPTUtil.bundle("label.info.syncAll"), model);
         } catch (DadosAcademicosObterCandidaturasSubmetidasSicabeBusinessMessageFaultFaultMessage
                 | DadosAcademicosObterCandidaturasSubmetidasSicabeErrorMessageFaultFaultMessage

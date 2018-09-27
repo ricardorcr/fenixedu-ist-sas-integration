@@ -107,7 +107,8 @@ ${portal.toolkit()}
 				<tr>
 					<%--!!!  Field names here --%>
 					<th><spring:message code="label.ingressionRegimeMapping.ingression"/></th>
-					<th><spring:message code="label.ingressionRegimeMapping.regime"/></th>
+					<th><spring:message code="label.ingressionRegimeMapping.regimeCode"/></th>
+					<th><spring:message code="label.ingressionRegimeMapping.regimeCodeWithDescription"/></th>
 					<th></th>
 				</tr>
 			</thead>
@@ -132,10 +133,11 @@ ${portal.toolkit()}
 				{
 				"DT_RowId" : '<c:out value='${searchResult.externalId}'/>',
 				"ingression" : "<c:out value='${searchResult.ingressionType.localizedName}'/>",
-				"regime" : "<c:out value='${searchResult.regime}'/>",
+				"regimeCode" : "<c:out value='${searchResult.regimeCode}'/>",
+				"regimeCodeWithDescription" : "<c:out value='${searchResult.regimeCodeWithDescription}'/>",
 				"actions" :
 				" <a  class=\"btn btn-xs btn-danger\" href=\"#\" onClick=\"javascript:processDelete('${searchResult.externalId}')\"><span class=\"glyphicon glyphicon-trash\" aria-hidden=\"true\"></span>&nbsp;<spring:message code='label.delete'/></a>" +
-				" <a  class=\"btn btn-default btn-xs\" href=\"${pageContext.request.contextPath}/integration/sas/manageIngressionRegimeMapping/update/${searchResult.externalId}\"><spring:message code='label.manageIngressionRegimeMapping.update'/></a>" +
+				" <a  class=\"btn btn-default btn-xs\" href=\"${pageContext.request.contextPath}/integration/sas/manageIngressionRegimeMapping/update/${searchResult.externalId}\"><spring:message code='label.update'/></a>" +
                 "" 
 			},
             </c:forEach>
@@ -151,7 +153,8 @@ ${portal.toolkit()}
 		},
 		"columns": [
 			{ data: 'ingression' },
-			{ data: 'regime' },
+			{ data: 'regimeCode' },
+			{ data: 'regimeCodeWithDescription' },
 			{ data: 'actions' }
 			
 		],

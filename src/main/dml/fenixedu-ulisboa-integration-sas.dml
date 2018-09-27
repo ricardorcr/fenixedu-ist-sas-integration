@@ -145,7 +145,8 @@ class SchoolLevelTypeMapping {
 }
 
 class SasIngressionRegimeMapping {
-	String regime;
+	String regimeCode;
+	String regimeCodeWithDescription;
 }
 
 relation BennuSocialServicesConfiguration{
