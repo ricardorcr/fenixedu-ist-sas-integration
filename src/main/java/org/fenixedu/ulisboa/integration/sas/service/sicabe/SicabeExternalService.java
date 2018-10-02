@@ -881,7 +881,12 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
         protected void makeLine(final SasScholarshipCandidacy candidacy) {
 
             final SasScholarshipData data = candidacy.getSasScholarshipData();
-
+            
+            addData("SasScholarshipCandidacy.candidacyName", candidacy.getCandidacyName());
+            addData("SasScholarshipCandidacy.docIdNumber", candidacy.getDocIdNumber());
+            addData("SasScholarshipCandidacy.docIdType", candidacy.getDocIdType());
+            addData("SasScholarshipCandidacy.fiscalNumber", candidacy.getFiscalNumber());
+            
             final Registration registration = candidacy.getRegistration();
 
             if (registration != null) {
