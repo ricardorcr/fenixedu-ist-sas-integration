@@ -1,5 +1,8 @@
 package org.fenixedu.ulisboa.integration.sas.service.sicabe;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
@@ -19,6 +22,8 @@ import org.fenixedu.academic.domain.student.Registration;
 import org.fenixedu.bennu.SasSpringConfiguration;
 import org.fenixedu.bennu.core.domain.Bennu;
 import org.fenixedu.bennu.core.i18n.BundleUtil;
+import org.fenixedu.commons.spreadsheet.SheetData;
+import org.fenixedu.commons.spreadsheet.SpreadsheetBuilderForXLSX;
 import org.fenixedu.treasury.services.integration.erp.ERPExternalServiceImplementation.SOAPLoggingHandler;
 import org.fenixedu.ulisboa.integration.sas.domain.CandidacyState;
 import org.fenixedu.ulisboa.integration.sas.domain.SasScholarshipCandidacy;
@@ -32,6 +37,7 @@ import org.fenixedu.ulisboa.integration.sas.service.process.AbstractFillScholars
 import org.fenixedu.ulisboa.integration.sas.service.process.FillScholarshipException;
 import org.fenixedu.ulisboa.integration.sas.service.process.FillScholarshipFirstYearService;
 import org.fenixedu.ulisboa.integration.sas.service.process.FillScholarshipServiceOtherYearService;
+import org.fenixedu.ulisboa.integration.sas.util.SasPTUtil;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.springframework.util.StringUtils;
@@ -381,7 +387,8 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
 
         service.fillAllInfo(bean, c.getRegistration(), c.getExecutionYear(), c.getFirstYear());
 
-        if (c.getSasScholarshipData() == null || dataHasChanged(c.getSasScholarshipData(), bean)) {
+        if (c.getSasScholarshipData() == null || dataHasChanged(c.getSasScholarshipData(), bean)
+                || c.getState() == SasScholarshipCandidacyState.PENDING) {
             updateSasSchoolarshipCandidacyData(bean, c);
         }
 
@@ -418,6 +425,9 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
                 || !equal(bean, bean.getNumberOfMonthsExecutionYear(), sasScholarshipData.getNumberOfMonthsExecutionYear(),
                         "numberOfMonthsExecutionYear")
 
+                || !equal(bean, bean.getCurricularYear(), sasScholarshipData.getCurricularYear(),
+                        "curricularYear")
+
                 || !equal(bean, bean.getRegime(), sasScholarshipData.getRegime(), "regime")
 
                 || !equal(bean, bean.getEnroled(), sasScholarshipData.getEnroled(), "enroled")
@@ -453,9 +463,6 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
 
                     || !equal(otherYearBean, otherYearBean.getLastAcademicActDateLastYear(),
                             sasScholarshipData.getLastAcademicActDateLastYear(), "lastAcademicActDateLastYear")
-
-                    || !equal(otherYearBean, otherYearBean.getCurricularYear(), sasScholarshipData.getCurricularYear(),
-                            "curricularYear")
 
                     || !equal(otherYearBean, otherYearBean.getCycleNumberOfEnrolmentsYearsInIntegralRegime(),
                             sasScholarshipData.getCycleNumberOfEnrolmentsYearsInIntegralRegime(),
@@ -513,6 +520,7 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
         data.setNumberOfEnrolmentsYears(bean.getCycleNumberOfEnrolmentsYears());
         data.setNumberOfDegreeCurricularYears(bean.getNumberOfDegreeCurricularYears());
         data.setObservations(bean.getObservations());
+        data.setCurricularYear(bean.getCurricularYear());
 
         if (bean instanceof ScholarshipStudentOtherYearBean) {
 
@@ -524,7 +532,6 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
             data.setNumberOfEnrolledEctsLastYear(otherYearBean.getNumberOfEnrolledEctsLastYear());
             data.setNumberOfApprovedEctsLastYear(otherYearBean.getNumberOfApprovedEctsLastYear());
             data.setLastEnrolmentYear(String.valueOf(otherYearBean.getLastEnrolmentYear()));
-            data.setCurricularYear(otherYearBean.getCurricularYear());
             data.setLastAcademicActDateLastYear(otherYearBean.getLastAcademicActDateLastYear());
             data.setCycleNumberOfEnrolmentsYearsInIntegralRegime(otherYearBean.getCycleNumberOfEnrolmentsYearsInIntegralRegime());
             data.setNumberOfApprovedEcts(otherYearBean.getNumberOfApprovedEcts());
@@ -863,5 +870,111 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
         log.setStudentName(candidacy.getCandidacyName());
         log.setStudentNumber(candidacy.getStudentNumber());
         candidacy.addSasScholarshipDataChangeLogs(log);
+    }
+
+    public static final class SheetDataExtension extends SheetData<SasScholarshipCandidacy> {
+        private SheetDataExtension(Iterable<SasScholarshipCandidacy> items) {
+            super(items);
+        }
+
+        @Override
+        protected void makeLine(final SasScholarshipCandidacy candidacy) {
+
+            final SasScholarshipData data = candidacy.getSasScholarshipData();
+
+            final Registration registration = candidacy.getRegistration();
+
+            if (registration != null) {
+                addData("SasScholarshipCandidacy.studentNumber",
+                        registration.getNumber() != null ? registration.getNumber().toString() : "-");
+                addData("SasScholarshipCandidacy.degreeCode",
+                        registration.getDegree() != null ? registration.getDegree().getCode() : "");
+            } else {
+                addData("SasScholarshipCandidacy.studentNumber", "-");
+                addData("SasScholarshipCandidacy.degreeCode", "");
+            }
+
+            addData("SasScholarshipData.state", candidacy.getState().getLocalizedName());
+            final SasScholarshipDataChangeLog lastLog = candidacy.getSasScholarshipDataChangeLogsSet().stream()
+                    .sorted((x, y) -> -x.getDate().compareTo(y.getDate())).findFirst().orElse(null);
+            addData("event.logs", lastLog.getDescription());
+
+            if (data != null) {
+                addData("SasScholarshipCandidacy.firstYear",
+                        candidacy.getFirstYear() ? bundle("label.true") : bundle("label.false"));
+                addData("SasScholarshipData.cycleIngressionYear", data.getCycleIngressionYear().toString());
+                addData("SasScholarshipData.curricularYear", data.getCurricularYear());
+                addData("SasScholarshipData.lastAcademicActDateLastYear", format(data.getLastAcademicActDateLastYear()));
+                addData("SasScholarshipData.enrolmentDate", format(data.getEnrolmentDate()));
+                addData("SasScholarshipData.firstMonthExecutionYear", data.getFirstMonthExecutionYear());
+                addData("SasScholarshipData.numberOfDegreeCurricularYears", data.getNumberOfDegreeCurricularYears());
+                addData("SasScholarshipData.numberOfEnrolledECTS", data.getNumberOfEnrolledECTS());
+                addData("SasScholarshipData.numberOfApprovedEctsLastYear", data.getNumberOfApprovedEctsLastYear());
+                addData("SasScholarshipData.numberOfEnrolledEctsLastYear", data.getNumberOfEnrolledEctsLastYear());
+                addData("SasScholarshipData.numberOfEnrolmentsYears", data.getNumberOfEnrolmentsYears());
+                addData("SasScholarshipData.cycleNumberOfEnrolmentsYearsInIntegralRegime",
+                        data.getCycleNumberOfEnrolmentsYearsInIntegralRegime());
+                addData("SasScholarshipData.numberOfMonthsExecutionYear", data.getNumberOfMonthsExecutionYear());
+                addData("SasScholarshipData.numberOfDegreeChanges", data.getNumberOfDegreeChanges());
+                addData("SasScholarshipData.observations", data.getObservations());
+                addData("SasScholarshipData.hasMadeDegreeChangeOnCurrentYear", data.getHasMadeDegreeChangeOnCurrentYear());
+                addData("SasScholarshipData.regime", data.getRegime());
+                addData("SasScholarshipData.cetQualificationOwner", format(data.getCetQualificationOwner()));
+                addData("SasScholarshipData.ctspQualificationOwner", format(data.getCtspQualificationOwner()));
+                addData("SasScholarshipData.phdQualificationOwner", format(data.getPhdQualificationOwner()));
+                addData("SasScholarshipData.degreeQualificationOwner", format(data.getDegreeQualificationOwner()));
+                addData("SasScholarshipData.masterQualificationOwner", format(data.getMasterQualificationOwner()));
+                addData("SasScholarshipData.lastEnrolmentYear", data.getLastEnrolmentYear());
+                addData("SasScholarshipData.gratuityAmount", data.getGratuityAmount());
+                addData("SasScholarshipData.enroled", format(data.getEnroled()));
+                addData("SasScholarshipData.numberOfApprovedEcts", data.getNumberOfApprovedEcts());
+                addData("SasScholarshipData.ingressionRegime", data.getIngressionRegime());
+            } else {
+
+                final String[] fields = { "firstYear", "cycleIngressionYear", "curricularYear", "lastAcademicActDateLastYear",
+                        "enrolmentDate", "firstMonthExecutionYear", "numberOfDegreeCurricularYears", "numberOfEnrolledECTS",
+                        "numberOfApprovedEctsLastYear", "numberOfEnrolledEctsLastYear", "numberOfEnrolmentsYears",
+                        "cycleNumberOfEnrolmentsYearsInIntegralRegime", "numberOfMonthsExecutionYear", "numberOfDegreeChanges",
+                        "observations", "hasMadeDegreeChangeOnCurrentYear", "regime", "cetQualificationOwner",
+                        "ctspQualificationOwner", "phdQualificationOwner", "degreeQualificationOwner", "masterQualificationOwner",
+                        "lastEnrolmentYear", "gratuityAmount", "enroled", "numberOfApprovedEcts", "ingressionRegime" };
+
+                Arrays.stream(fields).forEach(f -> addData("SasScholarshipData." + f, "-"));
+            }
+
+        }
+
+        private String format(Boolean value) {
+            return value != null && value.booleanValue() ? bundle("label.true") : bundle("label.false");
+        }
+
+        private LocalDate format(LocalDate value) {
+            return value;
+        }
+
+        private void addData(final String key, final Object value) {
+            addCell(bundle("label." + key), value == null ? "" : value);
+        }
+    }
+
+    public static byte[] export(ExecutionYear executionYear) {
+
+        final SpreadsheetBuilderForXLSX builder = new SpreadsheetBuilderForXLSX();
+
+        builder.addSheet("SAS", new SheetDataExtension(executionYear.getSasScholarshipCandidaciesSet()));
+
+        final ByteArrayOutputStream result = new ByteArrayOutputStream();
+        try {
+            builder.build(result);
+            return result.toByteArray();
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    static private String bundle(final String key) {
+        return SasPTUtil.bundle(key);
     }
 }

@@ -292,7 +292,7 @@ public class AbstractFillScholarshipService {
             fillCommonInfo(bean, registration, requestYear);
 
         } catch (FillScholarshipException e) {
-            //addError(bean, e.getMessage());
+            
         } finally {
             bean.setObservations(formatObservations(bean));
         }
@@ -322,7 +322,7 @@ public class AbstractFillScholarshipService {
         }
 
         if (!SasDataShareAuthorizationServices.isAuthorizationTypeActive()) {
-            return;
+            return; 
         }
 
         if (!SasDataShareAuthorizationServices.isAnswered(registration.getPerson())) {
@@ -345,6 +345,8 @@ public class AbstractFillScholarshipService {
 
     private void fillCommonInfo(AbstractScholarshipStudentBean bean, Registration registration, ExecutionYear requestYear) {
 
+        bean.setCurricularYear(RegistrationServices.getCurricularYear(registration, requestYear).getResult());
+        
         bean.setGratuityAmount(getTuitionAmount(registration, requestYear));
         bean.setNumberOfMonthsExecutionYear(SocialServicesConfiguration.getInstance().getNumberOfMonthsOfAcademicYear());
         bean.setFirstMonthExecutionYear(getFirstMonthOfExecutionYear(requestYear));

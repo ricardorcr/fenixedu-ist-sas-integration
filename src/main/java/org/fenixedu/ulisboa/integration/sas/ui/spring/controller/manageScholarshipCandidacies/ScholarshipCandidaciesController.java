@@ -26,9 +26,12 @@
  */
 package org.fenixedu.ulisboa.integration.sas.ui.spring.controller.manageScholarshipCandidacies;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.fenixedu.academic.domain.ExecutionYear;
 import org.fenixedu.bennu.core.domain.Bennu;
@@ -297,6 +300,16 @@ public class ScholarshipCandidaciesController extends SasBaseController {
         model.addAttribute("sasScholarshipDataChangeLogs", logs);
         model.addAttribute("sasScholarshipCandidacy", sasScholarshipCandidacy);
         return jspPath("viewLogs");
+
+    }
+
+    private static final String _EXPORT_TO_XLS_URI = "/exportToXls";
+    public static final String EXPORT_TO_XLS_URL = CONTROLLER_URL + _EXPORT_TO_XLS_URI;
+
+    @RequestMapping(value = _EXPORT_TO_XLS_URI + "/{executionYearId}", method = RequestMethod.GET)
+    public void exportToXls(@PathVariable(value = "executionYearId") ExecutionYear executionYear, Model model,
+            RedirectAttributes redirectAttributes, final HttpServletResponse response) throws IOException {
+        writeFile(response, "SAS_Report.xlsx", "application/vnd.ms-excel", SicabeExternalService.export(executionYear));
 
     }
 

@@ -27,9 +27,12 @@
 
 package org.fenixedu.ulisboa.integration.sas.ui.spring.controller;
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.POST;
 import java.util.List;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 import org.fenixedu.bennu.spring.portal.SpringApplication;
@@ -107,6 +110,20 @@ public class SasBaseController {
         // Add here more attributes to the Model
         // model.addAttribute(<attr1Key>, <attr1Value>);
         // ....
+    }
+    
+    protected void writeFile(final HttpServletResponse response, final String filename, final String contentType,
+            final byte[] content) throws IOException {
+
+        response.setContentLength(content.length);
+        response.setContentType(contentType);
+        response.addHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+
+        try (ServletOutputStream outputStream = response.getOutputStream()) {
+            outputStream.write(content);
+            outputStream.flush();
+            response.flushBuffer();
+        }
     }
 
 }

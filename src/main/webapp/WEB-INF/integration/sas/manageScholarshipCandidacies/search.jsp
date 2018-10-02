@@ -62,20 +62,30 @@ ${portal.toolkit()}
 		class=""
 		href="${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.PROCESS_ALL_ENTRIES_URL%>/${executionYear.externalId}"><spring:message
 			code="label.event.processAll" /></a> &nbsp;|&nbsp;
-	<span
-		class="glyphicon glyphicon-export" aria-hidden="true"></span>&nbsp;<a
-		class=""
-		href="#" onclick="showConfirmation('<spring:message code="label.send" />','<spring:message code="message.confirm.send.all.candidacies" />', '<spring:message code="label.send" />', '${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.SEND_ALL_ENTRIES_URL%>/${executionYear.externalId}');"><spring:message code="label.event.sendAll" /></a>&nbsp;|&nbsp;
+
 		
+	<span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>&nbsp;<a
+		class=""
+		href="${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.EXPORT_TO_XLS_URL%>/${executionYear.externalId}"><spring:message
+			code="label.event.exportToXls" /></a> &nbsp;|&nbsp;
+	
  	<span
 		class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span>&nbsp;<a
 		class=""
 		href="${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.VIEW_LOGS_ENTRIES_URL%>/${executionYear.externalId}"><spring:message
 			code="label.event.logs" /></a> &nbsp;|&nbsp;
+	
+	<span
+		class="glyphicon glyphicon-export" aria-hidden="true"></span>&nbsp;<a
+		class=""
+		href="#" onclick="showConfirmation('<spring:message code="label.send" />','<spring:message code="message.confirm.send.all.candidacies" />', '<spring:message code="label.send" />', '${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.SEND_ALL_ENTRIES_URL%>/${executionYear.externalId}');"><spring:message code="label.event.sendAll" /></a>&nbsp;|&nbsp;
+		
 	<span
 		class="glyphicon glyphicon-remove" aria-hidden="true"></span>&nbsp;<a
 		class=""
 		href="#" onclick="showConfirmation('<spring:message code="label.delete" />','<spring:message code="message.confirm.delete.all.candidacies" />', '<spring:message code="label.delete" />', '${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.DELETE_ALL_ENTRIES_URL%>/${executionYear.externalId}');"><spring:message code="label.event.deleteAll" /></a>
+		
+	
 		
 </div>
 

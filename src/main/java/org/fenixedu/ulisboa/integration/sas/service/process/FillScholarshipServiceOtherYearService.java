@@ -22,7 +22,6 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
         bean.setHasMadeDegreeChangeOnCurrentYear(hasMadeDegreeChange(registration, requestYear));
         bean.setCycleNumberOfEnrolmentsYearsInIntegralRegime(
                 getCycleNumberOfEnrolmentYearsInIntegralRegime(registration, requestYear));
-        bean.setCurricularYear(RegistrationServices.getCurricularYear(registration, requestYear).getResult());
         bean.setNumberOfApprovedEcts(RegistrationServices.getCurriculum(registration, requestYear).getSumEctsCredits());
 
         final ExecutionYear lastEnrolmentYear = getCycleLastEnrolmentYear(registration, requestYear);
