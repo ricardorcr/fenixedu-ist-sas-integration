@@ -571,7 +571,7 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
         if (!stateAllow2SendCandicacy(c.getState())) {
             writeLog(c, BundleUtil.getString(SasSpringConfiguration.BUNDLE, "message.error.sendCandidacy2Sicabe",
                     c.getState().getLocalizedName()), new DateTime());
-            throw new RuntimeException(c.getState().name());
+            throw new RuntimeException(c.getState() != null ? c.getState().name() : "Unexpected state. Fiscal code: " + c.getFiscalNumber());
         }
 
         try {
