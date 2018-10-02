@@ -64,17 +64,19 @@ ${portal.toolkit()}
 		class=""
 		href="${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.PROCESS_ENTRY_URL%>/${sasScholarshipCandidacy.externalId}"><spring:message
 			code="label.event.process" /></a> &nbsp;|&nbsp;
-	<span
-		class="glyphicon glyphicon-export" aria-hidden="true"></span>&nbsp;<a
-		class=""
-		href="#" onclick="showConfirmation('<spring:message code="label.send" />','<spring:message code="message.confirm.send.candidacy" />', '<spring:message code="label.send" />', '${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.SEND_ENTRY_URL%>/${sasScholarshipCandidacy.externalId}');"><spring:message
-			code="label.event.send" /></a> &nbsp;|&nbsp;
 			
 	<span
 		class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span>&nbsp;<a
 		class=""
 		href="${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.VIEW_LOG_URL%>/${sasScholarshipCandidacy.externalId}"><spring:message
 			code="label.event.logs" /></a> &nbsp;|&nbsp;
+	
+	<span
+		class="glyphicon glyphicon-export" aria-hidden="true"></span>&nbsp;<a
+		class=""
+		href="#" onclick="showConfirmation('<spring:message code="label.send" />','<spring:message code="message.confirm.send.candidacy" />', '<spring:message code="label.send" />', '${pageContext.request.contextPath}<%=ScholarshipCandidaciesController.SEND_ENTRY_URL%>/${sasScholarshipCandidacy.externalId}');"><spring:message
+			code="label.event.send" /></a> &nbsp;|&nbsp;
+	
 	<span
 		class="glyphicon glyphicon-remove" aria-hidden="true"></span>&nbsp;<a
 		class=""
