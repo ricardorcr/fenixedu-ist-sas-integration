@@ -443,7 +443,7 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
 
             final ScholarshipStudentOtherYearBean otherYearBean = (ScholarshipStudentOtherYearBean) bean;
 
-            value &= !equal(otherYearBean, otherYearBean.getNumberOfApprovedEcts(), sasScholarshipData.getNumberOfApprovedEcts(),
+            value |= !equal(otherYearBean, otherYearBean.getNumberOfApprovedEcts(), sasScholarshipData.getNumberOfApprovedEcts(),
                     "numberOfApprovedEcts")
 
                     || !equal(otherYearBean, otherYearBean.getNumberOfApprovedEctsLastYear(),
@@ -922,7 +922,7 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
                 addData("SasScholarshipData.numberOfMonthsExecutionYear", data.getNumberOfMonthsExecutionYear());
                 addData("SasScholarshipData.numberOfDegreeChanges", data.getNumberOfDegreeChanges());
                 addData("SasScholarshipData.observations", data.getObservations());
-                addData("SasScholarshipData.hasMadeDegreeChangeOnCurrentYear", data.getHasMadeDegreeChangeOnCurrentYear());
+                addData("SasScholarshipData.hasMadeDegreeChangeOnCurrentYear", format(data.getHasMadeDegreeChangeOnCurrentYear()));
                 addData("SasScholarshipData.regime", data.getRegime());
                 addData("SasScholarshipData.cetQualificationOwner", format(data.getCetQualificationOwner()));
                 addData("SasScholarshipData.ctspQualificationOwner", format(data.getCtspQualificationOwner()));
