@@ -220,7 +220,7 @@ public class ScholarshipCandidaciesController extends SasBaseController {
 
             addInfoMessage(SasPTUtil.bundle("label.info.sendAll"), model);
         } catch (RuntimeException e) {
-            addErrorMessage(SasPTUtil.bundle("label.error.send"), model);
+            addErrorMessage(SasPTUtil.bundle("label.error.sendAll"), model);
         }
 
         return redirect(CONTROLLER_URL + "/" + executionYear.getExternalId(), model, redirectAttributes);
