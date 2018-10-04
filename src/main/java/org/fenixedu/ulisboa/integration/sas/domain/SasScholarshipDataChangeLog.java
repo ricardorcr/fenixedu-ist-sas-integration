@@ -6,27 +6,26 @@ import org.joda.time.DateTime;
 import pt.ist.fenixframework.Atomic;
 
 public class SasScholarshipDataChangeLog extends SasScholarshipDataChangeLog_Base {
-    
-    public SasScholarshipDataChangeLog() {
+
+    protected SasScholarshipDataChangeLog() {
         super();
         super.setBennu(Bennu.getInstance());
     }
-    
-    public SasScholarshipDataChangeLog(DateTime date, String studentNumber, String studentName, String description) {
-        super();
-        super.setBennu(Bennu.getInstance());
+
+    public SasScholarshipDataChangeLog(SasScholarshipCandidacy candidacy, DateTime date, String description) {
+        this();
+        setSasScholarshipCandidacy(candidacy);
         setDate(date);
-        setStudentNumber(studentNumber);
-        setStudentName(studentName);
+        setStudentNumber(candidacy.getStudentNumber());
+        setStudentName(candidacy.getCandidacyName());
         setDescription(description);
     }
-    
-    
+
     @Atomic
     public void delete() {
         setSasScholarshipCandidacy(null);
         setBennu(null);
         deleteDomainObject();
     }
-    
+
 }

@@ -196,7 +196,7 @@ public class ScholarshipCandidaciesController extends SasBaseController {
 
         try {
             SicabeExternalService sicabe = new SicabeExternalService();
-            sicabe.sendSasScholarshipsCandidacies2Sicabe(Collections.singletonList(sasScholarshipCandidacy));
+            sicabe.sendSasScholarshipsCandidaciesToSicabe(Collections.singletonList(sasScholarshipCandidacy));
             addInfoMessage(SasPTUtil.bundle("label.info.send"), model);
         } catch (RuntimeException e) {
             addErrorMessage(SasPTUtil.bundle("label.error.send"), model);
@@ -214,10 +214,14 @@ public class ScholarshipCandidaciesController extends SasBaseController {
     public String sendSearchEntries(@PathVariable(value = "executionYearId") ExecutionYear executionYear, Model model,
             RedirectAttributes redirectAttributes) {
 
-        SicabeExternalService sicabe = new SicabeExternalService();
-        sicabe.sendAllSasScholarshipCandidacies2Sicabe(executionYear);
+        try {
+            SicabeExternalService sicabe = new SicabeExternalService();
+            sicabe.sendAllSasScholarshipCandidaciesToSicabe(executionYear);
 
-        addInfoMessage(SasPTUtil.bundle("label.info.sendAll"), model);
+            addInfoMessage(SasPTUtil.bundle("label.info.sendAll"), model);
+        } catch (RuntimeException e) {
+            addErrorMessage(SasPTUtil.bundle("label.error.send"), model);
+        }
 
         return redirect(CONTROLLER_URL + "/" + executionYear.getExternalId(), model, redirectAttributes);
 
