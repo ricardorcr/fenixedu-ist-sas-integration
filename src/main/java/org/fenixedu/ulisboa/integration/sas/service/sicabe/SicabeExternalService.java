@@ -457,8 +457,10 @@ public class SicabeExternalService extends BennuWebServiceClient<DadosAcademicos
                     || !equal(otherYearBean, otherYearBean.getHasMadeDegreeChangeOnCurrentYear(),
                             sasScholarshipData.getHasMadeDegreeChangeOnCurrentYear(), "hasMadeDegreeChangeOnCurrentYear")
 
-                    || !equal(otherYearBean, otherYearBean.getLastEnrolmentYear(), sasScholarshipData.getLastEnrolmentYear(),
-                            "lastEnrolmentYear")
+                    || !equal(otherYearBean,
+                            otherYearBean.getLastEnrolmentYear() != null ? String
+                                    .valueOf(otherYearBean.getLastEnrolmentYear()) : "",
+                            sasScholarshipData.getLastEnrolmentYear(), "lastEnrolmentYear")
 
                     || !equal(otherYearBean, otherYearBean.getLastAcademicActDateLastYear(),
                             sasScholarshipData.getLastAcademicActDateLastYear(), "lastAcademicActDateLastYear")
