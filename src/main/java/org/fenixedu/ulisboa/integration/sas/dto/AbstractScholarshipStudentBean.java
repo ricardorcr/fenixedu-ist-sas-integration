@@ -37,6 +37,8 @@ public abstract class AbstractScholarshipStudentBean implements Serializable {
     private BigDecimal numberOfEnrolledECTS;
     private String fiscalCode;
     private String documentBINumber;
+    private String ingressionRegimeCode;
+    private String ingressionRegimeCodeWithDescription;
 
     public String getInstitutionCode() {
         return institutionCode;
@@ -269,4 +271,21 @@ public abstract class AbstractScholarshipStudentBean implements Serializable {
     public void setDocumentBINumber(String documentBINumber) {
         this.documentBINumber = documentBINumber;
     }
+
+    public String getIngressionRegimeCode() {
+        return ingressionRegimeCode;
+    }
+
+    public void setIngressionRegimeCode(String ingressionRegimeCode) {
+        this.ingressionRegimeCode = ingressionRegimeCode;
+    }
+
+    public String getIngressionRegimeCodeWithDescription() {
+        return ingressionRegimeCodeWithDescription;
+    }
+
+    public void setIngressionRegimeCodeWithDescription(String ingressionRegimeCodeWithDescription) {
+        this.ingressionRegimeCodeWithDescription = ingressionRegimeCodeWithDescription;
+    }
+
 }

@@ -21,6 +21,13 @@ class SchoolLevelTypeMapping{
 	protected SchoolLevelType schoolLevel;
 }
 
+class SasIngressionRegimeMapping {
+	String regimeCode;
+	String regimeCodeWithDescription;
+}
+
+
+
 relation BennuSocialServicesConfiguration{
 	.org.fenixedu.bennu.core.domain.Bennu playsRole bennu {
 		multiplicity 1..1;
@@ -92,6 +99,24 @@ relation SchoolLevelTypeMappingBennu{
 		multiplicity 1..1;
 	}
 	SchoolLevelTypeMapping playsRole schoolLevelTypeMapping{
+		multiplicity *;
+	}
+}
+
+relation SasIngressionRegimeMappingIngressionType {
+	.org.fenixedu.academic.domain.candidacy.IngressionType playsRole ingressionType {
+		multiplicity 0..*;
+	}
+	
+	SasIngressionRegimeMapping playsRole sasIngressionRegimeMapping;
+}
+
+relation SasIngressionRegimeMappingBennu {
+	.org.fenixedu.bennu.core.domain.Bennu playsRole bennu {
+		multiplicity 1..1;
+	}
+	
+	SasIngressionRegimeMapping playsRole sasIngressionRegimeMappings {
 		multiplicity *;
 	}
 }

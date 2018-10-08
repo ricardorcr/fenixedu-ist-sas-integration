@@ -208,7 +208,7 @@ public class AbstractFillScholarshipService {
         bean.setRegistrationDate(currentYearRegistrationReport.getEnrolmentDate());
         bean.setRegistered(isRegistered(registration, request));
         bean.setNumberOfEnrolledECTS(currentYearRegistrationReport.getTotalEnroledCredits());
-
+        bean.setIngressionRegimeCodeWithDescription(registration.getIngressionType().getSasIngressionRegimeMapping().getRegimeCodeWithDescription());
     }
 
     private void checkIfRegistrationDegreeIsCompleted(AbstractScholarshipStudentBean bean, Registration registration) {

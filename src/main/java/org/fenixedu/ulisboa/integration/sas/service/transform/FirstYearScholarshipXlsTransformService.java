@@ -20,8 +20,8 @@ public class FirstYearScholarshipXlsTransformService extends AbstractScholarship
         // return sheet.getMergedRegion(0) == null;
 
         final int columnsRead = Integer.valueOf(String.valueOf(sheet.getRow(0).getLastCellNum()));
-        final int columnsExpected = ScholarshipStudentFirstYearBean.DOCUMENT_BI + 1;
-        final int columnsAlternative = ScholarshipStudentOtherYearBean.DOCUMENT_BI + 1;
+        final int columnsExpected = ScholarshipStudentFirstYearBean.INGRESSION_REGIME + 1;
+        final int columnsAlternative = ScholarshipStudentOtherYearBean.INGRESSION_REGIME + 1;
 
         if (columnsRead == columnsExpected) {
             return true;
@@ -111,6 +111,7 @@ public class FirstYearScholarshipXlsTransformService extends AbstractScholarship
                 bean.getRegistered() ? bean.getCycleNumberOfEnrolmentYears() : null);
         writeCellBigDecimal(row, ScholarshipStudentFirstYearBean.NUMBER_OF_ECTS,
                 bean.getRegistered() ? bean.getNumberOfEnrolledECTS() : null);
+        writeCellString(row, ScholarshipStudentFirstYearBean.INGRESSION_REGIME, bean.getIngressionRegimeCodeWithDescription());
     }
 
     public FirstYearScholarshipXlsTransformService(POIFSFileSystem poifsFileSystem) {

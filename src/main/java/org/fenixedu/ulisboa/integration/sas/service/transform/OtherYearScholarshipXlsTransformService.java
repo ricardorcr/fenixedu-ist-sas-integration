@@ -18,8 +18,8 @@ public class OtherYearScholarshipXlsTransformService extends AbstractScholarship
     @Override
     public boolean checkExcelFormat(HSSFSheet sheet) throws IOException {
         final int columnsRead = Integer.valueOf(String.valueOf(sheet.getRow(0).getLastCellNum()));
-        final int columnsExpected = ScholarshipStudentOtherYearBean.DOCUMENT_BI + 1;
-        final int columnsAlternative = ScholarshipStudentFirstYearBean.DOCUMENT_BI + 1;
+        final int columnsExpected = ScholarshipStudentOtherYearBean.INGRESSION_REGIME + 1;
+        final int columnsAlternative = ScholarshipStudentFirstYearBean.INGRESSION_REGIME + 1;
 
         if (columnsRead == columnsExpected) {
             return true;
@@ -137,7 +137,8 @@ public class OtherYearScholarshipXlsTransformService extends AbstractScholarship
                 bean.getRegistered() ? bean.getLastEnrolmentYear() : null);
         writeCellLocalDate(row, ScholarshipStudentOtherYearBean.LAST_ACADEMIC_ACT_DATE_LAST_YEAR,
                 bean.getRegistered() ? bean.getLastAcademicActDateLastYear() : null);
-
+        writeCellString(row, ScholarshipStudentOtherYearBean.INGRESSION_REGIME,
+                bean.getIngressionRegimeCodeWithDescription());
     }
 
     public OtherYearScholarshipXlsTransformService(POIFSFileSystem poifsFileSystem) {

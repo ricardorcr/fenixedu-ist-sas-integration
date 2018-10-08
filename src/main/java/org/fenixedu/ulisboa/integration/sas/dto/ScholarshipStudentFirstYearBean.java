@@ -32,5 +32,6 @@ public class ScholarshipStudentFirstYearBean extends AbstractScholarshipStudentB
     public static Integer NUMBER_OF_ECTS = 26;
     public static Integer FISCAL_CODE = 27;
     public static Integer DOCUMENT_BI = 28;
+    public static Integer INGRESSION_REGIME = 29;
 
 }

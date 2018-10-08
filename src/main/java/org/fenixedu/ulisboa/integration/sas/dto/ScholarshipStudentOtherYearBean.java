@@ -48,6 +48,7 @@ public class ScholarshipStudentOtherYearBean extends AbstractScholarshipStudentB
     public static Integer FISCAL_CODE = 38;
     public static Integer LAST_ACADEMIC_ACT_DATE_LAST_YEAR = 39;
     public static Integer DOCUMENT_BI = 40;
+    public static Integer INGRESSION_REGIME = 41;
 
     private Integer numberOfDegreeChanges;
     private Boolean hasMadeDegreeChangeOnCurrentYear;
