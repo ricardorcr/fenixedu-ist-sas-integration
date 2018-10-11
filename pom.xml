@@ -23,6 +23,13 @@
 		<version.org.fenixedu.academic>8.1.2</version.org.fenixedu.academic>
 	</properties>
 
+	<scm>
+        <connection>scm:git:git@github.com:ist-dsi/fenixedu-ist-sas-integration.git</connection>
+        <developerConnection>scm:git:git@github.com:ist-dsi/fenixedu-ist-sas-integration.git</developerConnection>
+        <url>http://fenixedu.org</url>
+        <tag>HEAD</tag>
+    </scm>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.poi</groupId>
