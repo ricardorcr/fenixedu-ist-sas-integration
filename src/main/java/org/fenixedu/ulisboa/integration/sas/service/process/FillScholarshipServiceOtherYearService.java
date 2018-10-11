@@ -11,7 +11,6 @@ import org.fenixedu.academic.domain.ExecutionInterval;
 import org.fenixedu.academic.domain.ExecutionYear;
 import org.fenixedu.academic.domain.StudentCurricularPlan;
 import org.fenixedu.academic.domain.degree.DegreeType;
-import org.fenixedu.academic.domain.exceptions.DomainException;
 import org.fenixedu.academic.domain.student.Registration;
 import org.fenixedu.academic.domain.student.Student;
 import org.fenixedu.academic.domain.student.curriculum.Curriculum;
@@ -22,6 +21,7 @@ import org.fenixedu.ulisboa.integration.sas.dto.AbstractScholarshipStudentBean;
 import org.fenixedu.ulisboa.integration.sas.dto.ScholarshipStudentOtherYearBean;
 import org.fenixedu.ulisboa.integration.sas.service.registration.report.RegistrationHistoryReport;
 import org.fenixedu.ulisboa.integration.sas.service.registration.report.RegistrationHistoryReportService;
+import org.fenixedu.ulisboa.integration.sas.util.SASDomainException;
 import org.joda.time.DateTime;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -86,7 +86,7 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
             studentCurricularPlan = registration.getStudentCurricularPlan(executionYear.getNextExecutionYear());
 
             if (studentCurricularPlan == null) {
-                throw new DomainException(
+                throw new SASDomainException(
                         "error.RegistrationHistoryReportService.unable.to.find.student.curricular.plan.for.year",
                         registration.getStudent().getNumber().toString(), executionYear.getQualifiedName());
             }
@@ -98,7 +98,7 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
             studentCurricularPlan = registration.getStudentCurricularPlan(executionYear);
 
             if (studentCurricularPlan == null) {
-                throw new DomainException(
+                throw new SASDomainException(
                         "error.RegistrationHistoryReportService.unable.to.find.student.curricular.plan.for.year",
                         registration.getStudent().getNumber().toString(), executionYear.getQualifiedName());
             }
@@ -244,9 +244,8 @@ public class FillScholarshipServiceOtherYearService extends AbstractFillScholars
     private Boolean calculateDegreeChangeForCurrentYear(Registration registration, ScholarshipReportRequest request) {
 
         return registration.getStudent().getRegistrationsSet().stream()
-                .filter(r -> r.getStartExecutionYear() == request.getExecutionYear()).filter(r -> SocialServicesConfiguration
-                        .getInstance().getIngressionTypeWhichAreDegreeTransferSet().contains(r.getIngressionType()))
-                .findAny().isPresent();
+                .filter(r -> r.getStartExecutionYear() == request.getExecutionYear()).anyMatch(r -> SocialServicesConfiguration
+                        .getInstance().getIngressionTypeWhichAreDegreeTransferSet().contains(r.getIngressionType()));
     }
 
     private Integer calculateNumberOfDegreeChanges(Student student, ScholarshipReportRequest request) {

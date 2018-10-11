@@ -53,6 +53,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import pt.ist.fenixframework.Atomic;
+import pt.ist.fenixframework.FenixFramework;
 
 @SpringFunctionality(app = SasController.class, title = "label.title.manageScholarshipReportRequests",
         accessGroup = "#academicAdmOffice")
@@ -175,5 +176,14 @@ public class ScholarshipReportRequestController extends SasBaseController {
             throw new RuntimeException("IOError writing file to output stream");
         }
 
+    }
+
+    @RequestMapping(value = "/repeat/{request}", method = RequestMethod.GET)
+    public String repeat(@PathVariable ScholarshipReportRequest request, Model model, RedirectAttributes redirectAttributes) {
+        FenixFramework.atomic(() -> {
+            new ScholarshipReportRequest(request.getExecutionYear(), request.getFirstYearOfCycle(), request.getParameterFile()
+                    .getFilename(), request.getParameterFile().getContent());
+        });
+        return redirect("/integration/sas/managescholarshipreportrequests/scholarshipreportrequest", model, redirectAttributes);
     }
 }

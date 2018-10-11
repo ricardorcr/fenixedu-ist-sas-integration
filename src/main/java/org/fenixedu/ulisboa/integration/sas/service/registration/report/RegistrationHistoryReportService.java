@@ -20,7 +20,6 @@ import org.fenixedu.academic.domain.ExecutionSemester;
 import org.fenixedu.academic.domain.ExecutionYear;
 import org.fenixedu.academic.domain.StudentCurricularPlan;
 import org.fenixedu.academic.domain.degree.DegreeType;
-import org.fenixedu.academic.domain.exceptions.DomainException;
 import org.fenixedu.academic.domain.student.Registration;
 import org.fenixedu.academic.domain.student.RegistrationRegimeType;
 import org.fenixedu.academic.domain.student.curriculum.Curriculum;
@@ -31,6 +30,7 @@ import org.fenixedu.academic.domain.studentCurriculum.CycleCurriculumGroup;
 import org.fenixedu.academic.domain.studentCurriculum.Dismissal;
 import org.fenixedu.academic.dto.student.RegistrationConclusionBean;
 import org.fenixedu.ulisboa.integration.sas.service.process.AbstractFillScholarshipService;
+import org.fenixedu.ulisboa.integration.sas.util.SASDomainException;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
@@ -76,11 +76,11 @@ public class RegistrationHistoryReportService {
         final ExecutionYear endYear = ExecutionInterval.assertExecutionIntervalType(ExecutionYear.class, endInterval);
 
         if (startYear == null || endYear == null) {
-            throw new DomainException("error.RegistrationHistoryReportService.startInterval.and.endInterval.must.be.defined");
+            throw new SASDomainException("error.RegistrationHistoryReportService.startInterval.and.endInterval.must.be.defined");
         }
 
         if (startYear.isAfter(endYear)) {
-            throw new DomainException("error.RegistrationHistoryReportService.startInterval.must.be.before.endInterval");
+            throw new SASDomainException("error.RegistrationHistoryReportService.startInterval.must.be.before.endInterval");
         }
 
         final SortedSet<ExecutionYear> toProcess = new TreeSet<>(ExecutionYear.COMPARATOR_BY_BEGIN_DATE);
@@ -118,7 +118,7 @@ public class RegistrationHistoryReportService {
 
         final StudentCurricularPlan studentCurricularPlan = registration.getStudentCurricularPlan(executionYear);
         if (studentCurricularPlan == null) {
-            throw new DomainException("error.RegistrationHistoryReportService.unable.to.find.student.curricular.plan.for.year",
+            throw new SASDomainException("error.RegistrationHistoryReportService.unable.to.find.student.curricular.plan.for.year",
                     registration.getStudent().getNumber().toString(), executionYear.getQualifiedName());
         }
         result.setStudentCurricularPlan(studentCurricularPlan);

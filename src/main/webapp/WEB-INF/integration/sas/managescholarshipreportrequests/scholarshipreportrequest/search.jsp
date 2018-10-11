@@ -130,16 +130,17 @@ ${portal.toolkit()}
 				
 				<spring:url var="parameterFileDownloadLink" value="/integration/sas/managescholarshipreportrequests/scholarshipreportrequest/downloadFile/${searchResult.parameterFile.externalId}"/>
 		    	<spring:url var="resultFileDownloadLink" value="/integration/sas/managescholarshipreportrequests/scholarshipreportrequest/downloadFile/${searchResult.resultFile.externalId}"/>
-			    
-				<%-- Field access / formatting  here CHANGE_ME --%>
+        		<spring:url var="repeatRequestLink" value="/integration/sas/managescholarshipreportrequests/scholarshipreportrequest/repeat/${searchResult.externalId}"/>
+
+        <%-- Field access / formatting  here CHANGE_ME --%>
 				{
 				"DT_RowId" : '<c:out value='${searchResult.externalId}'/>',
-"whenrequested" : "<joda:format value='${searchResult.whenRequested}' pattern='yyyy-MM-dd HH:mm' />",
-"whenprocessed" : "<joda:format value='${searchResult.whenProcessed}' pattern='yyyy-MM-dd HH:mm' />",
-"firstyearofcycle" : "<c:if test="${searchResult.firstYearOfCycle}"><spring:message code="label.true" /></c:if><c:if test="${not searchResult.firstYearOfCycle}"><spring:message code="label.false" /></c:if>",
-"executionyear" : "<c:out value='${searchResult.executionYear.name}'/>",
-"parameterfile" : "<a href='${parameterFileDownloadLink}'>Download</a>",
-"error" : '${searchResult.error.content}',
+				"whenrequested" : "<joda:format value='${searchResult.whenRequested}' pattern='yyyy-MM-dd HH:mm' />",
+				"whenprocessed" : "<joda:format value='${searchResult.whenProcessed}' pattern='yyyy-MM-dd HH:mm' />",
+				"firstyearofcycle" : "<c:if test="${searchResult.firstYearOfCycle}"><spring:message code="label.true" /></c:if><c:if test="${not searchResult.firstYearOfCycle}"><spring:message code="label.false" /></c:if>",
+				"executionyear" : "<c:out value='${searchResult.executionYear.name}'/>",
+				"parameterfile" : "<a href='${parameterFileDownloadLink}'>Download</a>&nbsp;<a href='${repeatRequestLink}''>Repetir</a>",
+				"error" : '${searchResult.error.content}',
 <c:choose>
 <c:when test="${empty searchResult.resultFile}">
 "resultfile" : ""},

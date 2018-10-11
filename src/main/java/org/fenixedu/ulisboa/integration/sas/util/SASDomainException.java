@@ -8,7 +8,7 @@ public class SASDomainException extends DomainException {
 
     private static final String BUNDLE = "resources/SasResources";
 
-    public SASDomainException(String key, String[] args) {
+    public SASDomainException(String key, String... args) {
         super(BUNDLE, key, args);
     }
 
