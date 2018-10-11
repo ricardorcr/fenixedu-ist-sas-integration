@@ -42,6 +42,7 @@ import org.fenixedu.ulisboa.integration.sas.domain.SocialServicesConfiguration;
 import org.fenixedu.ulisboa.integration.sas.dto.AbstractScholarshipStudentBean;
 import org.fenixedu.ulisboa.integration.sas.service.registration.report.RegistrationHistoryReport;
 import org.fenixedu.ulisboa.integration.sas.service.registration.report.RegistrationHistoryReportService;
+import org.fenixedu.ulisboa.integration.sas.util.SASDomainException;
 import org.joda.time.DateTime;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -100,6 +101,8 @@ public class AbstractFillScholarshipService {
 
                 fillCommonInfo(bean, currentYearRegistrationReport, request);
                 fillSpecificInfo(bean, currentYearRegistrationReport, request);
+            } catch (SASDomainException e) {
+                addError(bean, e.getLocalizedMessage());
             } catch (FillScholarshipException e) {
                 // ignore FillScholarshipException
             } finally {
@@ -220,8 +223,8 @@ public class AbstractFillScholarshipService {
 
         if (bean.getIngressionRegimeCode() == null || bean.getIngressionRegimeCodeWithDescription() == null) {
             addError(bean, "message.error.ingression.regime.mapping.is.missing",
-                    registration.getIngressionType() != null ? registration.getIngressionType()
-                            .getLocalizedName() : "empty.ingression.regime");
+                    new String[] { registration.getIngressionType() != null ? registration.getIngressionType()
+                            .getLocalizedName() : "N/A"});
         }
     }
 
@@ -586,7 +589,7 @@ public class AbstractFillScholarshipService {
         messages.put(bean, "ERRO: " + message);
     }
 
-    protected void addError(AbstractScholarshipStudentBean bean, String message, String... args) {
+    protected void addError(AbstractScholarshipStudentBean bean, String message, String[] args) {
         messages.put(bean, "ERRO: " + BundleUtil.getString(SasSpringConfiguration.BUNDLE, message, args));
     }
 

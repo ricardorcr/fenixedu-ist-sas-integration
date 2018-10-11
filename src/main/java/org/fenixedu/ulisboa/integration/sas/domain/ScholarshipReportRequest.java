@@ -40,7 +40,6 @@ public class ScholarshipReportRequest extends ScholarshipReportRequest_Base {
     @Atomic(mode = TxMode.WRITE)
     public void removeReport(final LocalizedString reason) {
         setError(reason);
-
         setBennuForWhichIsPending(null);
         setWhenProcessed(new DateTime());
     }
