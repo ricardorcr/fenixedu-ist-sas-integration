@@ -6,6 +6,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -31,7 +32,10 @@ import org.fenixedu.academic.domain.student.Student;
 import org.fenixedu.academic.domain.student.registrationStates.RegistrationState;
 import org.fenixedu.academic.domain.student.registrationStates.RegistrationStateType;
 import org.fenixedu.academic.util.Money;
+import org.fenixedu.bennu.SasSpringConfiguration;
 import org.fenixedu.bennu.core.domain.Bennu;
+import org.fenixedu.bennu.core.i18n.BundleUtil;
+import org.fenixedu.ulisboa.integration.sas.domain.SasIngressionRegimeMapping;
 import org.fenixedu.ulisboa.integration.sas.domain.ScholarshipReportRequest;
 import org.fenixedu.ulisboa.integration.sas.domain.SchoolLevelTypeMapping;
 import org.fenixedu.ulisboa.integration.sas.domain.SocialServicesConfiguration;
@@ -208,8 +212,27 @@ public class AbstractFillScholarshipService {
         bean.setRegistrationDate(currentYearRegistrationReport.getEnrolmentDate());
         bean.setRegistered(isRegistered(registration, request));
         bean.setNumberOfEnrolledECTS(currentYearRegistrationReport.getTotalEnroledCredits());
-        bean.setIngressionRegimeCodeWithDescription(registration.getIngressionType().getSasIngressionRegimeMapping().getRegimeCodeWithDescription());
+
+        getSasIngressionRegimeMapping(registration).ifPresent(sasIngressionRegimeMapping ->  {
+            bean.setIngressionRegimeCodeWithDescription(sasIngressionRegimeMapping.getRegimeCodeWithDescription());
+            bean.setIngressionRegimeCode(sasIngressionRegimeMapping.getRegimeCode());
+        });
+
+        if (bean.getIngressionRegimeCode() == null || bean.getIngressionRegimeCodeWithDescription() == null) {
+            addError(bean, "message.error.ingression.regime.mapping.is.missing",
+                    registration.getIngressionType() != null ? registration.getIngressionType()
+                            .getLocalizedName() : "empty.ingression.regime");
+        }
     }
+
+    private Optional<SasIngressionRegimeMapping> getSasIngressionRegimeMapping(Registration registration) {
+        if (registration.getIngressionType() == null || registration.getIngressionType().getSasIngressionRegimeMapping() ==
+                null) {
+            return Optional.empty();
+        }
+        return Optional.of(registration.getIngressionType().getSasIngressionRegimeMapping());
+    }
+
 
     private void checkIfRegistrationDegreeIsCompleted(AbstractScholarshipStudentBean bean, Registration registration) {
         SchoolLevelTypeMapping schoolLevelTypeMapping = registration.getDegreeType().getSchoolLevelTypeMapping();
@@ -561,6 +584,10 @@ public class AbstractFillScholarshipService {
 
     protected void addError(AbstractScholarshipStudentBean bean, String message) {
         messages.put(bean, "ERRO: " + message);
+    }
+
+    protected void addError(AbstractScholarshipStudentBean bean, String message, String... args) {
+        messages.put(bean, "ERRO: " + BundleUtil.getString(SasSpringConfiguration.BUNDLE, message, args));
     }
 
     protected void addWarning(AbstractScholarshipStudentBean bean, String message) {
