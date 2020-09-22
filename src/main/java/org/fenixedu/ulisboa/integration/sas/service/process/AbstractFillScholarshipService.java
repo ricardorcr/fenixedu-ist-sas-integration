@@ -391,7 +391,7 @@ public class AbstractFillScholarshipService {
     private BigDecimal calculateGratuityAmount(Registration registration, ScholarshipReportRequest request) {
         return registration.getPerson().getAnnualEventsFor(request.getExecutionYear()).stream()
                 .filter(e -> e instanceof GratuityEvent)
-                .filter(e -> ((GratuityEvent) e).getDegree() == registration.getDegree()).map(Event::getTotalAmountToPay)
+                .filter(e -> ((GratuityEvent) e).getDegree() == registration.getDegree()).map(Event::getOriginalAmountToPay)
                 .reduce(Money.ZERO, Money::add).getAmount();
     }
 
